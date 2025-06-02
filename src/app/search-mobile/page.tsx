@@ -2,6 +2,7 @@
 "use client";
 
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
+import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget";
 import SearchBar from "@/components/market/SearchBar";
 import { useRouter } from "next/navigation";
 
@@ -17,9 +18,12 @@ export default function MobileSearchPage() {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-8 pt-8">
-      <BitcoinMiniChartWidget />
-      <div className="w-full max-w-md">
+    <div className="flex flex-col items-center space-y-6 pt-8">
+      <div className="flex items-center justify-center gap-4">
+        <BitcoinMiniChartWidget size="sm" />
+        <AppleStockMiniChartWidget size="sm" />
+      </div>
+      <div className="w-full max-w-md px-4">
         <SearchBar onSearch={handleSearch} />
       </div>
       <p className="text-sm text-muted-foreground text-center px-4">
