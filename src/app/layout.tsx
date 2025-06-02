@@ -6,12 +6,12 @@ import { Toaster } from '@/components/ui/toaster';
 import SiteHeader from '@/components/core/SiteHeader';
 import SiteFooter from '@/components/core/SiteFooter';
 import MobileBottomNav from '@/components/core/MobileBottomNav';
-import InstallPWAHandler from '@/components/core/InstallPWAHandler'; // Added PWA Install Handler
+import InstallPWAHandler from '@/components/core/InstallPWAHandler';
 
 export const metadata: Metadata = {
   title: 'Stockdox',
   description: 'Real-time stock and cryptocurrency tracking application',
-  manifest: '/manifest.json', // Added manifest link
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -31,26 +31,25 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Stockdox" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-config" content="/browserconfig.xml" /> 
+        <meta name="msapplication-config" content="/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#FFD700" /> 
-        {/* Add other PWA related meta tags if needed, next-pwa handles some */}
+        <meta name="theme-color" content="#FFD700" />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
         <FirebaseProvider>
           <SiteHeader />
-          {/* Adjusted main content padding: 
-              Mobile: pt-8 as SiteHeader is null on mobile (no header takes up space)
-              Desktop: pt-8 as header is taller and layout differs 
+          {/* Adjusted main content padding:
+              Mobile: pt-16 (4rem) to account for sticky h-14 mobile header + some space
+              Desktop: pt-8 (2rem) as header is taller (h-16) but layout is different
               Bottom padding accounts for mobile nav (pb-20 = 5rem) or standard footer (md:pb-8 = 2rem)
           */}
-          <main className="flex-grow container mx-auto px-4 pt-8 md:pt-8 pb-20 md:pb-8">
+          <main className="flex-grow container mx-auto px-4 pt-16 md:pt-8 pb-20 md:pb-8">
             {children}
           </main>
           <SiteFooter />
           <MobileBottomNav />
-          <InstallPWAHandler /> {/* Added PWA Install Handler */}
+          <InstallPWAHandler />
           <Toaster />
         </FirebaseProvider>
       </body>
