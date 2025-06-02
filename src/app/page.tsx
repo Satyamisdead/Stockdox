@@ -10,6 +10,7 @@ import type { Asset } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
+import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget"; // Import Apple widget
 
 export default function DashboardPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -60,12 +61,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <section className="space-y-6">
-        {/* This div is no longer sticky and its structure is simplified */}
         <div className="bg-background py-4 border-b border-border/40 shadow-sm flex flex-col items-start gap-4">
             
-          {/* Bitcoin Widget */}
-          <div className="w-full md:max-w-2xl flex justify-start">
+          {/* Mini Widgets Container */}
+          <div className="w-full flex justify-start gap-4">
             <BitcoinMiniChartWidget />
+            <AppleStockMiniChartWidget />
           </div>
 
           {/* Search and Filter Bar */}
