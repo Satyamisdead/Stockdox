@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +8,8 @@ import FilterControls from "@/components/market/FilterControls";
 import { placeholderAssets } from "@/lib/placeholder-data";
 import type { Asset } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardHeader, CardContent } from "@/components/ui/card"; // Added Card imports
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
 
 export default function DashboardPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -58,17 +60,25 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <section className="space-y-6">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 sticky top-[calc(theme(spacing.16)_-_1px)] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 z-40 -mx-container-padding px-container-padding border-b border-border/40 shadow-sm">
-          {/* Assuming -mx-container-padding and px-container-padding are utility classes or replace with specific values like -mx-4 px-4 */}
-          <div className="container mx-auto flex flex-col md:flex-row items-center justify-center gap-4">
-            <SearchBar onSearch={handleSearch} />
-            <FilterControls onFilterChange={handleFilterChange} />
+        <div className="sticky top-[calc(theme(spacing.16)_-_1px)] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 z-40 -mx-container-padding px-container-padding border-b border-border/40 shadow-sm">
+          <div className="container mx-auto flex flex-col items-center gap-4">
+            
+            {/* Bitcoin Widget */}
+            <div className="w-full md:max-w-2xl">
+              <BitcoinMiniChartWidget />
+            </div>
+
+            {/* Search and Filter Bar */}
+            <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4">
+              <SearchBar onSearch={handleSearch} />
+              <FilterControls onFilterChange={handleFilterChange} />
+            </div>
           </div>
         </div>
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
-            {[...Array(8)].map((_, i) => ( // Increased skeleton items
+            {[...Array(8)].map((_, i) => ( 
               <Card key={i} className="overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-3 pb-2">
                    <Skeleton className="h-10 w-10 rounded-full" />

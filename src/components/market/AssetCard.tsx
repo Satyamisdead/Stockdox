@@ -7,7 +7,7 @@ import PriceDisplay from "./PriceDisplay";
 import { Button } from "@/components/ui/button";
 import { BellRing } from "lucide-react"; 
 import { useToast } from "@/hooks/use-toast";
-import BitcoinMiniChartWidget from "./BitcoinMiniChartWidget"; // Import the new component
+// Removed BitcoinMiniChartWidget import
 
 type AssetCardProps = {
   asset: Asset;
@@ -62,7 +62,7 @@ export default function AssetCard({ asset }: AssetCardProps) {
             </Button>
           </div>
         </div>
-        <BitcoinMiniChartWidget /> {/* Add the Bitcoin Mini Chart Widget here */}
+        {/* Removed BitcoinMiniChartWidget from here */}
       </CardContent>
     </Card>
   );

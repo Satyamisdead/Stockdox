@@ -16,7 +16,7 @@ const bitcoinChartData = [
 
 export default function BitcoinMiniChartWidget() {
   return (
-    <Card className="mt-4 border-primary/50 bg-black/40 backdrop-blur-sm shadow-inner">
+    <Card className="border-primary/50 bg-black/40 backdrop-blur-sm shadow-inner"> {/* Removed mt-4 */}
       <CardHeader className="p-3">
         <CardTitle className="text-sm font-medium text-white">Bitcoin (BTC) Snapshot</CardTitle>
       </CardHeader>
