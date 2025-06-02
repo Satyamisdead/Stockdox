@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,13 +14,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { auth, emailProvider } from "@/lib/firebase"; // emailProvider is just the ID string
+import { auth } from "@/lib/firebase";
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   AuthError
 } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import SocialSignInButtons from "./SocialSignInButtons";
 import { useState } from "react";
@@ -36,6 +37,7 @@ type AuthFormProps = {
 
 export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -62,7 +64,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
         await signInWithEmailAndPassword(auth, values.email, values.password);
         toast({ title: "Success", description: "Signed in successfully! Redirecting..." });
       }
-      router.push('/');
+      const redirectPath = searchParams.get('redirect');
+      const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
+      router.push(targetPath);
     } catch (error) {
       const authError = error as AuthError;
       console.error(`${mode} error:`, authError);

@@ -1,14 +1,16 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { auth, googleProvider } from "@/lib/firebase";
 import { signInWithPopup, AuthError } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Chrome } from "lucide-react"; // Using Chrome as a generic browser/Google icon
 
 export default function SocialSignInButtons() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
 
   const handleGoogleSignIn = async () => {
@@ -18,7 +20,9 @@ export default function SocialSignInButtons() {
     }
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push('/');
+      const redirectPath = searchParams.get('redirect');
+      const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
+      router.push(targetPath);
       toast({ title: "Success", description: "Signed in with Google successfully." });
     } catch (error) {
       const authError = error as AuthError;
