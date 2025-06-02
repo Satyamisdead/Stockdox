@@ -2,7 +2,8 @@ import type { Asset, NewsArticle } from '@/types';
 import { 
   Apple, Briefcase, Search, Cpu, ShoppingCart, Store, Landmark, CreditCard, 
   ShoppingBag, HeartPulse, Home, GlassWater, Activity, Cloud, Network, 
-  Laptop, Utensils, Fuel, Users, Car, DollarSign, Castle, Pill, Phone, Tractor, Plane, Palette // Added Palette as a generic icon
+  Laptop, Utensils, Fuel, Users, Car, DollarSign, Castle, Pill, Phone, Tractor, Plane, Palette, 
+  Shirt, Shield, PaintBucket // Added Shirt for Nike, Shield for Travelers, PaintBucket for Sherwin-Williams
 } from 'lucide-react';
 
 export const placeholderAssets: Asset[] = [
@@ -277,7 +278,7 @@ export const placeholderAssets: Asset[] = [
     volume24h: 3.5e6, 
     logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'american express',
-    icon: CreditCard // Reusing, appropriate
+    icon: CreditCard 
   },
   { 
     id: 'dis', 
@@ -303,7 +304,7 @@ export const placeholderAssets: Asset[] = [
     volume24h: 2.5e6, 
     logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'goldman sachs',
-    icon: Landmark // Reusing, appropriate
+    icon: Landmark 
   },
   { 
     id: 'mrk', 
@@ -357,6 +358,84 @@ export const placeholderAssets: Asset[] = [
     dataAiHint: 'boeing logo',
     icon: Plane
   },
+  { 
+    id: 'nke', 
+    name: 'NIKE, Inc.', 
+    symbol: 'NKE', 
+    type: 'stock', 
+    price: 95.50, 
+    change24h: 0.60, 
+    marketCap: 145e9, 
+    volume24h: 8e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'nike logo',
+    icon: Shirt 
+  },
+  { 
+    id: 'intc', 
+    name: 'Intel Corporation', 
+    symbol: 'INTC', 
+    type: 'stock', 
+    price: 30.80, 
+    change24h: -0.20, 
+    marketCap: 130e9, 
+    volume24h: 30e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'intel logo',
+    icon: Cpu // Reusing Cpu icon
+  },
+  { 
+    id: 'mmm', 
+    name: '3M Company', 
+    symbol: 'MMM', 
+    type: 'stock', 
+    price: 100.20, 
+    change24h: 0.15, 
+    marketCap: 55e9, 
+    volume24h: 3e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: '3m logo',
+    icon: Palette // Generic icon
+  },
+  { 
+    id: 'dow', 
+    name: 'Dow Inc.', 
+    symbol: 'DOW', 
+    type: 'stock', 
+    price: 55.70, 
+    change24h: 0.90, 
+    marketCap: 38e9, 
+    volume24h: 4e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'dow chemical',
+    icon: Palette // Generic icon
+  },
+  { 
+    id: 'trv', 
+    name: 'The Travelers Companies, Inc.', 
+    symbol: 'TRV', 
+    type: 'stock', 
+    price: 210.00, 
+    change24h: 0.40, 
+    marketCap: 48e9, 
+    volume24h: 1.5e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'travelers logo',
+    icon: Shield
+  },
+  { 
+    id: 'shw', 
+    name: 'The Sherwin-Williams Company', 
+    symbol: 'SHW', 
+    type: 'stock', 
+    price: 300.50, 
+    change24h: -0.30, 
+    marketCap: 75e9, 
+    volume24h: 1e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'sherwin williams',
+    icon: PaintBucket
+  },
 ];
 
 export const placeholderNews: NewsArticle[] = [
@@ -368,4 +447,3 @@ export const placeholderNews: NewsArticle[] = [
 export function getAssetById(id: string): Asset | undefined {
   return placeholderAssets.find(asset => asset.id === id);
 }
-
