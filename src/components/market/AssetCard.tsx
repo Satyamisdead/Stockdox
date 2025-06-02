@@ -1,10 +1,12 @@
+
 import type { Asset } from "@/types";
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import PriceDisplay from "./PriceDisplay";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react"; // Placeholder for add to watchlist
+import { BellRing } from "lucide-react"; // Changed from Eye to BellRing
+import { useToast } from "@/hooks/use-toast"; // Added useToast import
 
 type AssetCardProps = {
   asset: Asset;
@@ -12,6 +14,14 @@ type AssetCardProps = {
 
 export default function AssetCard({ asset }: AssetCardProps) {
   const IconComponent = asset.icon;
+  const { toast } = useToast(); // Initialize toast
+
+  const handleSetAlert = () => {
+    toast({
+      title: "Alert Noted",
+      description: `Price drop alert for ${asset.name} will be monitored. (Full notification feature is under development)`,
+    });
+  };
 
   return (
     <Card className="hover:shadow-primary/20 hover:shadow-lg transition-shadow duration-300">
@@ -45,9 +55,8 @@ export default function AssetCard({ asset }: AssetCardProps) {
           <Button variant="outline" size="sm" asChild>
             <Link href={`/asset/${asset.id}`}>View Details</Link>
           </Button>
-          {/* Placeholder for Add to Watchlist */}
-          <Button variant="ghost" size="icon" title="Add to Watchlist">
-            <Eye className="h-4 w-4 text-muted-foreground hover:text-primary" />
+          <Button variant="ghost" size="icon" title="Set Alert" onClick={handleSetAlert}>
+            <BellRing className="h-4 w-4 text-muted-foreground hover:text-primary" />
           </Button>
         </div>
       </CardContent>
