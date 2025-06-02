@@ -36,6 +36,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 's3-symbol-logo.tradingview.com',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
 };
