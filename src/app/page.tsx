@@ -57,15 +57,6 @@ export default function DashboardPage() {
   
   return (
     <div className="space-y-8">
-      <section className="text-center space-y-4 pt-8">
-        <h1 className="text-4xl md:text-5xl font-bold text-primary font-headline">
-          Track Stocks & Crypto in Real-Time
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Stay updated with the latest market movements. Search, filter, and manage your watchlist with ease.
-        </p>
-      </section>
-
       <section className="space-y-6">
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 sticky top-[calc(theme(spacing.16)_-_1px)] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 z-40 -mx-container-padding px-container-padding border-b border-border/40 shadow-sm">
           {/* Assuming -mx-container-padding and px-container-padding are utility classes or replace with specific values like -mx-4 px-4 */}
