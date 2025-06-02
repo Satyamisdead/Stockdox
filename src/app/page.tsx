@@ -84,7 +84,7 @@ export default function DashboardPage() {
             newPrice = asset.price * (1 + priceChangeFactor);
             newChange24h = asset.change24h + (Math.random() - 0.5) * 0.1;
           } else if (asset.type === 'crypto') {
-            // Stablecoins should not fluctuate
+            // Stablecoins should not fluctuate significantly
             if (asset.symbol === 'USDT' || asset.symbol === 'USDC' || asset.symbol === 'DAI' || asset.symbol === 'TUSD' || asset.symbol === 'USDP') {
               newPrice = 1.00;
               newChange24h = (Math.random() - 0.5) * 0.0002; // Very minor fluctuation for stablecoins change %
@@ -103,6 +103,21 @@ export default function DashboardPage() {
             }
           }
 
+          // Alert for crypto price drops if oldPrice is available and user has alerts set
+          // Exclude stablecoins from triggering audio alerts for their very minor simulated fluctuations
+          if (
+            userAlertPreferences.includes(asset.id) &&
+            newPrice < oldPrice &&
+            asset.type === 'crypto' &&
+            oldPrice > 0 &&
+            !(asset.symbol === 'USDT' || asset.symbol === 'USDC' || asset.symbol === 'DAI' || asset.symbol === 'TUSD' || asset.symbol === 'USDP')
+          ) {
+            console.log(`Alert: ${asset.name} price dropped to $${newPrice.toFixed(asset.symbol === 'BTC' || asset.symbol === 'ETH' ? 8 : (asset.price < 0.01 ? 6 : (asset.price < 1 ? 4 : 2)))}`);
+            if (audioRef.current) {
+              audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            }
+          }
+
           return {
             ...asset,
             price: parseFloat(newPrice.toFixed(asset.symbol === 'BTC' || asset.symbol === 'ETH' ? 8 : (asset.price < 0.01 ? 6 : (asset.price < 1 ? 4 : 2)))),
@@ -116,7 +131,7 @@ export default function DashboardPage() {
     }, SIMULATION_INTERVAL);
 
     return () => clearInterval(intervalId);
-  }, [assets, userAlertPreferences, isLoading]);
+  }, [assets, userAlertPreferences, isLoading]); // userAlertPreferences added as dependency
 
   // Derive filtered assets using useMemo
   const filteredAssets = useMemo(() => {
