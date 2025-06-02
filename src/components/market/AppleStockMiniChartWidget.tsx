@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-// Simplified Apple stock price data for the mini chart
+// Simplified Apple stock price data for the mini chart (remains static)
 const appleStockChartData = [
   { name: 'Jan', price: 165 },
   { name: 'Feb', price: 170 },
@@ -18,14 +18,28 @@ const appleStockChartData = [
 
 interface AppleStockMiniChartWidgetProps {
   size?: 'sm' | 'md';
+  currentPrice?: number;
+  currentChangePercent?: number;
 }
 
-export default function AppleStockMiniChartWidget({ size = 'md' }: AppleStockMiniChartWidgetProps) {
+export default function AppleStockMiniChartWidget({ size = 'md', currentPrice, currentChangePercent }: AppleStockMiniChartWidgetProps) {
   const isSmall = size === 'sm';
-  // Placeholder values for Apple stock
-  const displayPrice = "$170"; 
-  const displayChange = "+1.25%";
-  const isPositive = true; // Based on +1.25%
+
+  let displayPrice: string;
+  if (currentPrice !== undefined) {
+    displayPrice = `$${currentPrice.toFixed(2)}`;
+  } else {
+    displayPrice = "$170.00"; // Static fallback
+  }
+
+  const change = currentChangePercent;
+  const isPositive = change !== undefined ? change > 0 : true; // Default based on static
+  let displayChange: string;
+  if (change !== undefined) {
+    displayChange = `${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
+  } else {
+    displayChange = "+1.25%"; // Static fallback
+  }
 
   return (
     <Link href="/asset/aapl" className="block">

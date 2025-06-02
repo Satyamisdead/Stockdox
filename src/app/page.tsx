@@ -86,8 +86,9 @@ export default function DashboardPage() {
           } else if (asset.type === 'crypto') {
             // Stablecoins should not fluctuate significantly
             if (asset.symbol === 'USDT' || asset.symbol === 'USDC' || asset.symbol === 'DAI' || asset.symbol === 'TUSD' || asset.symbol === 'USDP') {
-              newPrice = 1.00;
-              newChange24h = (Math.random() - 0.5) * 0.0002; // Very minor fluctuation for stablecoins change %
+              newPrice = 1.00; // Keep stablecoin price at 1.00
+              // Simulate very minor fluctuation for change percentage only for stablecoins
+              newChange24h = (Math.random() - 0.5) * 0.0002; 
             } else {
               const priceChangeFactor = (Math.random() - 0.48) * 0.025; // Max +/- 1.25% change for crypto, slightly biased upwards
               newPrice = asset.price * (1 + priceChangeFactor);
@@ -161,6 +162,9 @@ export default function DashboardPage() {
   const handleFilterChange = (filters: { type: "all" | "stock" | "crypto" }) => {
     setActiveFilters(filters);
   };
+
+  const bitcoinAssetForWidget = useMemo(() => assets.find(asset => asset.id === 'bitcoin'), [assets]);
+  const appleAssetForWidget = useMemo(() => assets.find(asset => asset.id === 'aapl'), [assets]);
   
   return (
     <div className="space-y-8">
@@ -168,8 +172,14 @@ export default function DashboardPage() {
         <div className="bg-background py-4 border-b border-border/40 shadow-sm flex flex-col items-start gap-4">
             
           <div className="w-full flex justify-start gap-4">
-            <BitcoinMiniChartWidget />
-            <AppleStockMiniChartWidget />
+            <BitcoinMiniChartWidget 
+              currentPrice={bitcoinAssetForWidget?.price}
+              currentChangePercent={bitcoinAssetForWidget?.change24h}
+            />
+            <AppleStockMiniChartWidget 
+              currentPrice={appleAssetForWidget?.price}
+              currentChangePercent={appleAssetForWidget?.change24h}
+            />
           </div>
 
           <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4">

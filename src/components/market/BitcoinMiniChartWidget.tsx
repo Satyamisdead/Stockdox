@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-// Simplified Bitcoin price data for the mini chart
+// Simplified Bitcoin price data for the mini chart (remains static)
 const bitcoinChartData = [
   { name: 'Jan', price: 42000 },
   { name: 'Feb', price: 43500 },
@@ -18,10 +18,32 @@ const bitcoinChartData = [
 
 interface BitcoinMiniChartWidgetProps {
   size?: 'sm' | 'md';
+  currentPrice?: number;
+  currentChangePercent?: number;
 }
 
-export default function BitcoinMiniChartWidget({ size = 'md' }: BitcoinMiniChartWidgetProps) {
+export default function BitcoinMiniChartWidget({ size = 'md', currentPrice, currentChangePercent }: BitcoinMiniChartWidgetProps) {
   const isSmall = size === 'sm';
+
+  let displayPrice: string;
+  if (currentPrice !== undefined) {
+    if (currentPrice >= 1000) {
+      displayPrice = `$${(currentPrice / 1000).toFixed(1)}k`;
+    } else {
+      displayPrice = `$${currentPrice.toFixed(2)}`;
+    }
+  } else {
+    displayPrice = "$65k"; // Static fallback
+  }
+
+  const change = currentChangePercent;
+  const isPositive = change !== undefined ? change > 0 : true; // Default based on static
+  let displayChange: string;
+  if (change !== undefined) {
+    displayChange = `${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
+  } else {
+    displayChange = "+1.5%"; // Static fallback
+  }
 
   return (
     <Link href="/asset/bitcoin" className="block">
@@ -40,11 +62,11 @@ export default function BitcoinMiniChartWidget({ size = 'md' }: BitcoinMiniChart
             <p className={cn(
               "font-semibold text-white",
               isSmall ? "text-sm" : "text-base"
-            )}>$65k</p>
+            )}>{displayPrice}</p>
             <p className={cn(
-              "text-yellow-400",
+              isPositive ? 'text-yellow-400' : 'text-red-400', // Keep yellow for positive BTC
                isSmall ? "text-[10px]" : "text-xs"
-            )}>+1.5%</p>
+            )}>{displayChange}</p>
           </div>
           <div className="flex-1 w-full">
             <ResponsiveContainer width="100%" height="100%">
