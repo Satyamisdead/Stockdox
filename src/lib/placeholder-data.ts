@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 export const placeholderAssets: Asset[] = [
+  // Stocks (first 32 assets, unchanged from previous state)
   { 
     id: 'aapl', 
     name: 'Apple Inc.', 
@@ -424,46 +425,8 @@ export const placeholderAssets: Asset[] = [
     dataAiHint: 'travelers logo',
     icon: Shield
   },
-  { 
-    id: 'shw', 
-    name: 'The Sherwin-Williams Company', 
-    symbol: 'SHW', 
-    type: 'stock', 
-    price: 300.50, 
-    change24h: -0.30, 
-    marketCap: 75e9, 
-    volume24h: 1e6, 
-    logoUrl: 'https://placehold.co/40x40.png',
-    dataAiHint: 'sherwin williams',
-    icon: PaintBucket
-  },
-  // Cryptocurrencies
-  { 
-    id: 'bitcoin', 
-    name: 'Bitcoin', 
-    symbol: 'BTC', 
-    type: 'crypto', 
-    price: 60500.75, 
-    change24h: 2.15, 
-    marketCap: 1.19e12, 
-    volume24h: 28e9, 
-    logoUrl: 'https://placehold.co/40x40.png',
-    dataAiHint: 'bitcoin crypto',
-    icon: 'B' 
-  },
-  { 
-    id: 'ethereum', 
-    name: 'Ethereum', 
-    symbol: 'ETH', 
-    type: 'crypto', 
-    price: 3550.20, 
-    change24h: 1.75, 
-    marketCap: 425e9, 
-    volume24h: 14e9, 
-    logoUrl: 'https://placehold.co/40x40.png',
-    dataAiHint: 'ethereum crypto',
-    icon: 'E' 
-  },
+  // New Cryptocurrencies list (replaces previous crypto entries)
+  // Stablecoins
   { 
     id: 'tether', 
     name: 'Tether', 
@@ -476,32 +439,6 @@ export const placeholderAssets: Asset[] = [
     logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'tether crypto',
     icon: 'T' 
-  },
-  { 
-    id: 'bnb', 
-    name: 'BNB', 
-    symbol: 'BNB', 
-    type: 'crypto', 
-    price: 590.50, 
-    change24h: -0.85, 
-    marketCap: 87e9, 
-    volume24h: 1.6e9, 
-    logoUrl: 'https://placehold.co/40x40.png',
-    dataAiHint: 'bnb crypto',
-    icon: 'B' 
-  },
-  { 
-    id: 'solana', 
-    name: 'Solana', 
-    symbol: 'SOL', 
-    type: 'crypto', 
-    price: 148.70, 
-    change24h: 4.90, 
-    marketCap: 68e9, 
-    volume24h: 2.1e9, 
-    logoUrl: 'https://placehold.co/40x40.png',
-    dataAiHint: 'solana crypto',
-    icon: 'S' 
   },
   { 
     id: 'usd-coin', 
@@ -517,17 +454,70 @@ export const placeholderAssets: Asset[] = [
     icon: 'U' 
   },
   { 
-    id: 'xrp', 
-    name: 'XRP', 
-    symbol: 'XRP', 
+    id: 'dai', 
+    name: 'Dai', 
+    symbol: 'DAI', 
     type: 'crypto', 
-    price: 0.51, 
-    change24h: -1.50, 
-    marketCap: 29e9, 
-    volume24h: 1.1e9, 
+    price: 1.00, 
+    change24h: 0.02, 
+    marketCap: 5e9, 
+    volume24h: 100e6, 
     logoUrl: 'https://placehold.co/40x40.png',
-    dataAiHint: 'xrp crypto',
-    icon: 'X' 
+    dataAiHint: 'dai crypto',
+    icon: 'D' 
+  },
+  { 
+    id: 'trueusd', 
+    name: 'TrueUSD', 
+    symbol: 'TUSD', 
+    type: 'crypto', 
+    price: 1.00, 
+    change24h: 0.00, 
+    marketCap: 500e6, 
+    volume24h: 30e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'trueusd crypto',
+    icon: 'T' 
+  },
+  { 
+    id: 'pax-dollar', 
+    name: 'Pax Dollar', 
+    symbol: 'USDP', 
+    type: 'crypto', 
+    price: 1.00, 
+    change24h: 0.01, 
+    marketCap: 150e6, 
+    volume24h: 5e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'pax dollar crypto',
+    icon: 'P' 
+  },
+  // Layer 1
+  { 
+    id: 'ethereum', 
+    name: 'Ethereum', 
+    symbol: 'ETH', 
+    type: 'crypto', 
+    price: 3550.20, 
+    change24h: 1.75, 
+    marketCap: 425e9, 
+    volume24h: 14e9, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'ethereum crypto',
+    icon: 'E' 
+  },
+  { 
+    id: 'solana', 
+    name: 'Solana', 
+    symbol: 'SOL', 
+    type: 'crypto', 
+    price: 148.70, 
+    change24h: 4.90, 
+    marketCap: 68e9, 
+    volume24h: 2.1e9, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'solana crypto',
+    icon: 'S' 
   },
   { 
     id: 'cardano', 
@@ -543,6 +533,138 @@ export const placeholderAssets: Asset[] = [
     icon: 'A' 
   },
   { 
+    id: 'avalanche', 
+    name: 'Avalanche', 
+    symbol: 'AVAX', 
+    type: 'crypto', 
+    price: 34.20, 
+    change24h: 3.55, 
+    marketCap: 13.5e9, 
+    volume24h: 450e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'avalanche crypto',
+    icon: 'A' 
+  },
+  { 
+    id: 'polkadot', 
+    name: 'Polkadot', 
+    symbol: 'DOT', 
+    type: 'crypto', 
+    price: 7.20, 
+    change24h: 1.50, 
+    marketCap: 10e9, 
+    volume24h: 200e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'polkadot crypto',
+    icon: 'P' 
+  },
+  { 
+    id: 'near-protocol', 
+    name: 'NEAR Protocol', 
+    symbol: 'NEAR', 
+    type: 'crypto', 
+    price: 6.50, 
+    change24h: 5.10, 
+    marketCap: 7e9, 
+    volume24h: 300e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'near protocol crypto',
+    icon: 'N' 
+  },
+  { 
+    id: 'algorand', 
+    name: 'Algorand', 
+    symbol: 'ALGO', 
+    type: 'crypto', 
+    price: 0.18, 
+    change24h: 0.90, 
+    marketCap: 1.5e9, 
+    volume24h: 50e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'algorand crypto',
+    icon: 'A' 
+  },
+  // DeFi
+  { 
+    id: 'uniswap', 
+    name: 'Uniswap', 
+    symbol: 'UNI', 
+    type: 'crypto', 
+    price: 10.50, 
+    change24h: 3.20, 
+    marketCap: 7.8e9, 
+    volume24h: 150e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'uniswap crypto',
+    icon: 'U' 
+  },
+  { 
+    id: 'aave', 
+    name: 'Aave', 
+    symbol: 'AAVE', 
+    type: 'crypto', 
+    price: 90.20, 
+    change24h: 2.10, 
+    marketCap: 1.3e9, 
+    volume24h: 60e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'aave crypto',
+    icon: 'A' 
+  },
+  { 
+    id: 'compound', 
+    name: 'Compound', 
+    symbol: 'COMP', 
+    type: 'crypto', 
+    price: 55.80, 
+    change24h: -0.50, 
+    marketCap: 450e6, 
+    volume24h: 25e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'compound crypto',
+    icon: 'C' 
+  },
+  { 
+    id: 'maker', 
+    name: 'Maker', 
+    symbol: 'MKR', 
+    type: 'crypto', 
+    price: 2400.00, 
+    change24h: 1.80, 
+    marketCap: 2.2e9, 
+    volume24h: 70e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'maker crypto',
+    icon: 'M' 
+  },
+  { 
+    id: 'curve-dao', 
+    name: 'Curve DAO', 
+    symbol: 'CRV', 
+    type: 'crypto', 
+    price: 0.45, 
+    change24h: 4.50, 
+    marketCap: 550e6, 
+    volume24h: 40e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'curve dao crypto',
+    icon: 'C' 
+  },
+  { 
+    id: 'sushiswap', 
+    name: 'SushiSwap', 
+    symbol: 'SUSHI', 
+    type: 'crypto', 
+    price: 1.20, 
+    change24h: 2.70, 
+    marketCap: 300e6, 
+    volume24h: 35e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'sushiswap crypto',
+    icon: 'S' 
+  },
+  // Meme Coins
+  { 
     id: 'dogecoin', 
     name: 'Dogecoin', 
     symbol: 'DOGE', 
@@ -556,17 +678,228 @@ export const placeholderAssets: Asset[] = [
     icon: 'D' 
   },
   { 
-    id: 'avalanche', 
-    name: 'Avalanche', 
-    symbol: 'AVAX', 
+    id: 'shiba-inu', 
+    name: 'Shiba Inu', 
+    symbol: 'SHIB', 
     type: 'crypto', 
-    price: 34.20, 
-    change24h: 3.55, 
-    marketCap: 13.5e9, 
-    volume24h: 450e6, 
+    price: 0.000025, 
+    change24h: 6.20, 
+    marketCap: 14.5e9, 
+    volume24h: 600e6, 
     logoUrl: 'https://placehold.co/40x40.png',
-    dataAiHint: 'avalanche crypto',
+    dataAiHint: 'shiba inu crypto',
+    icon: 'S' 
+  },
+  { 
+    id: 'floki', 
+    name: 'Floki', 
+    symbol: 'FLOKI', 
+    type: 'crypto', 
+    price: 0.00018, 
+    change24h: 10.50, 
+    marketCap: 1.7e9, 
+    volume24h: 150e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'floki crypto',
+    icon: 'F' 
+  },
+  { 
+    id: 'pepe', 
+    name: 'Pepe', 
+    symbol: 'PEPE', 
+    type: 'crypto', 
+    price: 0.000012, 
+    change24h: 15.00, 
+    marketCap: 5e9, 
+    volume24h: 700e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'pepe crypto',
+    icon: 'P' 
+  },
+  { 
+    id: 'baby-doge-coin', 
+    name: 'Baby Doge Coin', 
+    symbol: 'BabyDoge', 
+    type: 'crypto', 
+    price: 0.0000000015, 
+    change24h: 5.80, 
+    marketCap: 250e6, 
+    volume24h: 5e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'baby doge coin crypto',
+    icon: 'B' 
+  },
+  // Layer 2
+  { 
+    id: 'polygon', 
+    name: 'Polygon', 
+    symbol: 'MATIC', 
+    type: 'crypto', 
+    price: 0.70, 
+    change24h: 2.20, 
+    marketCap: 6.9e9, 
+    volume24h: 280e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'polygon matic crypto',
+    icon: 'M' 
+  },
+  { 
+    id: 'arbitrum', 
+    name: 'Arbitrum', 
+    symbol: 'ARB', 
+    type: 'crypto', 
+    price: 1.10, 
+    change24h: 3.80, 
+    marketCap: 3e9, 
+    volume24h: 200e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'arbitrum crypto',
     icon: 'A' 
+  },
+  { 
+    id: 'optimism', 
+    name: 'Optimism', 
+    symbol: 'OP', 
+    type: 'crypto', 
+    price: 2.50, 
+    change24h: 1.90, 
+    marketCap: 2.6e9, 
+    volume24h: 150e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'optimism crypto',
+    icon: 'O' 
+  },
+  { 
+    id: 'loopring', 
+    name: 'Loopring', 
+    symbol: 'LRC', 
+    type: 'crypto', 
+    price: 0.28, 
+    change24h: -0.70, 
+    marketCap: 380e6, 
+    volume24h: 20e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'loopring crypto',
+    icon: 'L' 
+  },
+  { 
+    id: 'zksync', 
+    name: 'zkSync', 
+    symbol: 'ZK', 
+    type: 'crypto', 
+    price: 0.25, // Hypothetical as token might not be fully launched or priced broadly
+    change24h: 1.00, 
+    marketCap: 500e6, // Hypothetical
+    volume24h: 10e6,  // Hypothetical
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'zksync crypto',
+    icon: 'Z' 
+  },
+  // Infrastructure & Oracles
+  { 
+    id: 'chainlink', 
+    name: 'Chainlink', 
+    symbol: 'LINK', 
+    type: 'crypto', 
+    price: 15.80, 
+    change24h: 2.50, 
+    marketCap: 9.3e9, 
+    volume24h: 350e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'chainlink crypto',
+    icon: 'L' 
+  },
+  { 
+    id: 'cosmos', 
+    name: 'Cosmos', 
+    symbol: 'ATOM', 
+    type: 'crypto', 
+    price: 8.50, 
+    change24h: 1.20, 
+    marketCap: 3.3e9, 
+    volume24h: 120e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'cosmos atom crypto',
+    icon: 'A' 
+  },
+  { 
+    id: 'the-graph', 
+    name: 'The Graph', 
+    symbol: 'GRT', 
+    type: 'crypto', 
+    price: 0.30, 
+    change24h: 4.10, 
+    marketCap: 2.8e9, 
+    volume24h: 90e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'the graph crypto',
+    icon: 'G' 
+  },
+  { 
+    id: 'filecoin', 
+    name: 'Filecoin', 
+    symbol: 'FIL', 
+    type: 'crypto', 
+    price: 6.00, 
+    change24h: 0.80, 
+    marketCap: 3.3e9, 
+    volume24h: 100e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'filecoin crypto',
+    icon: 'F' 
+  },
+  { 
+    id: 'helium', 
+    name: 'Helium', 
+    symbol: 'HNT', 
+    type: 'crypto', 
+    price: 4.20, 
+    change24h: -1.50, 
+    marketCap: 680e6, 
+    volume24h: 15e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'helium crypto',
+    icon: 'H' 
+  },
+  // Privacy Coins
+  { 
+    id: 'monero', 
+    name: 'Monero', 
+    symbol: 'XMR', 
+    type: 'crypto', 
+    price: 140.50, 
+    change24h: 0.50, 
+    marketCap: 2.6e9, 
+    volume24h: 50e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'monero crypto',
+    icon: 'M' 
+  },
+  { 
+    id: 'zcash', 
+    name: 'Zcash', 
+    symbol: 'ZEC', 
+    type: 'crypto', 
+    price: 25.00, 
+    change24h: 1.10, 
+    marketCap: 400e6, 
+    volume24h: 30e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'zcash crypto',
+    icon: 'Z' 
+  },
+  { 
+    id: 'secret', 
+    name: 'Secret', 
+    symbol: 'SCRT', 
+    type: 'crypto', 
+    price: 0.55, 
+    change24h: 3.30, 
+    marketCap: 100e6, 
+    volume24h: 2e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'secret crypto',
+    icon: 'S' 
   },
 ];
 
