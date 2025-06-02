@@ -1,12 +1,8 @@
+
 {
   "name": "Stockdox",
   "short_name": "Stockdox",
-  "description": "Real-time stock and cryptocurrency tracking application",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#FFD700",
-  "orientation": "portrait-primary",
+  "description": "Real-time stock and cryptocurrency tracking application.",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -32,5 +28,10 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "theme_color": "#FFD700",
+  "background_color": "#000000",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
 }
