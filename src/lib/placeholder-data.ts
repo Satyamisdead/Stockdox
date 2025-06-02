@@ -18,8 +18,8 @@ export const placeholderAssets: Asset[] = [
     change24h: 1.25, 
     marketCap: 2.8e12, 
     volume24h: 50e6, 
-    logoUrl: 'https://placehold.co/40x40.png',
-    dataAiHint: 'apple logo',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
+    dataAiHint: 'apple logo black',
     icon: Apple 
   },
   { 
