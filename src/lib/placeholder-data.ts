@@ -20,7 +20,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 50e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/apple--big.svg',
     dataAiHint: 'apple logo',
-    icon: Apple 
+    icon: Apple,
+    peRatio: 28.5,
+    epsDilutedTTM: 6.00,
+    epsDilutedGrowthTTMYoY: 8.5,
+    dividendYieldTTM: 0.55,
+    sector: 'Technology',
+    relativeVolume: 1.1,
   },
   { 
     id: 'msft', 
@@ -31,9 +37,15 @@ export const placeholderAssets: Asset[] = [
     change24h: -0.15, 
     marketCap: 3.1e12, 
     volume24h: 22e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'microsoft logo',
-    icon: Briefcase 
+    icon: Briefcase,
+    peRatio: 35.2,
+    epsDilutedTTM: 11.50,
+    epsDilutedGrowthTTMYoY: 12.3,
+    dividendYieldTTM: 0.80,
+    sector: 'Technology',
+    relativeVolume: 0.9,
   },
   { 
     id: 'googl', 
@@ -44,9 +56,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 0.90, 
     marketCap: 2.1e12, 
     volume24h: 18e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'google logo',
-    icon: Search
+    icon: Search,
+    peRatio: 25.8,
+    epsDilutedTTM: 6.80,
+    epsDilutedGrowthTTMYoY: 15.1,
+    dividendYieldTTM: 0.00, // Google doesn't typically pay dividends
+    sector: 'Communication Services',
+    relativeVolume: 1.0,
   },
   { 
     id: 'nvda', 
@@ -59,7 +77,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 45e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/nvidia--big.svg',
     dataAiHint: 'nvidia logo',
-    icon: Cpu
+    icon: Cpu,
+    peRatio: 75.0,
+    epsDilutedTTM: 12.50,
+    epsDilutedGrowthTTMYoY: 200.0, // High growth example
+    dividendYieldTTM: 0.02,
+    sector: 'Technology',
+    relativeVolume: 1.5,
   },
   { 
     id: 'amzn', 
@@ -72,7 +96,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 35e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/amazon--big.svg',
     dataAiHint: 'amazon logo',
-    icon: ShoppingCart
+    icon: ShoppingCart,
+    peRatio: 50.5,
+    epsDilutedTTM: 3.70,
+    epsDilutedGrowthTTMYoY: 25.0,
+    dividendYieldTTM: 0.00,
+    sector: 'Consumer Discretionary',
+    relativeVolume: 1.2,
   },
   { 
     id: 'wmt', 
@@ -85,7 +115,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 20e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/walmart--big.svg',
     dataAiHint: 'walmart logo',
-    icon: Store
+    icon: Store,
+    peRatio: 25.1,
+    epsDilutedTTM: 2.40,
+    epsDilutedGrowthTTMYoY: 5.2,
+    dividendYieldTTM: 1.50,
+    sector: 'Consumer Staples',
+    relativeVolume: 0.8,
   },
   { 
     id: 'jpm', 
@@ -98,7 +134,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 12e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/jpmorgan--big.svg',
     dataAiHint: 'jpmorgan logo',
-    icon: Landmark
+    icon: Landmark,
+    peRatio: 12.5,
+    epsDilutedTTM: 16.00,
+    epsDilutedGrowthTTMYoY: 10.5,
+    dividendYieldTTM: 2.20,
+    sector: 'Financials',
+    relativeVolume: 0.95,
   },
   { 
     id: 'v', 
@@ -111,7 +153,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 8e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/visa--big.svg',
     dataAiHint: 'visa logo',
-    icon: CreditCard
+    icon: CreditCard,
+    peRatio: 30.0,
+    epsDilutedTTM: 9.30,
+    epsDilutedGrowthTTMYoY: 11.8,
+    dividendYieldTTM: 0.70,
+    sector: 'Information Technology', // Often classified here due to tech platform
+    relativeVolume: 1.0,
   },
   { 
     id: 'pg', 
@@ -124,7 +172,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 7e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/procter-gamble--big.svg',
     dataAiHint: 'procter gamble',
-    icon: ShoppingBag
+    icon: ShoppingBag,
+    peRatio: 26.3,
+    epsDilutedTTM: 6.30,
+    epsDilutedGrowthTTMYoY: 4.5,
+    dividendYieldTTM: 2.40,
+    sector: 'Consumer Staples',
+    relativeVolume: 0.7,
   },
   { 
     id: 'jnj', 
@@ -137,7 +191,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 9e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/johnson-johnson--big.svg',
     dataAiHint: 'johnson johnson',
-    icon: HeartPulse
+    icon: HeartPulse,
+    peRatio: 22.0,
+    epsDilutedTTM: 6.80,
+    epsDilutedGrowthTTMYoY: 3.2,
+    dividendYieldTTM: 2.90,
+    sector: 'Health Care',
+    relativeVolume: 0.85,
   },
   { 
     id: 'hd', 
@@ -150,7 +210,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 5e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/home-depot--big.svg',
     dataAiHint: 'home depot',
-    icon: Home
+    icon: Home,
+    peRatio: 23.5,
+    epsDilutedTTM: 14.50,
+    epsDilutedGrowthTTMYoY: 6.1,
+    dividendYieldTTM: 2.10,
+    sector: 'Consumer Discretionary',
+    relativeVolume: 0.9,
   },
   { 
     id: 'ko', 
@@ -163,7 +229,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 10e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/coca-cola--big.svg',
     dataAiHint: 'coca cola',
-    icon: GlassWater
+    icon: GlassWater,
+    peRatio: 25.0,
+    epsDilutedTTM: 2.55,
+    epsDilutedGrowthTTMYoY: 3.0,
+    dividendYieldTTM: 3.00,
+    sector: 'Consumer Staples',
+    relativeVolume: 1.0,
   },
   { 
     id: 'unh', 
@@ -176,7 +248,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 4e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/unitedhealth--big.svg',
     dataAiHint: 'unitedhealth logo',
-    icon: Activity
+    icon: Activity,
+    peRatio: 20.5,
+    epsDilutedTTM: 24.40,
+    epsDilutedGrowthTTMYoY: 12.0,
+    dividendYieldTTM: 1.60,
+    sector: 'Health Care',
+    relativeVolume: 0.75,
   },
   { 
     id: 'crm', 
@@ -189,7 +267,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 6e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/salesforce--big.svg',
     dataAiHint: 'salesforce logo',
-    icon: Cloud
+    icon: Cloud,
+    peRatio: 60.0, // Growth stocks often have high P/E
+    epsDilutedTTM: 4.50,
+    epsDilutedGrowthTTMYoY: 30.0,
+    dividendYieldTTM: 0.00,
+    sector: 'Technology',
+    relativeVolume: 1.3,
   },
   { 
     id: 'csco', 
@@ -202,7 +286,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 15e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/cisco--big.svg',
     dataAiHint: 'cisco logo',
-    icon: Network
+    icon: Network,
+    peRatio: 15.2,
+    epsDilutedTTM: 3.20,
+    epsDilutedGrowthTTMYoY: 5.5,
+    dividendYieldTTM: 3.30,
+    sector: 'Technology',
+    relativeVolume: 1.1,
   },
   { 
     id: 'ibm', 
@@ -215,7 +305,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 5e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/ibm--big.svg',
     dataAiHint: 'ibm logo',
-    icon: Laptop
+    icon: Laptop,
+    peRatio: 18.0,
+    epsDilutedTTM: 9.40,
+    epsDilutedGrowthTTMYoY: 2.5,
+    dividendYieldTTM: 3.90,
+    sector: 'Technology',
+    relativeVolume: 0.8,
   },
   { 
     id: 'mcd', 
@@ -228,7 +324,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 3e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/mcdonalds--big.svg',
     dataAiHint: 'mcdonalds logo',
-    icon: Utensils
+    icon: Utensils,
+    peRatio: 24.0,
+    epsDilutedTTM: 10.80,
+    epsDilutedGrowthTTMYoY: 8.0,
+    dividendYieldTTM: 2.50,
+    sector: 'Consumer Discretionary',
+    relativeVolume: 0.9,
   },
   { 
     id: 'cvx', 
@@ -241,7 +343,13 @@ export const placeholderAssets: Asset[] = [
     volume24h: 7e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/chevron--big.svg',
     dataAiHint: 'chevron logo',
-    icon: Fuel
+    icon: Fuel,
+    peRatio: 11.5,
+    epsDilutedTTM: 14.00,
+    epsDilutedGrowthTTMYoY: -5.0, // Energy sector can have fluctuations
+    dividendYieldTTM: 3.80,
+    sector: 'Energy',
+    relativeVolume: 1.05,
   },
   { 
     id: 'meta', 
@@ -252,9 +360,15 @@ export const placeholderAssets: Asset[] = [
     change24h: -0.70, 
     marketCap: 1.2e12, 
     volume24h: 25e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'meta logo',
-    icon: Users
+    icon: Users,
+    peRatio: 30.0,
+    epsDilutedTTM: 16.00,
+    epsDilutedGrowthTTMYoY: 70.0, // Example of rebound/growth
+    dividendYieldTTM: 0.40, // Meta recently started paying dividends
+    sector: 'Communication Services',
+    relativeVolume: 1.4,
   },
   { 
     id: 'tsla', 
@@ -265,9 +379,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 3.50, 
     marketCap: 560e9, 
     volume24h: 60e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'tesla logo',
-    icon: Car
+    icon: Car,
+    peRatio: 40.0, // High P/E typical for Tesla
+    epsDilutedTTM: 4.30,
+    epsDilutedGrowthTTMYoY: -10.0, // Example of recent slowdown
+    dividendYieldTTM: 0.00,
+    sector: 'Consumer Discretionary',
+    relativeVolume: 2.0,
   },
   { 
     id: 'axp', 
@@ -278,9 +398,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 0.85, 
     marketCap: 170e9, 
     volume24h: 3.5e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'american express',
-    icon: CreditCard 
+    icon: CreditCard,
+    peRatio: 19.5,
+    epsDilutedTTM: 11.80,
+    epsDilutedGrowthTTMYoY: 14.2,
+    dividendYieldTTM: 1.10,
+    sector: 'Financials',
+    relativeVolume: 0.9,
   },
   { 
     id: 'dis', 
@@ -291,9 +417,15 @@ export const placeholderAssets: Asset[] = [
     change24h: -0.50, 
     marketCap: 190e9, 
     volume24h: 9e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'disney logo',
-    icon: Castle 
+    icon: Castle,
+    peRatio: 60.0, // Can be high due to streaming investments/turnaround
+    epsDilutedTTM: 1.75,
+    epsDilutedGrowthTTMYoY: 5.0,
+    dividendYieldTTM: 0.30, // Disney reinstated a small dividend
+    sector: 'Communication Services',
+    relativeVolume: 1.1,
   },
   { 
     id: 'gs', 
@@ -304,9 +436,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 1.15, 
     marketCap: 150e9, 
     volume24h: 2.5e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'goldman sachs',
-    icon: Landmark 
+    icon: Landmark,
+    peRatio: 17.8,
+    epsDilutedTTM: 25.30,
+    epsDilutedGrowthTTMYoY: -20.0, // Example of earnings dip
+    dividendYieldTTM: 2.40,
+    sector: 'Financials',
+    relativeVolume: 0.8,
   },
   { 
     id: 'mrk', 
@@ -317,9 +455,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 0.25, 
     marketCap: 330e9, 
     volume24h: 6e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'merck logo',
-    icon: Pill
+    icon: Pill,
+    peRatio: 70.0, // Can be high with blockbuster drugs / pipeline
+    epsDilutedTTM: 1.85, // Placeholder
+    epsDilutedGrowthTTMYoY: 10.0,
+    dividendYieldTTM: 2.30,
+    sector: 'Health Care',
+    relativeVolume: 0.9,
   },
   { 
     id: 'vz', 
@@ -330,9 +474,15 @@ export const placeholderAssets: Asset[] = [
     change24h: -0.15, 
     marketCap: 170e9, 
     volume24h: 18e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'verizon logo',
-    icon: Phone
+    icon: Phone,
+    peRatio: 8.5, // Telcos often have lower P/E
+    epsDilutedTTM: 4.70,
+    epsDilutedGrowthTTMYoY: 1.0,
+    dividendYieldTTM: 6.60, // High dividend yield typical for VZ
+    sector: 'Communication Services',
+    relativeVolume: 1.2,
   },
   { 
     id: 'cat', 
@@ -343,9 +493,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 1.80, 
     marketCap: 170e9, 
     volume24h: 2e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'caterpillar logo',
-    icon: Tractor
+    icon: Tractor,
+    peRatio: 15.0,
+    epsDilutedTTM: 22.00,
+    epsDilutedGrowthTTMYoY: 25.0,
+    dividendYieldTTM: 1.60,
+    sector: 'Industrials',
+    relativeVolume: 1.0,
   },
   { 
     id: 'ba', 
@@ -356,9 +512,15 @@ export const placeholderAssets: Asset[] = [
     change24h: -1.20, 
     marketCap: 110e9, 
     volume24h: 7e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'boeing logo',
-    icon: Plane
+    icon: Plane,
+    peRatio: -25.0, // Negative P/E if losses
+    epsDilutedTTM: -7.20, // Negative EPS
+    epsDilutedGrowthTTMYoY: 15.0, // Growth from a low/negative base
+    dividendYieldTTM: 0.00, // Boeing suspended dividends
+    sector: 'Industrials',
+    relativeVolume: 1.3,
   },
   { 
     id: 'nke', 
@@ -369,9 +531,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 0.60, 
     marketCap: 145e9, 
     volume24h: 8e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'nike logo',
-    icon: Shirt 
+    icon: Shirt,
+    peRatio: 28.0,
+    epsDilutedTTM: 3.40,
+    epsDilutedGrowthTTMYoY: 2.0,
+    dividendYieldTTM: 1.50,
+    sector: 'Consumer Discretionary',
+    relativeVolume: 0.95,
   },
   { 
     id: 'intc', 
@@ -382,9 +550,15 @@ export const placeholderAssets: Asset[] = [
     change24h: -0.20, 
     marketCap: 130e9, 
     volume24h: 30e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'intel logo',
-    icon: Cpu
+    icon: Cpu,
+    peRatio: 30.0, // Can vary wildly with restructuring
+    epsDilutedTTM: 1.00,
+    epsDilutedGrowthTTMYoY: -50.0, // Example of earnings drop
+    dividendYieldTTM: 1.80, // Intel cut its dividend
+    sector: 'Technology',
+    relativeVolume: 1.5,
   },
   { 
     id: 'mmm', 
@@ -395,9 +569,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 0.15, 
     marketCap: 55e9, 
     volume24h: 3e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: '3m logo',
-    icon: Palette 
+    icon: Palette,
+    peRatio: 10.0, // Lower due to legal issues/restructuring
+    epsDilutedTTM: 10.00, // Placeholder
+    epsDilutedGrowthTTMYoY: -15.0,
+    dividendYieldTTM: 5.90, // High yield, but dividend sustainability concerns
+    sector: 'Industrials',
+    relativeVolume: 0.7,
   },
   { 
     id: 'dow', 
@@ -408,9 +588,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 0.90, 
     marketCap: 38e9, 
     volume24h: 4e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'dow chemical',
-    icon: PaintBucket // Changed from Palette to PaintBucket for variety
+    icon: PaintBucket,
+    peRatio: 20.0, // Cyclical chemical company
+    epsDilutedTTM: 2.80,
+    epsDilutedGrowthTTMYoY: -25.0,
+    dividendYieldTTM: 5.00,
+    sector: 'Materials',
+    relativeVolume: 0.85,
   },
   { 
     id: 'trv', 
@@ -421,9 +607,15 @@ export const placeholderAssets: Asset[] = [
     change24h: 0.40, 
     marketCap: 48e9, 
     volume24h: 1.5e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // User did not provide new logo
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'travelers logo',
-    icon: Shield
+    icon: Shield,
+    peRatio: 14.0,
+    epsDilutedTTM: 15.00,
+    epsDilutedGrowthTTMYoY: 10.0,
+    dividendYieldTTM: 2.00,
+    sector: 'Financials',
+    relativeVolume: 0.6,
   },
   // Cryptocurrencies
   { 
@@ -435,9 +627,11 @@ export const placeholderAssets: Asset[] = [
     change24h: 1.50, 
     marketCap: 1.28e12, 
     volume24h: 25e9, 
-    logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCBTC--big.svg', // Example, you might want specific crypto logos
+    logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCBTC--big.svg',
     dataAiHint: 'bitcoin crypto',
-    icon: 'B' 
+    icon: 'B',
+    circulatingSupply: "19.7M BTC",
+    allTimeHigh: "$69,044.77",
   },
   // Stablecoins
   { 
@@ -451,7 +645,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 45e9, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCUSDT--big.svg',
     dataAiHint: 'tether crypto',
-    icon: 'T' 
+    icon: 'T',
+    circulatingSupply: "112B USDT",
+    allTimeHigh: "$1.02",
   },
   { 
     id: 'usd-coin', 
@@ -464,7 +660,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 5.5e9, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCUSDC--big.svg',
     dataAiHint: 'usdc crypto',
-    icon: 'U' 
+    icon: 'U',
+    circulatingSupply: "34B USDC",
+    allTimeHigh: "$1.01",
   },
   { 
     id: 'dai', 
@@ -477,7 +675,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 100e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCDAI--big.svg',
     dataAiHint: 'dai crypto',
-    icon: 'D' 
+    icon: 'D',
+    circulatingSupply: "5B DAI",
+    allTimeHigh: "$1.01",
   },
   { 
     id: 'trueusd', 
@@ -490,7 +690,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 30e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCTUSD--big.svg',
     dataAiHint: 'trueusd crypto',
-    icon: 'T' 
+    icon: 'T',
+    circulatingSupply: "500M TUSD",
+    allTimeHigh: "$1.01",
   },
   { 
     id: 'pax-dollar', 
@@ -503,7 +705,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 5e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCUSDP--big.svg',
     dataAiHint: 'pax dollar crypto',
-    icon: 'P' 
+    icon: 'P',
+    circulatingSupply: "150M USDP",
+    allTimeHigh: "$1.01",
   },
   // Layer 1
   { 
@@ -517,7 +721,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 14e9, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCETH--big.svg',
     dataAiHint: 'ethereum crypto',
-    icon: 'E' 
+    icon: 'E',
+    circulatingSupply: "120M ETH",
+    allTimeHigh: "$4,891.70",
   },
   { 
     id: 'solana', 
@@ -530,7 +736,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 2.1e9, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCSOL--big.svg',
     dataAiHint: 'solana crypto',
-    icon: 'S' 
+    icon: 'S',
+    circulatingSupply: "460M SOL",
+    allTimeHigh: "$260.06",
   },
   { 
     id: 'cardano', 
@@ -543,7 +751,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 350e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCADA--big.svg',
     dataAiHint: 'cardano crypto',
-    icon: 'A' 
+    icon: 'A',
+    circulatingSupply: "35B ADA",
+    allTimeHigh: "$3.10",
   },
   { 
     id: 'avalanche', 
@@ -556,7 +766,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 450e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCAVAX--big.svg',
     dataAiHint: 'avalanche crypto',
-    icon: 'A' 
+    icon: 'A',
+    circulatingSupply: "390M AVAX",
+    allTimeHigh: "$146.22",
   },
   { 
     id: 'polkadot', 
@@ -569,7 +781,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 200e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCDOT--big.svg',
     dataAiHint: 'polkadot crypto',
-    icon: 'P' 
+    icon: 'P',
+    circulatingSupply: "1.4B DOT",
+    allTimeHigh: "$55.00",
   },
   { 
     id: 'near-protocol', 
@@ -582,7 +796,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 300e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCNEAR--big.svg',
     dataAiHint: 'near protocol crypto',
-    icon: 'N' 
+    icon: 'N',
+    circulatingSupply: "1.1B NEAR",
+    allTimeHigh: "$20.44",
   },
   { 
     id: 'algorand', 
@@ -595,7 +811,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 50e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCALGO--big.svg',
     dataAiHint: 'algorand crypto',
-    icon: 'A' 
+    icon: 'A',
+    circulatingSupply: "8.1B ALGO",
+    allTimeHigh: "$3.28",
   },
   // DeFi
   { 
@@ -609,7 +827,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 150e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCUNI--big.svg',
     dataAiHint: 'uniswap crypto',
-    icon: 'U' 
+    icon: 'U',
+    circulatingSupply: "750M UNI",
+    allTimeHigh: "$44.97",
   },
   { 
     id: 'aave', 
@@ -622,7 +842,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 60e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCAAVE--big.svg',
     dataAiHint: 'aave crypto',
-    icon: 'A' 
+    icon: 'A',
+    circulatingSupply: "14.8M AAVE",
+    allTimeHigh: "$666.86",
   },
   { 
     id: 'compound', 
@@ -635,7 +857,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 25e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCCOMP--big.svg',
     dataAiHint: 'compound crypto',
-    icon: 'C' 
+    icon: 'C',
+    circulatingSupply: "8M COMP",
+    allTimeHigh: "$911.20",
   },
   { 
     id: 'maker', 
@@ -648,7 +872,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 70e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCMKR--big.svg',
     dataAiHint: 'maker crypto',
-    icon: 'M' 
+    icon: 'M',
+    circulatingSupply: "920K MKR",
+    allTimeHigh: "$6,339.02",
   },
   { 
     id: 'curve-dao', 
@@ -661,7 +887,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 40e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCCRV--big.svg',
     dataAiHint: 'curve dao crypto',
-    icon: 'C' 
+    icon: 'C',
+    circulatingSupply: "1.2B CRV",
+    allTimeHigh: "$60.50", // Initial high price
   },
   { 
     id: 'sushiswap', 
@@ -674,7 +902,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 35e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCSUSHI--big.svg',
     dataAiHint: 'sushiswap crypto',
-    icon: 'S' 
+    icon: 'S',
+    circulatingSupply: "250M SUSHI",
+    allTimeHigh: "$23.38",
   },
   // Meme Coins
   { 
@@ -688,7 +918,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 800e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCDOGE--big.svg',
     dataAiHint: 'dogecoin crypto',
-    icon: 'D' 
+    icon: 'D',
+    circulatingSupply: "144B DOGE",
+    allTimeHigh: "$0.7376",
   },
   { 
     id: 'shiba-inu', 
@@ -701,7 +933,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 600e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCSHIB--big.svg',
     dataAiHint: 'shiba inu crypto',
-    icon: 'S' 
+    icon: 'S',
+    circulatingSupply: "589T SHIB",
+    allTimeHigh: "$0.00008845",
   },
   { 
     id: 'floki', 
@@ -714,7 +948,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 150e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCFLOKI--big.svg',
     dataAiHint: 'floki crypto',
-    icon: 'F' 
+    icon: 'F',
+    circulatingSupply: "9.7T FLOKI",
+    allTimeHigh: "$0.0003437",
   },
   { 
     id: 'pepe', 
@@ -727,7 +963,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 700e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCPEPE--big.svg',
     dataAiHint: 'pepe crypto',
-    icon: 'P' 
+    icon: 'P',
+    circulatingSupply: "420T PEPE",
+    allTimeHigh: "$0.00001717",
   },
   { 
     id: 'baby-doge-coin', 
@@ -738,9 +976,11 @@ export const placeholderAssets: Asset[] = [
     change24h: 5.80, 
     marketCap: 250e6, 
     volume24h: 5e6, 
-    logoUrl: 'https://placehold.co/40x40.png', // TradingView may not have all meme coins
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'baby doge coin crypto',
-    icon: 'B' 
+    icon: 'B',
+    circulatingSupply: "150Q BabyDoge", // Quadrillion
+    allTimeHigh: "$0.000000006345",
   },
   // Layer 2
   { 
@@ -754,7 +994,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 280e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCMATIC--big.svg',
     dataAiHint: 'polygon matic crypto',
-    icon: 'M' 
+    icon: 'M',
+    circulatingSupply: "9.9B MATIC",
+    allTimeHigh: "$2.92",
   },
   { 
     id: 'arbitrum', 
@@ -767,7 +1009,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 200e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCARB--big.svg',
     dataAiHint: 'arbitrum crypto',
-    icon: 'A' 
+    icon: 'A',
+    circulatingSupply: "2.9B ARB",
+    allTimeHigh: "$2.39",
   },
   { 
     id: 'optimism', 
@@ -780,7 +1024,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 150e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCOP--big.svg',
     dataAiHint: 'optimism crypto',
-    icon: 'O' 
+    icon: 'O',
+    circulatingSupply: "1.1B OP",
+    allTimeHigh: "$4.84",
   },
   { 
     id: 'loopring', 
@@ -793,7 +1039,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 20e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCLRC--big.svg',
     dataAiHint: 'loopring crypto',
-    icon: 'L' 
+    icon: 'L',
+    circulatingSupply: "1.3B LRC",
+    allTimeHigh: "$3.83",
   },
   { 
     id: 'zksync', 
@@ -802,11 +1050,13 @@ export const placeholderAssets: Asset[] = [
     type: 'crypto', 
     price: 0.25, 
     change24h: 1.00, 
-    marketCap: 500e6, 
+    marketCap: 500e6, // Placeholder
     volume24h: 10e6,  
-    logoUrl: 'https://placehold.co/40x40.png', // Likely needs specific logo, TradingView may not have ZK yet
+    logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'zksync crypto',
-    icon: 'Z' 
+    icon: 'Z',
+    circulatingSupply: "2B ZK", // Placeholder
+    allTimeHigh: "$0.50", // Placeholder
   },
   // Infrastructure & Oracles
   { 
@@ -820,7 +1070,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 350e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCLINK--big.svg',
     dataAiHint: 'chainlink crypto',
-    icon: 'L' 
+    icon: 'L',
+    circulatingSupply: "587M LINK",
+    allTimeHigh: "$52.88",
   },
   { 
     id: 'cosmos', 
@@ -833,7 +1085,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 120e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCATOM--big.svg',
     dataAiHint: 'cosmos atom crypto',
-    icon: 'A' 
+    icon: 'A',
+    circulatingSupply: "390M ATOM",
+    allTimeHigh: "$44.70",
   },
   { 
     id: 'the-graph', 
@@ -846,7 +1100,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 90e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCGRT--big.svg',
     dataAiHint: 'the graph crypto',
-    icon: 'G' 
+    icon: 'G',
+    circulatingSupply: "9.5B GRT",
+    allTimeHigh: "$2.88",
   },
   { 
     id: 'filecoin', 
@@ -859,7 +1115,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 100e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCFIL--big.svg',
     dataAiHint: 'filecoin crypto',
-    icon: 'F' 
+    icon: 'F',
+    circulatingSupply: "560M FIL",
+    allTimeHigh: "$237.24",
   },
   { 
     id: 'helium', 
@@ -872,7 +1130,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 15e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCHNT--big.svg',
     dataAiHint: 'helium crypto',
-    icon: 'H' 
+    icon: 'H',
+    circulatingSupply: "160M HNT",
+    allTimeHigh: "$55.22",
   },
   // Privacy Coins
   { 
@@ -886,7 +1146,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 50e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCXMR--big.svg',
     dataAiHint: 'monero crypto',
-    icon: 'M' 
+    icon: 'M',
+    circulatingSupply: "18.4M XMR",
+    allTimeHigh: "$542.33",
   },
   { 
     id: 'zcash', 
@@ -899,7 +1161,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 30e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCZEC--big.svg',
     dataAiHint: 'zcash crypto',
-    icon: 'Z' 
+    icon: 'Z',
+    circulatingSupply: "16.3M ZEC",
+    allTimeHigh: "$3,191.93", // Initial high price
   },
   { 
     id: 'secret', 
@@ -912,7 +1176,9 @@ export const placeholderAssets: Asset[] = [
     volume24h: 2e6, 
     logoUrl: 'https://s3-symbol-logo.tradingview.com/crypto/XTVCSCRT--big.svg',
     dataAiHint: 'secret crypto',
-    icon: 'S' 
+    icon: 'S',
+    circulatingSupply: "190M SCRT",
+    allTimeHigh: "$10.64",
   },
 ];
 
@@ -925,5 +1191,3 @@ export const placeholderNews: NewsArticle[] = [
 export function getAssetById(id: string): Asset | undefined {
   return placeholderAssets.find(asset => asset.id === id);
 }
-
-    

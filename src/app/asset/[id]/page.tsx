@@ -25,16 +25,33 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
 
   const IconComponent = asset.icon;
 
-  // Placeholder for financial metrics. In a real app, an LLM might decide which ones to show.
-  // For example, by calling a flow: const metricsToShow = await ai.getFinancialMetricsForAsset(asset.id);
-  const financialMetrics = [
-    { label: "Market Cap", value: asset.marketCap ? `$${asset.marketCap.toLocaleString()}` : "N/A" },
-    { label: "Volume (24h)", value: asset.volume24h ? `$${asset.volume24h.toLocaleString()}` : "N/A" },
-    { label: "Asset Type", value: asset.type === 'stock' ? 'Stock' : 'Cryptocurrency' },
-    // Add more common metrics or metrics determined by LLM.
-    { label: "Circulating Supply", value: asset.type === 'crypto' ? "19.7M BTC (Example)" : "N/A" },
-    { label: "All-Time High", value: "$69,044.77 (Example)" },
-  ];
+  let financialMetrics: { label: string; value: string | number }[] = [];
+
+  if (asset.type === 'stock') {
+    financialMetrics = [
+      { label: "Price", value: `$${asset.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+      { label: "Change % (24h)", value: `${asset.change24h.toFixed(2)}%` },
+      { label: "Volume (24h)", value: asset.volume24h ? asset.volume24h.toLocaleString() : "N/A" },
+      { label: "Rel Volume", value: asset.relativeVolume ? `${asset.relativeVolume.toFixed(1)}x` : "N/A" },
+      { label: "Market Cap", value: asset.marketCap ? `$${asset.marketCap.toLocaleString()}` : "N/A" },
+      { label: "P/E Ratio", value: asset.peRatio ? asset.peRatio.toFixed(2) : "N/A" },
+      { label: "EPS (TTM)", value: asset.epsDilutedTTM ? `$${asset.epsDilutedTTM.toFixed(2)}` : "N/A" },
+      { label: "EPS Growth (YoY)", value: asset.epsDilutedGrowthTTMYoY ? `${asset.epsDilutedGrowthTTMYoY.toFixed(2)}%` : "N/A" },
+      { label: "Div Yield (TTM)", value: asset.dividendYieldTTM ? `${asset.dividendYieldTTM.toFixed(2)}%` : "N/A" },
+      { label: "Sector", value: asset.sector || "N/A" },
+    ];
+  } else if (asset.type === 'crypto') {
+    financialMetrics = [
+      { label: "Price", value: `$${asset.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: asset.symbol === 'BTC' || asset.symbol === 'ETH' ? 8 : 2 })}` },
+      { label: "Change % (24h)", value: `${asset.change24h.toFixed(2)}%` },
+      { label: "Volume (24h)", value: asset.volume24h ? `$${asset.volume24h.toLocaleString()}` : "N/A" },
+      { label: "Market Cap", value: asset.marketCap ? `$${asset.marketCap.toLocaleString()}` : "N/A" },
+      { label: "Circulating Supply", value: asset.circulatingSupply || "N/A" },
+      { label: "All-Time High", value: asset.allTimeHigh || "N/A" },
+      { label: "Asset Type", value: "Cryptocurrency" },
+    ];
+  }
+
 
   return (
     <div className="space-y-8">
@@ -89,7 +106,7 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
               ))}
                <div className="pt-2 text-xs text-muted-foreground/70 flex items-start gap-1.5">
                 <Info size={14} className="mt-0.5 shrink-0"/> 
-                <span>Some metrics might be decided by an AI model based on asset type and availability. Displaying common examples.</span>
+                <span>Financial data is for illustrative purposes. Values may be placeholders.</span>
               </div>
             </CardContent>
           </Card>
