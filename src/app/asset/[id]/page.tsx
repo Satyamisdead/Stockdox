@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useMemo } from "react";
 import { getAssetById, placeholderNews } from "@/lib/placeholder-data";
 import type { Asset, NewsArticle } from "@/types";
 import Image from "next/image";
@@ -17,11 +18,26 @@ import { Badge } from "@/components/ui/badge";
 export default function AssetDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const asset: Asset | undefined = getAssetById(params.id);
-  const news: NewsArticle[] = placeholderNews; // Mock news
 
   if (!asset) {
     notFound();
   }
+
+  const relatedNews = useMemo(() => {
+    if (!asset) return [];
+    const searchTerm = asset.name.toLowerCase();
+    const symbolTerm = asset.symbol.toLowerCase();
+    
+    const filtered = placeholderNews.filter(article => 
+      article.title.toLowerCase().includes(searchTerm) ||
+      article.title.toLowerCase().includes(symbolTerm) ||
+      (article.summary && (article.summary.toLowerCase().includes(searchTerm) || article.summary.toLowerCase().includes(symbolTerm)))
+    );
+    // If no specific news, return a small slice of general news or an empty array.
+    // For this mock, we'll return up to 3 of the filtered, or default to first 3 general if none specifically match.
+    if (filtered.length > 0) return filtered.slice(0,3);
+    return placeholderNews.slice(0,3); // Fallback to general news if no specific match
+  }, [asset]);
 
   const IconComponent = asset.icon;
 
@@ -117,15 +133,15 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
       <Separator />
 
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold font-headline">Related News</h2>
-        {news.length > 0 ? (
+        <h2 className="text-2xl font-semibold font-headline">Related News for {asset.name}</h2>
+        {relatedNews.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {news.map((article) => (
+            {relatedNews.map((article) => (
               <NewsItem key={article.id} article={article} />
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground">No recent news available for {asset.name}.</p>
+          <p className="text-muted-foreground">No specific news found for {asset.name}. Displaying general market news.</p>
         )}
       </section>
     </div>

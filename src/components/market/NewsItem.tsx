@@ -1,3 +1,4 @@
+
 import type { NewsArticle } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,8 @@ export default function NewsItem({ article }: NewsItemProps) {
       )}
       <CardFooter>
         <Button variant="outline" size="sm" asChild>
-          <a href={article.url} target="_blank" rel="noopener noreferrer" className="gap-2">
+          {/* Removed target="_blank" and rel="noopener noreferrer" to open in same tab */}
+          <a href={article.url} className="gap-2">
             Read More <ExternalLink className="h-4 w-4" />
           </a>
         </Button>
