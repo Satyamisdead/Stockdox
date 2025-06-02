@@ -76,25 +76,48 @@ export default function DashboardPage() {
           const oldPrice = previousPricesRef.current.get(asset.id) || asset.price;
           newPreviousPrices.set(asset.id, asset.price); // Store current price as previous for next tick
 
+          let newPrice = asset.price;
+          let newChange24h = asset.change24h;
+
           if (asset.type === 'stock') {
             const priceChangeFactor = (Math.random() - 0.5) * 0.01; // Max +/- 0.5% change
-            const newPrice = asset.price * (1 + priceChangeFactor);
-            const newChange24h = asset.change24h + (Math.random() - 0.5) * 0.1;
-            
-            if (userAlertPreferences.includes(asset.id) && newPrice < oldPrice) {
-              console.log(`Alert: ${asset.name} price dropped to $${newPrice.toFixed(2)}`);
-              if (audioRef.current) {
-                audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
-              }
+            newPrice = asset.price * (1 + priceChangeFactor);
+            newChange24h = asset.change24h + (Math.random() - 0.5) * 0.1;
+          } else if (asset.type === 'crypto') {
+            // Stablecoins should not fluctuate
+            if (asset.symbol === 'USDT' || asset.symbol === 'USDC' || asset.symbol === 'DAI' || asset.symbol === 'TUSD' || asset.symbol === 'USDP') {
+              newPrice = 1.00;
+              newChange24h = (Math.random() - 0.5) * 0.0002; // Very minor fluctuation for stablecoins change %
+            } else {
+              const priceChangeFactor = (Math.random() - 0.48) * 0.025; // Max +/- 1.25% change for crypto, slightly biased upwards
+              newPrice = asset.price * (1 + priceChangeFactor);
+              newChange24h = asset.change24h + (Math.random() - 0.48) * 0.25;
             }
-
-            return {
-              ...asset,
-              price: parseFloat(newPrice.toFixed(asset.symbol === 'BTC' || asset.symbol === 'ETH' ? 8 : 2)),
-              change24h: parseFloat(newChange24h.toFixed(2)),
-            };
           }
-          return asset;
+          
+          if (userAlertPreferences.includes(asset.id) && newPrice < oldPrice && asset.type !== 'crypto') { // Added crypto check to avoid alerts on stablecoin minor changes for now
+            console.log(`Alert: ${asset.name} price dropped to $${newPrice.toFixed(2)}`);
+            if (audioRef.current) {
+              audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            }
+          }
+          // Specific alert for crypto, if oldPrice is available
+          if (userAlertPreferences.includes(asset.id) && newPrice < oldPrice && asset.type === 'crypto' && oldPrice > 0) {
+              // Avoid alerts if price is already very low or for minor stablecoin fluctuations
+             if (newPrice / oldPrice < 0.995 && asset.symbol !== 'USDT' && asset.symbol !== 'USDC' && asset.symbol !== 'DAI' && asset.symbol !== 'TUSD' && asset.symbol !== 'USDP') { 
+                console.log(`Alert: ${asset.name} price dropped to $${newPrice.toFixed(asset.symbol === 'BTC' || asset.symbol === 'ETH' ? 8 : 4)}`);
+                if (audioRef.current) {
+                    audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
+                }
+            }
+          }
+
+
+          return {
+            ...asset,
+            price: parseFloat(newPrice.toFixed(asset.symbol === 'BTC' || asset.symbol === 'ETH' ? 8 : (asset.price < 0.01 ? 6 : (asset.price < 1 ? 4 : 2)))),
+            change24h: parseFloat(newChange24h.toFixed(2)),
+          };
         });
         
         previousPricesRef.current = newPreviousPrices;
