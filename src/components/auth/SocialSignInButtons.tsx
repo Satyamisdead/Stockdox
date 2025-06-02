@@ -6,7 +6,8 @@ import { auth, googleProvider } from "@/lib/firebase"; // Direct import
 import { signInWithPopup, type AuthError } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { Chrome } from "lucide-react"; 
+import { Chrome, Loader2 } from "lucide-react"; // Added Loader2
+import { useState } from "react"; // Added useState
 
 export default function SocialSignInButtons() {
   const router = useRouter();
@@ -16,8 +17,12 @@ export default function SocialSignInButtons() {
 
   const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
-    if (!auth || !googleProvider) { // Use imported auth and googleProvider
-      toast({ title: "Error", description: "Authentication service (Google) not available.", variant: "destructive" });
+    if (!auth || !googleProvider) { 
+      toast({ 
+        title: "Configuration Error", 
+        description: "Firebase authentication for Google Sign-In is not configured. Please ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in your .env.local file and restart your server.", 
+        variant: "destructive" 
+      });
       setIsLoadingGoogle(false);
       return;
     }

@@ -51,8 +51,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    if (!auth) { // Use the imported auth directly
-      toast({ title: "Error", description: "Authentication service not available. Ensure Firebase is correctly configured.", variant: "destructive" });
+    if (!auth) { 
+      toast({ 
+        title: "Configuration Error", 
+        description: "Firebase authentication is not configured. Please ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in your .env.local file and restart your development server.", 
+        variant: "destructive" 
+      });
       setIsLoading(false);
       return;
     }
