@@ -1,8 +1,7 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, EmailAuthProvider, type Auth } from "firebase/auth";
-// import { getFirestore } from "firebase/firestore"; // Uncomment if using Firestore for watchlist etc.
-// import { getMessaging } from "firebase/messaging"; // Uncomment if using FCM
+import { getFirestore, type Firestore } from "firebase/firestore"; // Added Firestore import
 
 const firebaseConfig = {
   apiKey: "AIzaSyCw1LrhLFPYwPasxlVP6pkagbF3kdSwXkA", // Hardcoded API key
@@ -15,15 +14,13 @@ const firebaseConfig = {
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
+let db: Firestore | undefined; // Added Firestore instance
 
-if (typeof window !== "undefined") { // Ensure Firebase is initialized only on the client side
+if (typeof window !== "undefined") { 
   
   console.log(
     "Firebase Service: Attempting to initialize with hardcoded API Key."
   );
-
-  // Removed checks for process.env.NEXT_PUBLIC_FIREBASE_API_KEY as it's now hardcoded.
-  // The hardcoded key will always be "present".
 
   if (!getApps().length) {
     try {
@@ -31,7 +28,6 @@ if (typeof window !== "undefined") { // Ensure Firebase is initialized only on t
       console.log("Firebase Service: initializeApp successful.");
     } catch (initError) {
       console.error("Firebase Service: initializeApp failed:", initError);
-      // app will remain undefined
     }
   } else {
     app = getApp();
@@ -50,12 +46,16 @@ if (typeof window !== "undefined") { // Ensure Firebase is initialized only on t
         "Please double-check your project settings in the Firebase console. " +
         "Ensure the Firebase Authentication API is enabled in your Firebase project console."
       );
-      // auth will remain undefined
+    }
+    try {
+      db = getFirestore(app); // Initialize Firestore
+      console.log("Firebase Service: getFirestore successful.");
+    } catch (firestoreError) {
+      console.error("Firebase Service: getFirestore failed:", firestoreError);
     }
   } else { 
-    // This case means app initialization failed.
     console.error(
-        "Firebase Service: `getAuth` cannot be called because Firebase app initialization failed. " +
+        "Firebase Service: Firebase app initialization failed. Auth and Firestore cannot be initialized. " +
         "Check for previous `initializeApp` errors in the console."
     );
   }
@@ -67,4 +67,4 @@ const googleProvider = typeof window !== "undefined" && auth ? new GoogleAuthPro
 const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
 
 
-export { app, auth, googleProvider, emailProvider /*, db, messaging */ };
+export { app, auth, db, googleProvider, emailProvider };

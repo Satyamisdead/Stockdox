@@ -10,7 +10,9 @@ import type { Asset } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
-import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget"; // Import Apple widget
+import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget";
+import { useAuth } from "@/hooks/useAuth";
+import { getAlertedAssetIds } from "@/services/userPreferenceService";
 
 const SIMULATION_INTERVAL = 3000; // Update every 3 seconds
 
@@ -22,31 +24,69 @@ export default function DashboardPage() {
   const [activeFilters, setActiveFilters] = useState<{ type: "all" | "stock" | "crypto" }>({ type: "all" });
 
   const initialAssetsRef = useRef<Asset[]>([]);
+  const previousPricesRef = useRef<Map<string, number>>(new Map());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const { user, loading: authLoading } = useAuth();
+  const [userAlertPreferences, setUserAlertPreferences] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Initialize audio element
+    if (typeof window !== "undefined") {
+      audioRef.current = new Audio('/audio/alert.mp3'); // User needs to place this file
+    }
+  }, []);
+  
+  useEffect(() => {
+    const fetchUserAlerts = async () => {
+      if (user && !authLoading) {
+        const prefs = await getAlertedAssetIds(user.uid);
+        setUserAlertPreferences(prefs);
+      } else if (!authLoading) {
+        setUserAlertPreferences([]); // Clear prefs if user logs out
+      }
+    };
+    fetchUserAlerts();
+  }, [user, authLoading]);
 
   useEffect(() => {
     const loadData = () => {
-      // Deep copy placeholderAssets to avoid modifying the original import
       const copiedAssets = JSON.parse(JSON.stringify(placeholderAssets)) as Asset[];
       initialAssetsRef.current = copiedAssets;
       setAssets(copiedAssets);
       setFilteredAssets(copiedAssets);
       setIsLoading(false);
+
+      // Initialize previous prices
+      const initialPrices = new Map<string, number>();
+      copiedAssets.forEach(asset => initialPrices.set(asset.id, asset.price));
+      previousPricesRef.current = initialPrices;
     };
 
     const timeoutId = setTimeout(loadData, 1000);
 
-    // Simulate real-time data updates
     const intervalId = setInterval(() => {
       setAssets(prevAssets => {
         if (prevAssets.length === 0) return prevAssets;
-        return prevAssets.map(asset => {
+
+        const newPreviousPrices = new Map<string, number>();
+        const updatedAssets = prevAssets.map(asset => {
+          newPreviousPrices.set(asset.id, asset.price); // Store current price as previous for next tick
+
           if (asset.type === 'stock') {
-            // Simulate price change
             const priceChangeFactor = (Math.random() - 0.5) * 0.01; // Max +/- 0.5% change
             const newPrice = asset.price * (1 + priceChangeFactor);
+            const newChange24h = asset.change24h + (Math.random() - 0.5) * 0.1;
+            
+            const oldPrice = previousPricesRef.current.get(asset.id) || asset.price;
 
-            // Simulate 24h change %
-            const newChange24h = asset.change24h + (Math.random() - 0.5) * 0.1; // Small random fluctuation
+            // Check for price drop alert
+            if (userAlertPreferences.includes(asset.id) && newPrice < oldPrice) {
+              console.log(`Alert: ${asset.name} price dropped to $${newPrice.toFixed(2)}`);
+              if (audioRef.current) {
+                audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
+              }
+            }
 
             return {
               ...asset,
@@ -56,6 +96,9 @@ export default function DashboardPage() {
           }
           return asset;
         });
+        
+        previousPricesRef.current = newPreviousPrices; // Update ref with new "previous" prices for the next interval
+        return updatedAssets;
       });
     }, SIMULATION_INTERVAL);
 
@@ -63,19 +106,18 @@ export default function DashboardPage() {
       clearTimeout(timeoutId);
       clearInterval(intervalId);
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userAlertPreferences]); // Re-run if userAlertPreferences change, though interval logic itself doesn't directly depend on it to restart
 
-  useEffect(() => {
-    // When assets state updates (due to simulation), also update filteredAssets
-    // if there's no active search or filter other than "all"
+   useEffect(() => {
     if (!isLoading) {
         applyFiltersAndSearch(assets, searchQuery, activeFilters);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assets]); // Dependency on assets causes this to run when assets change
+  }, [assets]); 
 
   const applyFiltersAndSearch = (currentAssets: Asset[], query: string, filters: { type: "all" | "stock" | "crypto" }) => {
-    let tempAssets = [...currentAssets]; // Work with a copy to ensure re-render on simulated updates
+    let tempAssets = [...currentAssets]; 
 
     if (query) {
       tempAssets = tempAssets.filter(
@@ -90,21 +132,18 @@ export default function DashboardPage() {
     }
     
     setFilteredAssets(tempAssets);
-    setIsLoading(false); // Set loading to false after filtering
+    setIsLoading(false); 
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setIsLoading(true); // Set loading true before filtering
-    // Use initialAssetsRef.current for searching to start from a stable base
-    // then let the simulation update the filtered list via the useEffect on `assets`
+    setIsLoading(true); 
     applyFiltersAndSearch(initialAssetsRef.current, query, activeFilters);
   };
 
   const handleFilterChange = (filters: { type: "all" | "stock" | "crypto" }) => {
     setActiveFilters(filters);
-    setIsLoading(true); // Set loading true before filtering
-    // Use initialAssetsRef.current for filtering to start from a stable base
+    setIsLoading(true); 
     applyFiltersAndSearch(initialAssetsRef.current, searchQuery, filters);
   };
   
@@ -113,20 +152,18 @@ export default function DashboardPage() {
       <section className="space-y-6">
         <div className="bg-background py-4 border-b border-border/40 shadow-sm flex flex-col items-start gap-4">
             
-          {/* Mini Widgets Container */}
           <div className="w-full flex justify-start gap-4">
             <BitcoinMiniChartWidget />
             <AppleStockMiniChartWidget />
           </div>
 
-          {/* Search and Filter Bar */}
           <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4">
             <SearchBar onSearch={handleSearch} />
             <FilterControls onFilterChange={handleFilterChange} />
           </div>
         </div>
 
-        {isLoading && filteredAssets.length === 0 ? ( // Show skeletons only if truly loading and no assets yet
+        {isLoading && filteredAssets.length === 0 ? ( 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
             {[...Array(8)].map((_, i) => ( 
               <Card key={i} className="overflow-hidden">

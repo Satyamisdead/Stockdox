@@ -7,11 +7,13 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import PriceDisplay from "./PriceDisplay";
 import { Button } from "@/components/ui/button";
-import { BellRing } from "lucide-react"; 
+import { BellRing, Loader2 } from "lucide-react"; 
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { getAlertedAssetIds, toggleAlertForAsset } from "@/services/userPreferenceService";
 
 type AssetCardProps = {
   asset: Asset;
@@ -21,18 +23,65 @@ export default function AssetCard({ asset }: AssetCardProps) {
   const IconComponent = asset.icon;
   const { toast } = useToast(); 
   const isMobile = useIsMobile();
-  const [isAlertActive, setIsAlertActive] = useState(false);
+  const { user, loading: authLoading } = useAuth();
 
-  const handleSetAlert = () => {
-    setIsAlertActive(!isAlertActive); // Toggle alert state
-    const toastDescription = isMobile 
-      ? `Alert for ${asset.name} ${!isAlertActive ? 'set' : 'removed'}.`
-      : `Price alert for ${asset.name} ${!isAlertActive ? 'set' : 'removed'}. (Monitoring in development)`;
-    
-    toast({
-      title: `Alert ${!isAlertActive ? 'Set' : 'Removed'}`,
-      description: toastDescription,
-    });
+  const [isAlertActive, setIsAlertActive] = useState(false);
+  const [isAlertLoading, setIsAlertLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAlertStatus = async () => {
+      if (user && !authLoading) {
+        setIsAlertLoading(true);
+        try {
+          const alertedIds = await getAlertedAssetIds(user.uid);
+          setIsAlertActive(alertedIds.includes(asset.id));
+        } catch (error) {
+          // Already logged in service, toast shown by service or handleSetAlert
+        } finally {
+          setIsAlertLoading(false);
+        }
+      } else if (!authLoading) {
+         // User not logged in or auth still loading, reset/keep default
+        setIsAlertActive(false);
+        setIsAlertLoading(false);
+      }
+    };
+
+    fetchAlertStatus();
+  }, [user, authLoading, asset.id]);
+
+  const handleSetAlert = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to save your alert preferences.",
+        variant: "default",
+      });
+      // Toggle locally for non-logged-in users for immediate feedback, won't persist.
+      // Or, choose not to toggle if persistence is key:
+      // setIsAlertActive(prev => !prev); 
+      return;
+    }
+
+    setIsAlertLoading(true);
+    try {
+      const newAlertStatus = await toggleAlertForAsset(user.uid, asset.id);
+      setIsAlertActive(newAlertStatus);
+      toast({
+        title: `Alert ${newAlertStatus ? 'Set' : 'Removed'}`,
+        description: `Price alert for ${asset.name} ${newAlertStatus ? 'activated' : 'deactivated'}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error Updating Alert",
+        description: "Could not update your alert preference. Please try again.",
+        variant: "destructive",
+      });
+      // Optionally revert optimistic update if it was done:
+      // setIsAlertActive(prev => !prev); 
+    } finally {
+      setIsAlertLoading(false);
+    }
   };
 
   return (
@@ -62,14 +111,18 @@ export default function AssetCard({ asset }: AssetCardProps) {
         </div>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col justify-between">
-        <div> {/* Wrapper for existing top content */}
+        <div> 
           <PriceDisplay price={asset.price} change={asset.change24h} symbol={asset.symbol} />
           <div className="mt-4 flex justify-between items-center">
             <Button variant="outline" size="sm" asChild>
               <Link href={`/asset/${asset.id}`}>View Details</Link>
             </Button>
-            <Button variant="ghost" size="icon" title="Set Alert" onClick={handleSetAlert}>
-              <BellRing className={cn("h-4 w-4", isAlertActive ? "text-primary" : "text-muted-foreground hover:text-primary")} />
+            <Button variant="ghost" size="icon" title="Set Alert" onClick={handleSetAlert} disabled={isAlertLoading || authLoading}>
+              {isAlertLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <BellRing className={cn("h-4 w-4", isAlertActive ? "text-primary" : "text-muted-foreground hover:text-primary")} />
+              )}
             </Button>
           </div>
         </div>
@@ -77,4 +130,3 @@ export default function AssetCard({ asset }: AssetCardProps) {
     </Card>
   );
 }
-
