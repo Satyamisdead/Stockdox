@@ -16,16 +16,16 @@ const bitcoinChartData = [
 
 export default function BitcoinMiniChartWidget() {
   return (
-    <Card className="border-primary/50 bg-black/40 backdrop-blur-sm shadow-inner"> {/* Removed mt-4 */}
-      <CardHeader className="p-3">
+    <Card className="border-primary/50 bg-black/40 backdrop-blur-sm shadow-inner w-56 h-56 flex flex-col">
+      <CardHeader className="p-3 shrink-0">
         <CardTitle className="text-sm font-medium text-white">Bitcoin (BTC) Snapshot</CardTitle>
       </CardHeader>
-      <CardContent className="p-3 pt-0">
-        <div className="flex items-center justify-between mb-1">
+      <CardContent className="p-3 pt-0 flex flex-col flex-1">
+        <div className="flex items-center justify-between mb-1 shrink-0">
           <p className="text-lg font-semibold text-white">$43,000.50</p> {/* Placeholder price */}
           <p className="text-xs text-yellow-400">+1.5%</p> {/* Placeholder change, yellow accent */}
         </div>
-        <div className="h-[60px] w-full">
+        <div className="flex-1 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={bitcoinChartData} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
               <Tooltip

@@ -64,7 +64,7 @@ export default function DashboardPage() {
           <div className="container mx-auto flex flex-col items-center gap-4">
             
             {/* Bitcoin Widget */}
-            <div className="w-full md:max-w-2xl">
+            <div className="w-full md:max-w-2xl flex justify-center">
               <BitcoinMiniChartWidget />
             </div>
 
