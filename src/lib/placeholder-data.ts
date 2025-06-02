@@ -425,7 +425,20 @@ export const placeholderAssets: Asset[] = [
     dataAiHint: 'travelers logo',
     icon: Shield
   },
-  // New Cryptocurrencies list (replaces previous crypto entries)
+  // Cryptocurrencies
+  { 
+    id: 'bitcoin', 
+    name: 'Bitcoin', 
+    symbol: 'BTC', 
+    type: 'crypto', 
+    price: 65000.00, 
+    change24h: 1.50, 
+    marketCap: 1.28e12, 
+    volume24h: 25e9, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'bitcoin crypto',
+    icon: 'B' 
+  },
   // Stablecoins
   { 
     id: 'tether', 
