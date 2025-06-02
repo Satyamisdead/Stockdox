@@ -6,7 +6,7 @@ import SiteHeader from '@/components/core/SiteHeader';
 import SiteFooter from '@/components/core/SiteFooter';
 
 export const metadata: Metadata = {
-  title: 'MarketPulse',
+  title: 'Stockdox',
   description: 'Real-time stock and cryptocurrency tracking application',
 };
 

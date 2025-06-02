@@ -77,7 +77,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold font-headline">{mode === "signin" ? "Welcome Back" : "Create an Account"}</h1>
         <p className="text-muted-foreground">
-          {mode === "signin" ? "Sign in to access your MarketPulse dashboard." : "Enter your email and password to sign up."}
+          {mode === "signin" ? "Sign in to access your Stockdox dashboard." : "Enter your email and password to sign up."}
         </p>
       </div>
       <Form {...form}>
