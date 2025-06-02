@@ -1,3 +1,6 @@
+
+"use client";
+
 import { getAssetById, placeholderNews } from "@/lib/placeholder-data";
 import type { Asset, NewsArticle } from "@/types";
 import Image from "next/image";
@@ -6,11 +9,13 @@ import AssetChart from "@/components/market/AssetChart";
 import NewsItem from "@/components/market/NewsItem";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Info } from "lucide-react";
 
 export default function AssetDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const asset: Asset | undefined = getAssetById(params.id);
   const news: NewsArticle[] = placeholderNews; // Mock news
 
@@ -33,6 +38,11 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
 
   return (
     <div className="space-y-8">
+      <Button variant="outline" onClick={() => router.back()} className="mb-6">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Assets
+      </Button>
+
       <section className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
            {asset.logoUrl ? (
