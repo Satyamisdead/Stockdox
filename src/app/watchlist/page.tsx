@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -5,16 +6,18 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Asset } from "@/types";
 import AssetCard from "@/components/market/AssetCard";
-import { placeholderAssets } from "@/lib/placeholder-data"; // Mock data
+import { placeholderAssets } from "@/lib/placeholder-data"; 
 import { Loader2, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Loading from "@/app/loading";
+
 
 export default function WatchlistPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [watchlistAssets, setWatchlistAssets] = useState<Asset[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingData, setIsLoadingData] = useState(true); // Separate loading state for data fetching
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -26,21 +29,22 @@ export default function WatchlistPage() {
     if (user) {
       // In a real app, fetch user's watchlist from Firebase Firestore
       // For now, mock by taking first 2 assets if user is logged in
-      setTimeout(() => {
-        setWatchlistAssets(placeholderAssets.slice(0, 2));
-        setIsLoading(false);
-      }, 500);
-    } else {
-      setIsLoading(false);
+      // Simulate a delay for data fetching
+      const timer = setTimeout(() => {
+        // For demonstration, let's assume the first 3 assets are on the watchlist
+        const userSpecificWatchlist = placeholderAssets.filter(asset => ['aapl', 'bitcoin', 'msft'].includes(asset.id));
+        setWatchlistAssets(userSpecificWatchlist);
+        setIsLoadingData(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (!authLoading && !user) {
+      // If not logged in and auth check is complete, stop data loading indication
+      setIsLoadingData(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
-  if (authLoading || isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-12rem)]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
+  if (authLoading || isLoadingData) {
+     return <Loading />;
   }
 
   if (!user) {
@@ -58,7 +62,7 @@ export default function WatchlistPage() {
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-primary font-headline">Your Watchlist</h1>
       {watchlistAssets.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {watchlistAssets.map((asset) => (
             <AssetCard key={asset.id} asset={asset} />
           ))}

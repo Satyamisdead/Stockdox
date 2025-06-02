@@ -1,9 +1,10 @@
+
 "use client";
 
 import type { User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth as firebaseAuthInstance } from '@/lib/firebase'; // Renamed import to avoid conflict
 import type { Auth } from 'firebase/auth';
-import React, { createContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useEffect, useState, type ReactNode } from 'react';
 
 interface FirebaseContextType {
   auth: Auth | undefined;
@@ -18,11 +19,12 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) {
+    if (!firebaseAuthInstance) {
+      console.warn("FirebaseProvider: Firebase Auth instance is not available. User state will not be managed.");
       setLoading(false);
       return;
     }
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+    const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
@@ -30,7 +32,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <FirebaseContext.Provider value={{ auth, user, loading }}>
+    <FirebaseContext.Provider value={{ auth: firebaseAuthInstance, user, loading }}>
       {children}
     </FirebaseContext.Provider>
   );

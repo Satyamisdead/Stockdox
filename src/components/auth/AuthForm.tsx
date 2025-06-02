@@ -14,11 +14,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/lib/firebase"; // Direct import
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  AuthError
+  type AuthError
 } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -51,8 +51,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    if (!auth) {
-      toast({ title: "Error", description: "Authentication service not available.", variant: "destructive" });
+    if (!auth) { // Use the imported auth directly
+      toast({ title: "Error", description: "Authentication service not available. Ensure Firebase is correctly configured.", variant: "destructive" });
       setIsLoading(false);
       return;
     }
@@ -67,10 +67,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
       const redirectPath = searchParams.get('redirect');
       const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
       router.push(targetPath);
+      router.refresh(); // Refresh to ensure layout updates with new auth state
     } catch (error) {
       const authError = error as AuthError;
-      console.error(`${mode} error:`, authError);
-      toast({ title: `${mode === "signup" ? "Sign Up" : "Sign In"} Error`, description: authError.message || `Failed to ${mode}.`, variant: "destructive" });
+      let errorMessage = authError.message || `Failed to ${mode}. Please try again.`;
+      // Customize messages for common errors
+      if (authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password') {
+        errorMessage = 'Invalid email or password.';
+      } else if (authError.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email address is already in use.';
+      }
+      console.error(`${mode} error:`, authError.code, authError.message);
+      toast({ title: `${mode === "signup" ? "Sign Up" : "Sign In"} Error`, description: errorMessage, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +101,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="you@example.com" {...field} type="email" />
+                  <Input placeholder="you@example.com" {...field} type="email" autoComplete="email" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -106,7 +114,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="••••••••" {...field} type="password" />
+                  <Input placeholder="••••••••" {...field} type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -118,12 +126,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
           </Button>
         </form>
       </Form>
-      <div className="relative">
+      <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
+          <span className="bg-card px-2 text-muted-foreground">
             Or continue with
           </span>
         </div>

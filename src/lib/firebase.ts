@@ -1,6 +1,6 @@
 
-import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, EmailAuthProvider, Auth } from "firebase/auth";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, EmailAuthProvider, type Auth } from "firebase/auth";
 // import { getFirestore } from "firebase/firestore"; // Uncomment if using Firestore for watchlist etc.
 // import { getMessaging } from "firebase/messaging"; // Uncomment if using FCM
 
@@ -84,7 +84,8 @@ if (typeof window !== "undefined") { // Ensure Firebase is initialized only on t
   console.log("Firebase Service: Not on client, skipping Firebase initialization.");
 }
 
-const googleProvider = typeof window !== "undefined" ? new GoogleAuthProvider() : undefined;
-const emailProvider = EmailAuthProvider.PROVIDER_ID;
+const googleProvider = typeof window !== "undefined" && auth ? new GoogleAuthProvider() : undefined;
+const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
+
 
 export { app, auth, googleProvider, emailProvider /*, db, messaging */ };
