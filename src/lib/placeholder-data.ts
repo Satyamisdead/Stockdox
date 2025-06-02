@@ -1,9 +1,10 @@
+
 import type { Asset, NewsArticle } from '@/types';
 import { 
   Apple, Briefcase, Search, Cpu, ShoppingCart, Store, Landmark, CreditCard, 
   ShoppingBag, HeartPulse, Home, GlassWater, Activity, Cloud, Network, 
-  Laptop, Utensils, Fuel, Users, Car, DollarSign, Castle, Pill, Phone, Tractor, Plane, Palette, 
-  Shirt, Shield, PaintBucket // Added Shirt for Nike, Shield for Travelers, PaintBucket for Sherwin-Williams
+  Laptop, Utensils, Fuel, Users, Car, Castle, Pill, Phone, Tractor, Plane, Palette, 
+  Shirt, Shield, PaintBucket
 } from 'lucide-react';
 
 export const placeholderAssets: Asset[] = [
@@ -382,7 +383,7 @@ export const placeholderAssets: Asset[] = [
     volume24h: 30e6, 
     logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'intel logo',
-    icon: Cpu // Reusing Cpu icon
+    icon: Cpu
   },
   { 
     id: 'mmm', 
@@ -395,7 +396,7 @@ export const placeholderAssets: Asset[] = [
     volume24h: 3e6, 
     logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: '3m logo',
-    icon: Palette // Generic icon
+    icon: Palette 
   },
   { 
     id: 'dow', 
@@ -408,7 +409,7 @@ export const placeholderAssets: Asset[] = [
     volume24h: 4e6, 
     logoUrl: 'https://placehold.co/40x40.png',
     dataAiHint: 'dow chemical',
-    icon: Palette // Generic icon
+    icon: Palette 
   },
   { 
     id: 'trv', 
@@ -447,3 +448,5 @@ export const placeholderNews: NewsArticle[] = [
 export function getAssetById(id: string): Asset | undefined {
   return placeholderAssets.find(asset => asset.id === id);
 }
+
+    
