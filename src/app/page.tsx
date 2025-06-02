@@ -60,19 +60,18 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <section className="space-y-6">
-        <div className="sticky top-[calc(theme(spacing.16)_-_1px)] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 z-40 -mx-container-padding px-container-padding border-b border-border/40 shadow-sm">
-          <div className="container mx-auto flex flex-col items-start gap-4"> {/* Changed items-center to items-start */}
+        {/* This div is no longer sticky and its structure is simplified */}
+        <div className="bg-background py-4 border-b border-border/40 shadow-sm flex flex-col items-start gap-4">
             
-            {/* Bitcoin Widget */}
-            <div className="w-full md:max-w-2xl flex justify-start"> {/* Changed justify-center to justify-start */}
-              <BitcoinMiniChartWidget />
-            </div>
+          {/* Bitcoin Widget */}
+          <div className="w-full md:max-w-2xl flex justify-start">
+            <BitcoinMiniChartWidget />
+          </div>
 
-            {/* Search and Filter Bar */}
-            <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4">
-              <SearchBar onSearch={handleSearch} />
-              <FilterControls onFilterChange={handleFilterChange} />
-            </div>
+          {/* Search and Filter Bar */}
+          <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4">
+            <SearchBar onSearch={handleSearch} />
+            <FilterControls onFilterChange={handleFilterChange} />
           </div>
         </div>
 
