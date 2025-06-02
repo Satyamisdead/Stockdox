@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { BellRing } from "lucide-react"; 
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 type AssetCardProps = {
   asset: Asset;
@@ -19,14 +21,16 @@ export default function AssetCard({ asset }: AssetCardProps) {
   const IconComponent = asset.icon;
   const { toast } = useToast(); 
   const isMobile = useIsMobile();
+  const [isAlertActive, setIsAlertActive] = useState(false);
 
   const handleSetAlert = () => {
+    setIsAlertActive(!isAlertActive); // Toggle alert state
     const toastDescription = isMobile 
-      ? `Alert for ${asset.name} noted.`
-      : `Price drop alert for ${asset.name} will be monitored. (Full notification feature is under development)`;
+      ? `Alert for ${asset.name} ${!isAlertActive ? 'set' : 'removed'}.`
+      : `Price alert for ${asset.name} ${!isAlertActive ? 'set' : 'removed'}. (Monitoring in development)`;
     
     toast({
-      title: "Alert Noted",
+      title: `Alert ${!isAlertActive ? 'Set' : 'Removed'}`,
       description: toastDescription,
     });
   };
@@ -65,7 +69,7 @@ export default function AssetCard({ asset }: AssetCardProps) {
               <Link href={`/asset/${asset.id}`}>View Details</Link>
             </Button>
             <Button variant="ghost" size="icon" title="Set Alert" onClick={handleSetAlert}>
-              <BellRing className="h-4 w-4 text-muted-foreground hover:text-primary" />
+              <BellRing className={cn("h-4 w-4", isAlertActive ? "text-primary" : "text-muted-foreground hover:text-primary")} />
             </Button>
           </div>
         </div>
@@ -73,3 +77,4 @@ export default function AssetCard({ asset }: AssetCardProps) {
     </Card>
   );
 }
+
