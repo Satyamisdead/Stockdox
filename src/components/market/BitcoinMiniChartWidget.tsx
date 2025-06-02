@@ -16,13 +16,13 @@ const bitcoinChartData = [
 
 export default function BitcoinMiniChartWidget() {
   return (
-    <Card className="border-primary/50 bg-black/40 backdrop-blur-sm shadow-inner w-56 h-56 flex flex-col">
-      <CardHeader className="p-3 shrink-0">
-        <CardTitle className="text-sm font-medium text-white">Bitcoin (BTC) Snapshot</CardTitle>
+    <Card className="border-primary/50 bg-black/40 backdrop-blur-sm shadow-inner w-40 h-40 flex flex-col">
+      <CardHeader className="p-2 shrink-0">
+        <CardTitle className="text-xs font-medium text-white">Bitcoin (BTC)</CardTitle>
       </CardHeader>
-      <CardContent className="p-3 pt-0 flex flex-col flex-1">
+      <CardContent className="p-2 pt-0 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-1 shrink-0">
-          <p className="text-lg font-semibold text-white">$43,000.50</p> {/* Placeholder price */}
+          <p className="text-base font-semibold text-white">$43k</p> {/* Placeholder price, shortened */}
           <p className="text-xs text-yellow-400">+1.5%</p> {/* Placeholder change, yellow accent */}
         </div>
         <div className="flex-1 w-full">
@@ -33,21 +33,22 @@ export default function BitcoinMiniChartWidget() {
                   backgroundColor: 'rgba(10, 10, 10, 0.85)',
                   borderColor: 'hsl(var(--primary))',
                   color: '#FFFFFF',
-                  fontSize: '12px',
-                  borderRadius: '0.375rem',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                  fontSize: '10px', // Smaller tooltip font
+                  borderRadius: '0.25rem', // Smaller border radius
+                  padding: '4px 8px', // Reduced padding
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
                 }}
                 itemStyle={{ color: '#FFFFFF' }}
                 labelStyle={{ color: '#BBBBBB' }}
-                cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5 }}
+                cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1 }}
               />
-              <YAxis domain={['dataMin - 500', 'dataMax + 500']} hide />
+              <YAxis domain={['dataMin - 1000', 'dataMax + 1000']} hide />
               <Line
                 type="monotone"
                 dataKey="price"
                 stroke="hsl(var(--primary))" // Yellow color from theme
-                strokeWidth={2}
-                dot={{ r: 2, fill: 'hsl(var(--primary))', strokeWidth: 0 }}
+                strokeWidth={1.5} // Thinner line
+                dot={{ r: 1, fill: 'hsl(var(--primary))', strokeWidth: 0 }} // Smaller dots
               />
             </LineChart>
           </ResponsiveContainer>

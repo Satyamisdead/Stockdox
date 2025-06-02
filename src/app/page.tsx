@@ -61,10 +61,10 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <section className="space-y-6">
         <div className="sticky top-[calc(theme(spacing.16)_-_1px)] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 z-40 -mx-container-padding px-container-padding border-b border-border/40 shadow-sm">
-          <div className="container mx-auto flex flex-col items-center gap-4">
+          <div className="container mx-auto flex flex-col items-start gap-4"> {/* Changed items-center to items-start */}
             
             {/* Bitcoin Widget */}
-            <div className="w-full md:max-w-2xl flex justify-center">
+            <div className="w-full md:max-w-2xl flex justify-start"> {/* Changed justify-center to justify-start */}
               <BitcoinMiniChartWidget />
             </div>
 
