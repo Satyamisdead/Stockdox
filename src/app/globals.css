@@ -44,10 +44,10 @@ body {
   }
 
   .dark {
-    --background: 0 0% 0%; /* Dark Black */
+    --background: 0 0% 0%; /* Black */
     --foreground: 0 0% 82.7%; /* Light Grey (#D3D3D3) */
 
-    --card: 0 0% 5%; /* Very Dark Grey */
+    --card: 0 0% 5%; /* Very Dark Grey, slightly off-black */
     --card-foreground: 0 0% 82.7%; /* Light Grey */
 
     --popover: 0 0% 5%; /* Very Dark Grey */
