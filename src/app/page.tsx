@@ -95,23 +95,13 @@ export default function DashboardPage() {
             }
           }
           
-          if (userAlertPreferences.includes(asset.id) && newPrice < oldPrice && asset.type !== 'crypto') { // Added crypto check to avoid alerts on stablecoin minor changes for now
+          // Alert for stock price drops if oldPrice is available and user has alerts set
+          if (userAlertPreferences.includes(asset.id) && newPrice < oldPrice && asset.type === 'stock' && oldPrice > 0) {
             console.log(`Alert: ${asset.name} price dropped to $${newPrice.toFixed(2)}`);
             if (audioRef.current) {
               audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
             }
           }
-          // Specific alert for crypto, if oldPrice is available
-          if (userAlertPreferences.includes(asset.id) && newPrice < oldPrice && asset.type === 'crypto' && oldPrice > 0) {
-              // Avoid alerts if price is already very low or for minor stablecoin fluctuations
-             if (newPrice / oldPrice < 0.995 && asset.symbol !== 'USDT' && asset.symbol !== 'USDC' && asset.symbol !== 'DAI' && asset.symbol !== 'TUSD' && asset.symbol !== 'USDP') { 
-                console.log(`Alert: ${asset.name} price dropped to $${newPrice.toFixed(asset.symbol === 'BTC' || asset.symbol === 'ETH' ? 8 : 4)}`);
-                if (audioRef.current) {
-                    audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
-                }
-            }
-          }
-
 
           return {
             ...asset,
