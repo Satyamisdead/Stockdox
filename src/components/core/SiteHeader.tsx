@@ -33,14 +33,8 @@ export default function SiteHeader() {
   };
 
   if (isMobile) {
-    // Render a minimal header for mobile
-    return (
-      <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 max-w-screen-2xl items-center">
-          <Logo size="sm" />
-        </div>
-      </header>
-    );
+    // Render nothing for mobile to rely on MobileBottomNav
+    return null;
   }
 
   // Render full header for desktop

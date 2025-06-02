@@ -41,11 +41,11 @@ export default function RootLayout({
         <FirebaseProvider>
           <SiteHeader />
           {/* Adjusted main content padding: 
-              Mobile: pt for 56px (3.5rem) header + 32px (2rem) space = 88px (5.5rem)
-              Desktop: pt remains 32px (2rem) as header is taller and layout differs 
+              Mobile: pt-8 as SiteHeader is null on mobile (no header takes up space)
+              Desktop: pt-8 as header is taller and layout differs 
               Bottom padding accounts for mobile nav (pb-20 = 5rem) or standard footer (md:pb-8 = 2rem)
           */}
-          <main className="flex-grow container mx-auto px-4 pt-[5.5rem] md:pt-8 pb-20 md:pb-8">
+          <main className="flex-grow container mx-auto px-4 pt-8 md:pt-8 pb-20 md:pb-8">
             {children}
           </main>
           <SiteFooter />
