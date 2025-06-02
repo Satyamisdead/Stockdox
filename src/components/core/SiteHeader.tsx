@@ -18,12 +18,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useIsMobile } from '@/hooks/use-mobile'; // Added import
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function SiteHeader() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const isMobile = useIsMobile(); // Added hook
+  const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
     if (auth) {
@@ -32,10 +32,18 @@ export default function SiteHeader() {
     }
   };
 
-  if (isMobile) { // Conditionally render header
-    return null;
+  if (isMobile) {
+    // Render a minimal header for mobile
+    return (
+      <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 max-w-screen-2xl items-center">
+          <Logo size="sm" />
+        </div>
+      </header>
+    );
   }
 
+  // Render full header for desktop
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
