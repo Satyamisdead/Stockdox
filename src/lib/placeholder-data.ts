@@ -2,7 +2,7 @@ import type { Asset, NewsArticle } from '@/types';
 import { 
   Apple, Briefcase, Search, Cpu, ShoppingCart, Store, Landmark, CreditCard, 
   ShoppingBag, HeartPulse, Home, GlassWater, Activity, Cloud, Network, 
-  Laptop, Utensils, Fuel, Users, Car, DollarSign 
+  Laptop, Utensils, Fuel, Users, Car, DollarSign, Castle, Pill, Phone, Tractor, Plane, Palette // Added Palette as a generic icon
 } from 'lucide-react';
 
 export const placeholderAssets: Asset[] = [
@@ -266,6 +266,97 @@ export const placeholderAssets: Asset[] = [
     dataAiHint: 'tesla logo',
     icon: Car
   },
+  { 
+    id: 'axp', 
+    name: 'American Express Company', 
+    symbol: 'AXP', 
+    type: 'stock', 
+    price: 230.70, 
+    change24h: 0.85, 
+    marketCap: 170e9, 
+    volume24h: 3.5e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'american express',
+    icon: CreditCard // Reusing, appropriate
+  },
+  { 
+    id: 'dis', 
+    name: 'The Walt Disney Company', 
+    symbol: 'DIS', 
+    type: 'stock', 
+    price: 105.20, 
+    change24h: -0.50, 
+    marketCap: 190e9, 
+    volume24h: 9e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'disney logo',
+    icon: Castle 
+  },
+  { 
+    id: 'gs', 
+    name: 'The Goldman Sachs Group, Inc.', 
+    symbol: 'GS', 
+    type: 'stock', 
+    price: 450.90, 
+    change24h: 1.15, 
+    marketCap: 150e9, 
+    volume24h: 2.5e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'goldman sachs',
+    icon: Landmark // Reusing, appropriate
+  },
+  { 
+    id: 'mrk', 
+    name: 'Merck & Co., Inc.', 
+    symbol: 'MRK', 
+    type: 'stock', 
+    price: 130.60, 
+    change24h: 0.25, 
+    marketCap: 330e9, 
+    volume24h: 6e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'merck logo',
+    icon: Pill
+  },
+  { 
+    id: 'vz', 
+    name: 'Verizon Communications Inc.', 
+    symbol: 'VZ', 
+    type: 'stock', 
+    price: 40.10, 
+    change24h: -0.15, 
+    marketCap: 170e9, 
+    volume24h: 18e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'verizon logo',
+    icon: Phone
+  },
+  { 
+    id: 'cat', 
+    name: 'Caterpillar Inc.', 
+    symbol: 'CAT', 
+    type: 'stock', 
+    price: 330.40, 
+    change24h: 1.80, 
+    marketCap: 170e9, 
+    volume24h: 2e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'caterpillar logo',
+    icon: Tractor
+  },
+  { 
+    id: 'ba', 
+    name: 'The Boeing Company', 
+    symbol: 'BA', 
+    type: 'stock', 
+    price: 180.00, 
+    change24h: -1.20, 
+    marketCap: 110e9, 
+    volume24h: 7e6, 
+    logoUrl: 'https://placehold.co/40x40.png',
+    dataAiHint: 'boeing logo',
+    icon: Plane
+  },
 ];
 
 export const placeholderNews: NewsArticle[] = [
@@ -277,3 +368,4 @@ export const placeholderNews: NewsArticle[] = [
 export function getAssetById(id: string): Asset | undefined {
   return placeholderAssets.find(asset => asset.id === id);
 }
+
