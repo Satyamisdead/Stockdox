@@ -1,4 +1,6 @@
 
+"use client";
+
 import type { Asset } from "@/types";
 import Link from "next/link";
 import Image from "next/image";
@@ -7,7 +9,7 @@ import PriceDisplay from "./PriceDisplay";
 import { Button } from "@/components/ui/button";
 import { BellRing } from "lucide-react"; 
 import { useToast } from "@/hooks/use-toast";
-// Removed BitcoinMiniChartWidget import
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type AssetCardProps = {
   asset: Asset;
@@ -16,11 +18,16 @@ type AssetCardProps = {
 export default function AssetCard({ asset }: AssetCardProps) {
   const IconComponent = asset.icon;
   const { toast } = useToast(); 
+  const isMobile = useIsMobile();
 
   const handleSetAlert = () => {
+    const toastDescription = isMobile 
+      ? `Alert for ${asset.name} noted.`
+      : `Price drop alert for ${asset.name} will be monitored. (Full notification feature is under development)`;
+    
     toast({
       title: "Alert Noted",
-      description: `Price drop alert for ${asset.name} will be monitored. (Full notification feature is under development)`,
+      description: toastDescription,
     });
   };
 
@@ -62,7 +69,6 @@ export default function AssetCard({ asset }: AssetCardProps) {
             </Button>
           </div>
         </div>
-        {/* Removed BitcoinMiniChartWidget from here */}
       </CardContent>
     </Card>
   );
