@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -17,10 +18,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useIsMobile } from '@/hooks/use-mobile'; // Added import
 
 export default function SiteHeader() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const isMobile = useIsMobile(); // Added hook
 
   const handleSignOut = async () => {
     if (auth) {
@@ -28,6 +31,10 @@ export default function SiteHeader() {
       router.push('/');
     }
   };
+
+  if (isMobile) { // Conditionally render header
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
