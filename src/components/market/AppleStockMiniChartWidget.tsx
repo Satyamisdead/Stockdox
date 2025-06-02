@@ -44,24 +44,24 @@ export default function AppleStockMiniChartWidget({ size = 'md', currentPrice, c
   return (
     <Link href="/asset/aapl" className="block">
       <Card className={cn(
-        "border-sky-500/50 bg-black/40 backdrop-blur-sm shadow-inner flex flex-col cursor-pointer hover:border-sky-500 transition-colors",
-        isSmall ? "w-32 h-32" : "w-40 h-40"
+        "border-sky-500/50 bg-black/40 backdrop-blur-sm shadow-inner flex flex-col cursor-pointer hover:border-sky-500 transition-colors border-2",
+        isSmall ? "w-28 h-28" : "w-36 h-36"
       )}>
-        <CardHeader className="p-2 shrink-0">
+        <CardHeader className={cn("shrink-0", isSmall ? "p-1.5" : "p-2")}>
           <CardTitle className={cn(
             "font-medium text-white",
-            isSmall ? "text-[10px]" : "text-xs"
+            isSmall ? "text-[9px]" : "text-xs"
           )}>Apple (AAPL)</CardTitle>
         </CardHeader>
-        <CardContent className="p-2 pt-0 flex flex-col flex-1">
-          <div className="flex items-center justify-between mb-1 shrink-0">
+        <CardContent className={cn("flex flex-col flex-1 pt-0", isSmall ? "p-1.5" : "p-2")}>
+          <div className="flex items-center justify-between mb-0.5 shrink-0">
             <p className={cn(
               "font-semibold text-white",
-              isSmall ? "text-sm" : "text-base"
+              isSmall ? "text-xs" : "text-base"
             )}>{displayPrice}</p>
             <p className={cn(
               isPositive ? 'text-sky-400' : 'text-red-400',
-              isSmall ? "text-[10px]" : "text-xs"
+              isSmall ? "text-[9px]" : "text-xs"
             )}>{displayChange}</p>
           </div>
           <div className="flex-1 w-full">
@@ -86,8 +86,8 @@ export default function AppleStockMiniChartWidget({ size = 'md', currentPrice, c
                   type="monotone"
                   dataKey="price"
                   stroke="hsl(var(--chart-2))"
-                  strokeWidth={isSmall ? 1 : 1.5}
-                  dot={{ r: isSmall ? 0.5 : 1, fill: 'hsl(var(--chart-2))', strokeWidth: 0 }}
+                  strokeWidth={isSmall ? 1.5 : 2}
+                  dot={{ r: isSmall ? 1 : 1.5, fill: 'hsl(var(--chart-2))', strokeWidth: 0 }}
                 />
               </LineChart>
             </ResponsiveContainer>
