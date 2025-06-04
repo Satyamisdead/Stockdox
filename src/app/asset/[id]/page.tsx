@@ -34,8 +34,8 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
       (article.summary && (article.summary.toLowerCase().includes(searchTerm) || article.summary.toLowerCase().includes(symbolTerm)))
     );
     
+    // If specific news found, return up to 3. Otherwise, show up to 3 general news.
     if (filtered.length > 0) return filtered.slice(0,3);
-    // Fallback: if no specific news, show a few general news items.
     return placeholderNews.slice(0, 3);
   }, [asset]);
 
@@ -71,9 +71,9 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
 
   return (
     <div className="space-y-8">
-      <Button variant="outline" onClick={() => router.back()} className="mb-6">
+      <Button variant="outline" onClick={() => router.push('/')} className="mb-6">
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Assets
+        Back to Dashboard
       </Button>
 
       <section className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -147,4 +147,3 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
-

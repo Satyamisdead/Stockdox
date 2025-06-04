@@ -32,8 +32,20 @@ export default function NewsReaderPage() {
       setAsset(foundAsset);
       setArticle(foundArticle);
       setIsLoading(false);
+
+      if (!foundArticle) { // If article not found, redirect to notFound
+        setIsLoading(false); // Ensure loading stops
+        notFound();
+        return;
+      }
+      // Asset is useful for context (like button text), but not strictly required for the page to function if article exists.
+      // If asset is not found but article is, we can still show the article.
+      // However, if assetId is crucial for back navigation, we might reconsider this.
+      // For now, if article exists, we proceed. If asset also doesn't exist, button text will fallback.
+
     } else {
       setIsLoading(false); // Mark loading as false if params are missing
+      notFound(); // If IDs are missing, it's a notFound scenario
     }
   }, [assetId, articleId]);
 
@@ -41,16 +53,24 @@ export default function NewsReaderPage() {
     return <Loading />;
   }
 
-  if (!article) { // Asset is not strictly needed if we navigate to dashboard, but article is
-    notFound();
-    return null; 
+  // If article is not found after attempting to load, trigger notFound
+  // This check is now more robust due to the useEffect update
+  if (!article) { 
+    // notFound() should have been called in useEffect if article was not found
+    // This is a fallback, or if isLoading was prematurely set to false.
+    return <Loading />; // Or show a specific "Article not found" message before redirecting
   }
 
   return (
     <div className="space-y-6">
-      <Button variant="outline" onClick={() => router.push('/')} className="mb-4">
+      <Button 
+        variant="outline" 
+        onClick={() => router.push(`/asset/${assetId}`)} 
+        className="mb-4"
+        disabled={!assetId} // Disable if assetId somehow isn't available
+      >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Dashboard
+        Back to {asset?.name || 'Asset'} Details
       </Button>
 
       <Card className="shadow-lg">
@@ -82,4 +102,3 @@ export default function NewsReaderPage() {
     </div>
   );
 }
-
