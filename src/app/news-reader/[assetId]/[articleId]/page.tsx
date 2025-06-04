@@ -41,18 +41,16 @@ export default function NewsReaderPage() {
     return <Loading />;
   }
 
-  if (!asset || !article) {
-    // Use Next.js notFound to render the nearest not-found.js page
-    // This is more appropriate than a custom message here for missing core data.
+  if (!article) { // Asset is not strictly needed if we navigate to dashboard, but article is
     notFound();
-    return null; // Keep TypeScript happy, notFound() will throw an error.
+    return null; 
   }
 
   return (
     <div className="space-y-6">
-      <Button variant="outline" onClick={() => router.push(`/asset/${asset.id}`)} className="mb-4">
+      <Button variant="outline" onClick={() => router.push('/')} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to {asset.name}
+        Back to Dashboard
       </Button>
 
       <Card className="shadow-lg">
