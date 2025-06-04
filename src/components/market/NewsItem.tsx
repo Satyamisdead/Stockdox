@@ -2,15 +2,16 @@
 import type { NewsArticle } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, BookOpen } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
-
+import Link from "next/link";
 
 type NewsItemProps = {
   article: NewsArticle;
+  assetId: string; // To help construct the link to the news reader
 };
 
-export default function NewsItem({ article }: NewsItemProps) {
+export default function NewsItem({ article, assetId }: NewsItemProps) {
   return (
     <Card className="flex flex-col h-full">
       <CardHeader>
@@ -28,12 +29,12 @@ export default function NewsItem({ article }: NewsItemProps) {
       )}
       <CardFooter>
         <Button variant="outline" size="sm" asChild>
-          {/* Removed target="_blank" and rel="noopener noreferrer" to open in same tab */}
-          <a href={article.url} className="gap-2">
-            Read More <ExternalLink className="h-4 w-4" />
-          </a>
+          <Link href={`/news-reader/${assetId}/${encodeURIComponent(article.id)}`} className="gap-2">
+            Read More <BookOpen className="h-4 w-4" />
+          </Link>
         </Button>
       </CardFooter>
     </Card>
   );
 }
+

@@ -33,10 +33,10 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
       article.title.toLowerCase().includes(symbolTerm) ||
       (article.summary && (article.summary.toLowerCase().includes(searchTerm) || article.summary.toLowerCase().includes(symbolTerm)))
     );
-    // If no specific news, return a small slice of general news or an empty array.
-    // For this mock, we'll return up to 3 of the filtered, or default to first 3 general if none specifically match.
+    
     if (filtered.length > 0) return filtered.slice(0,3);
-    return placeholderNews.slice(0,3); // Fallback to general news if no specific match
+    // Fallback: if no specific news, show a few general news items.
+    return placeholderNews.slice(0, 3);
   }, [asset]);
 
   const IconComponent = asset.icon;
@@ -137,7 +137,7 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
         {relatedNews.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {relatedNews.map((article) => (
-              <NewsItem key={article.id} article={article} />
+              <NewsItem key={article.id} article={article} assetId={asset.id} />
             ))}
           </div>
         ) : (
@@ -147,3 +147,4 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+

@@ -1198,11 +1198,23 @@ export const placeholderAssets: Asset[] = [
 ];
 
 export const placeholderNews: NewsArticle[] = [
-  { id: 'news1', title: 'Market Hits Record Highs Amidst Tech Rally', source: 'Finance News Today', publishedAt: new Date(Date.now() - 3600000).toISOString(), url: '#', summary: 'Major indices soared today, largely driven by strong earnings reports from leading technology companies.' },
-  { id: 'news2', title: 'Interest Rate Speculation Shakes Bond Markets', source: 'Global Economic Review', publishedAt: new Date(Date.now() - 7200000).toISOString(), url: '#', summary: 'Bond yields saw increased volatility as traders reacted to comments from central bank officials.' },
-  { id: 'news3', title: 'Federal Reserve Signals Potential Interest Rate Adjustments', source: 'Economic Times', publishedAt: new Date(Date.now() - 10800000).toISOString(), url: '#', summary: 'The Federal Reserve hinted at possible changes to interest rates in the coming months, depending on inflation data.' },
+  { id: 'news-001', title: 'Market Hits Record Highs Amidst Tech Rally', source: 'Finance News Today', publishedAt: new Date(Date.now() - 3600000 * 1).toISOString(), url: 'https://example.com/news1', summary: 'Major indices soared today, largely driven by strong earnings reports from leading technology companies like Apple and Microsoft.' },
+  { id: 'news-002', title: 'Interest Rate Speculation Shakes Bond Markets', source: 'Global Economic Review', publishedAt: new Date(Date.now() - 3600000 * 2).toISOString(), url: 'https://example.com/news2', summary: 'Bond yields saw increased volatility as traders reacted to comments from central bank officials regarding future monetary policy.' },
+  { id: 'news-003', title: 'Federal Reserve Signals Potential Interest Rate Adjustments for GOOGL', source: 'Economic Times', publishedAt: new Date(Date.now() - 3600000 * 3).toISOString(), url: 'https://example.com/news3', summary: 'The Federal Reserve hinted at possible changes to interest rates in the coming months, a move that could impact Alphabet Inc. (GOOGL) and other tech giants.' },
+  { id: 'news-004', title: 'Bitcoin Price Surges Past $65,000: What\'s Next?', source: 'Crypto Daily', publishedAt: new Date(Date.now() - 3600000 * 1.5).toISOString(), url: 'https://example.com/news4', summary: 'Bitcoin (BTC) saw a significant price increase today, breaking the $65,000 barrier. Analysts discuss potential resistance levels.' },
+  { id: 'news-005', title: 'Ethereum Upgrade "Dencun" Successfully Implemented', source: 'ETH News Hub', publishedAt: new Date(Date.now() - 3600000 * 4).toISOString(), url: 'https://example.com/news5', summary: 'The Dencun upgrade for Ethereum (ETH) has gone live, promising lower transaction fees for Layer 2 solutions.' },
+  { id: 'news-006', title: 'Nvidia (NVDA) Stock Continues Upward Trend on AI Chip Demand', source: 'Tech Stock Observer', publishedAt: new Date(Date.now() - 3600000 * 0.5).toISOString(), url: 'https://example.com/news6', summary: 'Nvidia Corp. (NVDA) shares climbed again as demand for its AI chips remains robust across various sectors.' },
+  { id: 'news-007', title: 'Solana (SOL) Ecosystem Sees Rapid Growth in Q1', source: 'Blockchain Weekly', publishedAt: new Date(Date.now() - 3600000 * 5).toISOString(), url: 'https://example.com/news7', summary: 'The Solana blockchain platform (SOL) reported significant growth in decentralized applications and user activity in the first quarter.' },
+  { id: 'news-008', title: 'Is Apple (AAPL) Planning a New Product Line?', source: 'Gadget Sphere', publishedAt: new Date(Date.now() - 3600000 * 2.5).toISOString(), url: 'https://example.com/news8', summary: 'Rumors are circulating about a potential new product category from Apple Inc. (AAPL), with speculation focusing on AR/VR devices.' },
+  { id: 'news-009', title: 'SEC Chair Comments on Cryptocurrency Regulation', source: 'Financial Regulation Today', publishedAt: new Date(Date.now() - 3600000 * 6).toISOString(), url: 'https://example.com/news9', summary: 'The SEC Chair provided insights into the agency\'s approach to regulating cryptocurrencies, impacting assets like Bitcoin and Ethereum.' },
+  { id: 'news-010', title: 'Tesla (TSLA) Announces New Gigafactory Expansion', source: 'EV World News', publishedAt: new Date(Date.now() - 3600000 * 3.5).toISOString(), url: 'https://example.com/news10', summary: 'Tesla, Inc. (TSLA) revealed plans to expand its Gigafactory network, aiming to boost electric vehicle production capacity.' },
 ];
 
 export function getAssetById(id: string): Asset | undefined {
   return placeholderAssets.find(asset => asset.id === id);
 }
+
+export function getNewsArticleById(id: string): NewsArticle | undefined {
+  return placeholderNews.find(article => article.id === id);
+}
+
