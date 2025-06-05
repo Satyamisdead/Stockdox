@@ -250,7 +250,7 @@ export default function GamesPage() {
     <div className="flex flex-col items-center justify-center py-6 sm:py-10 space-y-4">
       <Card className="w-full max-w-[640px] shadow-xl bg-card border border-border">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xl sm:text-2xl font-headline text-primary">Brick Breaker</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl font-headline text-primary">Take a Break</CardTitle>
           <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm">
             <div className="flex items-center text-foreground">
                 <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Score: {score}
