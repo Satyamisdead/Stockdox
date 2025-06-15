@@ -9,7 +9,7 @@ import MobileBottomNav from '@/components/core/MobileBottomNav';
 import InstallPWAHandler from '@/components/core/InstallPWAHandler';
 import ChatbotLauncher from '@/components/chatbot/ChatbotLauncher';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // Fallback for local dev
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9002'; // Fallback for local dev
 
 export const metadata: Metadata = {
   title: 'Stockdox',
@@ -39,12 +39,12 @@ export const metadata: Metadata = {
     images: ['/og-image.png'], // Path relative to the public folder
     // creator: '@yourtwitterhandle', // Optional: Add your Twitter handle
   },
-  icons: { // Consolidate favicon links here
+  icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any', type: 'image/x-icon' },
       { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
-    apple: '/apple-touch-icon.png', // For apple-touch-icon
+    apple: '/apple-touch-icon.png',
   },
 };
 
@@ -75,15 +75,6 @@ export default function RootLayout({
         {/* Viewport settings for responsiveness */}
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-        {/* Favicon links are now handled by the metadata object's 'icons' property, 
-            but you can keep specific ones here if Next.js metadata doesn't cover a niche case.
-            The ones in the metadata object should be sufficient for most modern browsers & PWA.
-        */}
-        {/* 
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" /> 
-        */}
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col bg-background text-foreground">
         <FirebaseProvider>
