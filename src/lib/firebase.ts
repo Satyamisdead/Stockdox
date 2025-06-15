@@ -1,10 +1,10 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, EmailAuthProvider, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore"; // Added Firestore import
+import { getFirestore, type Firestore } from "firebase/firestore";
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY, // Changed to use environment variable
+const firebaseConfigValues = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
@@ -12,66 +12,78 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp | undefined;
-let auth: Auth | undefined;
-let db: Firestore | undefined; // Added Firestore instance
+let app: FirebaseApp | undefined = undefined;
+let auth: Auth | undefined = undefined;
+let db: Firestore | undefined = undefined;
+let googleProvider: GoogleAuthProvider | undefined = undefined;
+const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
 
-if (typeof window !== "undefined") { 
-  
-  if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+if (typeof window !== "undefined") {
+  console.log("Firebase Service: Attempting client-side initialization.");
+
+  const missingKeys = Object.entries(firebaseConfigValues)
+    .filter(([key, value]) => !value || typeof value !== 'string')
+    .map(([key]) => key);
+
+  if (missingKeys.length > 0) {
     console.error(
-      "Firebase Service: NEXT_PUBLIC_FIREBASE_API_KEY is missing. Firebase will not be initialized. " +
-      "Please ensure it is set in your .env.local file."
+      "Firebase Service: Firebase configuration is incomplete. The following NEXT_PUBLIC_FIREBASE_ environment variables are missing or invalid in .env.local: " +
+      missingKeys.join(", ") +
+      ". Firebase will not be initialized."
     );
   } else {
-    console.log(
-      "Firebase Service: Attempting to initialize with API Key from environment variable."
-    );
+    console.log("Firebase Service: All Firebase configuration values found in environment variables.");
+    
+    // Type assertion after check, as we know all values are strings
+    const completeFirebaseConfig = firebaseConfigValues as { [key: string]: string };
 
     if (!getApps().length) {
       try {
-        app = initializeApp(firebaseConfig);
-        console.log("Firebase Service: initializeApp successful.");
+        console.log("Firebase Service: Calling initializeApp...");
+        app = initializeApp(completeFirebaseConfig);
+        console.log("Firebase Service: initializeApp successful. Project ID:", app.options.projectId);
       } catch (initError) {
         console.error("Firebase Service: initializeApp failed:", initError);
+        app = undefined; // Ensure app is undefined on failure
       }
     } else {
       app = getApp();
-      console.log("Firebase Service: getApp() successful (already initialized).");
+      console.log("Firebase Service: getApp() successful (already initialized). Project ID:", app.options.projectId);
     }
 
     if (app) {
       try {
+        console.log("Firebase Service: Calling getAuth...");
         auth = getAuth(app);
         console.log("Firebase Service: getAuth successful.");
+        googleProvider = new GoogleAuthProvider(); // Initialize provider only if auth is successful
       } catch (authError) {
         console.error("Firebase Service: getAuth failed:", authError);
         console.error(
           "Firebase Service: This often indicates an issue with the Firebase configuration (e.g., invalid API key or authDomain) " +
-          "even if initializeApp did not throw an immediate error. " +
-          "Please double-check your project settings in the Firebase console and your .env.local file. " +
-          "Ensure the Firebase Authentication API is enabled in your Firebase project console."
+          "or that the Firebase Authentication API is not enabled in your Firebase project console. " +
+          "Please double-check your project settings and .env.local file."
         );
+        auth = undefined; // Ensure auth is undefined on failure
+        googleProvider = undefined;
       }
+
       try {
-        db = getFirestore(app); // Initialize Firestore
+        console.log("Firebase Service: Calling getFirestore...");
+        db = getFirestore(app);
         console.log("Firebase Service: getFirestore successful.");
       } catch (firestoreError) {
         console.error("Firebase Service: getFirestore failed:", firestoreError);
+        db = undefined; // Ensure db is undefined on failure
       }
-    } else { 
+    } else {
       console.error(
-          "Firebase Service: Firebase app initialization failed. Auth and Firestore cannot be initialized. " +
-          "Check for previous `initializeApp` errors in the console."
+        "Firebase Service: Firebase app initialization failed. Auth and Firestore cannot be initialized."
       );
     }
   }
 } else {
-  console.log("Firebase Service: Not on client, skipping Firebase initialization.");
+  console.log("Firebase Service: Not on client-side, skipping Firebase initialization.");
 }
-
-const googleProvider = typeof window !== "undefined" && auth ? new GoogleAuthProvider() : undefined;
-const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
-
 
 export { app, auth, db, googleProvider, emailProvider };
