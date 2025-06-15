@@ -86,8 +86,8 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
             "mainSeriesProperties.candleStyle.borderDownColor": "#AAAAAA",
             "mainSeriesProperties.candleStyle.wickUpColor": "#FFD700",
             "mainSeriesProperties.candleStyle.wickDownColor": "#AAAAAA",
-            "paneProperties.backgroundType": "solid", // Or "gradient"
-            "paneProperties.background": "hsl(var(--card))", // Match card background
+            "paneProperties.backgroundType": "solid", 
+            "paneProperties.background": "hsl(var(--card))", 
             "paneProperties.vertGridProperties.color": "hsla(var(--border), 0.5)",
             "paneProperties.horzGridProperties.color": "hsla(var(--border), 0.5)",
             "scalesProperties.textColor": "hsl(var(--card-foreground))",
@@ -117,21 +117,21 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
     }
 
     return () => {
-      // Clean up the widget if the component unmounts, though TradingView might handle this internally too
-      if (chartContainerRef.current) {
-        // chartContainerRef.current.innerHTML = ''; // This can cause issues if script re-runs too quickly
-      }
+      // Clean up the widget if the component unmounts
+      // if (chartContainerRef.current) {
+      // chartContainerRef.current.innerHTML = ''; // This can cause issues if script re-runs too quickly
+      // }
     };
 
   }, [symbol, assetType, exchange, name]);
 
   return (
-    <Card className="h-[400px] md:h-[500px] w-full flex flex-col shadow-lg"> {/* Slightly increased height for better chart view */}
+    <Card className="h-[350px] md:h-[450px] w-full flex flex-col shadow-lg">
       <CardHeader>
         <CardTitle className="font-headline">{name} ({symbol}) Chart</CardTitle>
         <CardDescription>Interactive chart powered by TradingView</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow pb-4 pr-2"> {/* Ensure padding doesn't shrink chart area too much */}
+      <CardContent className="flex-grow pb-4 pr-2"> 
         <div 
           id={`tradingview_chart_widget_${symbol.replace(/[^a-zA-Z0-9]/g, '')}`} 
           ref={chartContainerRef} 
