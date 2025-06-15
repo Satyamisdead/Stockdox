@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Info, DollarSign, Bitcoin, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService";
-import Loading from "@/app/loading"; // Import loading component
+import Loading from "@/app/loading"; 
+import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton
 
 export default function AssetDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -31,10 +32,10 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
 
     const fetchData = async () => {
       setIsLoading(true);
-      const placeholderAsset = getPlaceholderAssetById(assetId); // Get type from placeholder
+      const placeholderAsset = getPlaceholderAssetById(assetId); 
       
       if (!placeholderAsset) {
-        setAsset(null); // Mark as not found
+        setAsset(null); 
         setIsLoading(false);
         return;
       }
@@ -59,7 +60,6 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
           logoUrl: profile.logo || placeholderAsset.logoUrl,
           sector: profile.finnhubIndustry || placeholderAsset.sector,
           exchange: profile.exchange,
-          // Retain other details from placeholder if not directly available from these Finnhub calls
           volume24h: placeholderAsset.volume24h,
           peRatio: placeholderAsset.peRatio,
           epsDilutedTTM: placeholderAsset.epsDilutedTTM,
@@ -73,9 +73,8 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
         };
         setAsset(fetchedAssetData);
       } else {
-        // Fallback to placeholder if API fetch fails, or show limited data
         console.warn(`Could not fetch full Finnhub data for ${placeholderAsset.symbol}. Using placeholder data.`);
-        setAsset(placeholderAsset); // Use the placeholder data as a fallback
+        setAsset(placeholderAsset); 
       }
       setIsLoading(false);
     };
@@ -104,12 +103,12 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
     return <Loading />;
   }
 
-  if (asset === null) { // Explicitly checking for null which we set for "not found"
+  if (asset === null) { 
     notFound();
   }
   
-  if (!asset) { // Fallback if asset is still undefined for some reason (should be caught by isLoading or null check)
-      return <Loading />; // Or a more specific error
+  if (!asset) { 
+      return <Loading />; 
   }
 
 
@@ -144,7 +143,7 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
   } else if (asset.type === 'crypto') {
      let pricePrecision = 2;
      if (asset.price !== undefined) {
-        if (asset.symbol === 'BTC' || asset.symbol === 'ETH') pricePrecision = 8;
+        if (asset.symbol === 'BTC' || asset.symbol === 'ETH') pricePrecision = 2; // For TradingView consistency, less precision can be better. TV handles it.
         else if (asset.price < 0.01) pricePrecision = 6;
         else if (asset.price < 1) pricePrecision = 4;
      }
@@ -161,7 +160,7 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
       { label: "Circulating Supply", value: asset.circulatingSupply || "N/A" },
       { label: "All-Time High", value: asset.allTimeHigh || "N/A" },
       { label: "Asset Type", value: "Cryptocurrency" },
-      { label: "Exchange", value: asset.exchange || "N/A" },
+      { label: "Exchange", value: asset.exchange || "N/A" }, // Exchange here is from Finnhub, may differ from TradingView's
     ];
   }
 
@@ -183,7 +182,7 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
               height={60} 
               className="rounded-full shadow-lg"
               data-ai-hint={asset.dataAiHint || asset.name.toLowerCase().split(" ")[0]}
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/60x60.png'; (e.target as HTMLImageElement).dataset.aiHint = 'default logo'; }} // Fallback to placeholder on error
             />
           ) : typeof asset.icon === 'string' && asset.icon.length === 1 ? (
              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-2xl font-bold text-primary">
@@ -206,7 +205,12 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <AssetChart assetName={asset.name} />
+           <AssetChart 
+            symbol={asset.symbol} 
+            assetType={asset.type} 
+            exchange={asset.exchange} 
+            name={asset.name} 
+          />
         </div>
         <div className="space-y-4">
           <Card>
@@ -218,13 +222,13 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
                 metric.value !== "N/A" && metric.value !== undefined && metric.value !== null ? (
                   <div key={metric.label} className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">{metric.label}:</span>
-                    <span className="font-medium text-foreground">{metric.value}</span>
+                    <span className="font-medium text-foreground">{String(metric.value)}</span>
                   </div>
                 ) : null
               ))}
                <div className="pt-2 text-xs text-muted-foreground/70 flex items-start gap-1.5">
                 <Info size={14} className="mt-0.5 shrink-0"/> 
-                <span>Financial data is sourced from Finnhub & placeholders. Values may not be fully comprehensive for all assets.</span>
+                <span>Financial data is sourced from Finnhub & placeholders. Values may not be fully comprehensive for all assets. Chart by TradingView.</span>
               </div>
             </CardContent>
           </Card>
