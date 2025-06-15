@@ -1,13 +1,22 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bot } from 'lucide-react';
 import ChatRoomWindow from './ChatRoomWindow';
 
 export default function ChatbotLauncher() {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <>
@@ -24,4 +33,3 @@ export default function ChatbotLauncher() {
     </>
   );
 }
-
