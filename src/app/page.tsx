@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import AssetCard from "@/components/market/AssetCard";
 import SearchBar from "@/components/market/SearchBar";
 import FilterControls from "@/components/market/FilterControls";
-import { placeholderAssets as initialAssetSymbols } from "@/lib/placeholder-data"; // Use this for initial symbols and types
+import { placeholderAssets as initialAssetSymbols } from "@/lib/placeholder-data"; 
 import type { Asset } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -49,62 +49,80 @@ export default function DashboardPage() {
 
   // Load initial data from Finnhub
   useEffect(() => {
-    // Load all assets defined in placeholder-data.ts
     const symbolsToLoad = initialAssetSymbols; 
 
     const fetchInitialAssetData = async () => {
       setIsLoading(true);
-      const fetchedAssets: Asset[] = [];
       const initialPrices = new Map<string, number>();
 
-      for (const initialAsset of symbolsToLoad) {
-        const profile = await fetchProfileBySymbol(initialAsset.symbol, initialAsset.type);
-        const quote = await fetchQuoteBySymbol(initialAsset.symbol);
+      const assetDataPromises = symbolsToLoad.map(async (initialAsset) => {
+        try {
+          // Fetch profile and quote in parallel for each asset
+          const [profile, quote] = await Promise.all([
+            fetchProfileBySymbol(initialAsset.symbol, initialAsset.type),
+            fetchQuoteBySymbol(initialAsset.symbol)
+          ]);
 
-        if (profile && quote && quote.c !== undefined) {
-          const assetData: Asset = {
-            id: initialAsset.symbol.toLowerCase(), // Use symbol as ID
-            symbol: initialAsset.symbol.toUpperCase(),
-            name: profile.name || initialAsset.name,
-            type: initialAsset.type,
-            price: quote.c,
-            change24h: quote.dp, // Percent change
-            dailyChange: quote.d, // Absolute change
-            dailyHigh: quote.h,
-            dailyLow: quote.l,
-            dailyOpen: quote.o,
-            previousClose: quote.pc,
-            marketCap: profile.marketCapitalization,
-            logoUrl: profile.logo || initialAsset.logoUrl, // Use Finnhub logo if available
-            sector: profile.finnhubIndustry || initialAsset.sector,
-            exchange: profile.exchange,
-            // Keep other fields from placeholder if not available from Finnhub basic calls
-            volume24h: initialAsset.volume24h,
-            peRatio: initialAsset.peRatio,
-            epsDilutedTTM: initialAsset.epsDilutedTTM,
-            circulatingSupply: initialAsset.circulatingSupply,
-            allTimeHigh: initialAsset.allTimeHigh,
-            icon: initialAsset.icon, // Keep original icon as fallback
-            dataAiHint: profile.logo ? undefined : initialAsset.dataAiHint // Don't need AI hint if we have a logo
-          };
-          fetchedAssets.push(assetData);
-          initialPrices.set(assetData.id, assetData.price);
-        } else {
-           console.warn(`Could not fetch full data for ${initialAsset.symbol}. Profile: ${!!profile}, Quote: ${!!quote}`);
-           // Fallback to placeholder if API fails for some assets
+          if (profile && quote && quote.c !== undefined) {
+            const assetData: Asset = {
+              id: initialAsset.symbol.toLowerCase(),
+              symbol: initialAsset.symbol.toUpperCase(),
+              name: profile.name || initialAsset.name,
+              type: initialAsset.type,
+              price: quote.c,
+              change24h: quote.dp,
+              dailyChange: quote.d,
+              dailyHigh: quote.h,
+              dailyLow: quote.l,
+              dailyOpen: quote.o,
+              previousClose: quote.pc,
+              marketCap: profile.marketCapitalization,
+              logoUrl: profile.logo || initialAsset.logoUrl,
+              sector: profile.finnhubIndustry || initialAsset.sector,
+              exchange: profile.exchange,
+              volume24h: initialAsset.volume24h,
+              peRatio: initialAsset.peRatio,
+              epsDilutedTTM: initialAsset.epsDilutedTTM,
+              circulatingSupply: initialAsset.circulatingSupply,
+              allTimeHigh: initialAsset.allTimeHigh,
+              icon: initialAsset.icon,
+              dataAiHint: profile.logo ? undefined : initialAsset.dataAiHint,
+            };
+            if(assetData.price !== undefined) initialPrices.set(assetData.id, assetData.price);
+            return assetData;
+          } else {
+            console.warn(`Could not fetch full Finnhub data for ${initialAsset.symbol}. Using placeholder data.`);
             const fallbackAsset: Asset = {
                 ...initialAsset,
                 id: initialAsset.symbol.toLowerCase(),
                 price: initialAsset.price, 
                 change24h: initialAsset.change24h, 
             };
-            fetchedAssets.push(fallbackAsset);
             if (fallbackAsset.price !== undefined) {
                  initialPrices.set(fallbackAsset.id, fallbackAsset.price);
             }
+            return fallbackAsset;
+          }
+        } catch (error) {
+          console.error(`Error fetching data for ${initialAsset.symbol}:`, error);
+          const fallbackOnError: Asset = {
+            ...initialAsset,
+            id: initialAsset.symbol.toLowerCase(),
+            price: initialAsset.price, 
+            change24h: initialAsset.change24h,
+          };
+          if (fallbackOnError.price !== undefined) {
+            initialPrices.set(fallbackOnError.id, fallbackOnError.price);
+          }
+          return fallbackOnError;
         }
-      }
-      setAssets(fetchedAssets);
+      });
+      
+      const fetchedAssetsResults = await Promise.all(assetDataPromises);
+      // Filter out any potential nulls if map function could return null (though current logic returns fallbacks)
+      const validAssets = fetchedAssetsResults.filter(asset => asset !== null) as Asset[];
+      
+      setAssets(validAssets);
       previousPricesRef.current = initialPrices;
       setIsLoading(false);
     };
@@ -210,7 +228,6 @@ export default function DashboardPage() {
 
         {(isLoading && assets.length === 0) ? ( 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
-            {/* Show skeletons based on the number of assets we intend to load initially */}
             {[...Array(initialAssetSymbols.length)].map((_, i) => ( 
               <Card key={i} className="overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-3 pb-2">
