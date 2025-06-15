@@ -5,16 +5,18 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import AssetCard from "@/components/market/AssetCard";
 import SearchBar from "@/components/market/SearchBar";
 import FilterControls from "@/components/market/FilterControls";
-import { placeholderAssets } from "@/lib/placeholder-data";
-import type { Asset } from "@/types";
+import { placeholderAssets as initialAssetSymbols } from "@/lib/placeholder-data"; // Use this for initial symbols and types
+import type { Asset, FinnhubQuote, FinnhubProfile } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
 import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget";
 import { useAuth } from "@/hooks/useAuth";
 import { getAlertedAssetIds } from "@/services/userPreferenceService";
+import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService";
 
-const SIMULATION_INTERVAL = 3000; // Update every 3 seconds
+const FETCH_INTERVAL = 30000; // Fetch new quotes every 30 seconds
+const INITIAL_ASSETS_TO_LOAD = 8; // Load a subset of assets initially for performance
 
 export default function DashboardPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -28,115 +30,135 @@ export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const [userAlertPreferences, setUserAlertPreferences] = useState<string[]>([]);
 
-  // Initialize audio element
   useEffect(() => {
     if (typeof window !== "undefined") {
       audioRef.current = new Audio('/audio/alert.mp3');
     }
   }, []);
   
-  // Fetch user alert preferences
   useEffect(() => {
     const fetchUserAlerts = async () => {
       if (user && !authLoading) {
         const prefs = await getAlertedAssetIds(user.uid);
         setUserAlertPreferences(prefs);
       } else if (!authLoading) {
-        setUserAlertPreferences([]); // Clear prefs if user logs out or not logged in
+        setUserAlertPreferences([]);
       }
     };
     fetchUserAlerts();
   }, [user, authLoading]);
 
-  // Load initial data and set up previous prices ref
+  // Load initial data from Finnhub
   useEffect(() => {
-    const copiedAssets = JSON.parse(JSON.stringify(placeholderAssets)) as Asset[];
-    setAssets(copiedAssets);
+    const symbolsToLoad = initialAssetSymbols.slice(0, INITIAL_ASSETS_TO_LOAD);
 
-    const initialPrices = new Map<string, number>();
-    copiedAssets.forEach(asset => initialPrices.set(asset.id, asset.price));
-    previousPricesRef.current = initialPrices;
-    
-    // Simulate a delay for initial data loading appearance
-    const timer = setTimeout(() => {
-        setIsLoading(false);
-    }, 500); // Reduced delay for faster perceived load
+    const fetchInitialAssetData = async () => {
+      setIsLoading(true);
+      const fetchedAssets: Asset[] = [];
+      const initialPrices = new Map<string, number>();
 
-    return () => clearTimeout(timer);
+      for (const initialAsset of symbolsToLoad) {
+        const profile = await fetchProfileBySymbol(initialAsset.symbol, initialAsset.type);
+        const quote = await fetchQuoteBySymbol(initialAsset.symbol);
+
+        if (profile && quote && quote.c !== undefined) {
+          const assetData: Asset = {
+            id: initialAsset.symbol.toLowerCase(), // Use symbol as ID
+            symbol: initialAsset.symbol.toUpperCase(),
+            name: profile.name || initialAsset.name,
+            type: initialAsset.type,
+            price: quote.c,
+            change24h: quote.dp, // Percent change
+            dailyChange: quote.d, // Absolute change
+            dailyHigh: quote.h,
+            dailyLow: quote.l,
+            dailyOpen: quote.o,
+            previousClose: quote.pc,
+            marketCap: profile.marketCapitalization,
+            logoUrl: profile.logo || initialAsset.logoUrl, // Use Finnhub logo if available
+            sector: profile.finnhubIndustry || initialAsset.sector,
+            exchange: profile.exchange,
+            // Keep other fields from placeholder if not available from Finnhub basic calls
+            volume24h: initialAsset.volume24h,
+            peRatio: initialAsset.peRatio,
+            epsDilutedTTM: initialAsset.epsDilutedTTM,
+            circulatingSupply: initialAsset.circulatingSupply,
+            allTimeHigh: initialAsset.allTimeHigh,
+            icon: initialAsset.icon, // Keep original icon as fallback
+            dataAiHint: profile.logo ? undefined : initialAsset.dataAiHint // Don't need AI hint if we have a logo
+          };
+          fetchedAssets.push(assetData);
+          initialPrices.set(assetData.id, assetData.price);
+        } else {
+           console.warn(`Could not fetch full data for ${initialAsset.symbol}. Profile: ${!!profile}, Quote: ${!!quote}`);
+           // Fallback to placeholder if API fails for some assets
+           // This maintains UI consistency but shows potentially stale placeholder data.
+            const fallbackAsset: Asset = {
+                ...initialAsset,
+                id: initialAsset.symbol.toLowerCase(),
+                price: initialAsset.price, // fallback price
+                change24h: initialAsset.change24h, // fallback change
+            };
+            fetchedAssets.push(fallbackAsset);
+            if (fallbackAsset.price !== undefined) {
+                 initialPrices.set(fallbackAsset.id, fallbackAsset.price);
+            }
+        }
+      }
+      setAssets(fetchedAssets);
+      previousPricesRef.current = initialPrices;
+      setIsLoading(false);
+    };
+
+    fetchInitialAssetData();
   }, []);
 
-  // Simulation interval
+  // Interval to update quotes
   useEffect(() => {
-    if (assets.length === 0 || isLoading) return; // Don't run interval if no assets or still in initial load phase
+    if (isLoading || assets.length === 0) return;
 
-    const intervalId = setInterval(() => {
-      setAssets(prevAssets => {
-        const newPreviousPrices = new Map<string, number>();
-        const updatedAssets = prevAssets.map(asset => {
-          const oldPrice = previousPricesRef.current.get(asset.id) || asset.price;
-          newPreviousPrices.set(asset.id, asset.price); // Store current price as previous for next tick
-
-          let newPrice = asset.price;
-          let newChange24h = asset.change24h;
-
-          if (asset.type === 'stock') {
-            const priceChangeFactor = (Math.random() - 0.5) * 0.01; // Max +/- 0.5% change
-            newPrice = asset.price * (1 + priceChangeFactor);
-            newChange24h = asset.change24h + (Math.random() - 0.5) * 0.1;
-          } else if (asset.type === 'crypto') {
-            // Stablecoins should not fluctuate significantly
-            if (asset.symbol === 'USDT' || asset.symbol === 'USDC' || asset.symbol === 'DAI' || asset.symbol === 'TUSD' || asset.symbol === 'USDP') {
-              newPrice = 1.00; // Keep stablecoin price at 1.00
-              // Simulate very minor fluctuation for change percentage only for stablecoins
-              newChange24h = (Math.random() - 0.5) * 0.0002; 
-            } else {
-              const priceChangeFactor = (Math.random() - 0.48) * 0.025; // Max +/- 1.25% change for crypto, slightly biased upwards
-              newPrice = asset.price * (1 + priceChangeFactor);
-              newChange24h = asset.change24h + (Math.random() - 0.48) * 0.25;
-            }
-          }
+    const intervalId = setInterval(async () => {
+      const updatedAssetsPromises = assets.map(async (currentAsset) => {
+        const quote = await fetchQuoteBySymbol(currentAsset.symbol);
+        if (quote && quote.c !== undefined) {
+          const oldPrice = previousPricesRef.current.get(currentAsset.id) || currentAsset.price || 0;
           
-          // Alert for stock price drops if oldPrice is available and user has alerts set
-          if (userAlertPreferences.includes(asset.id) && newPrice < oldPrice && asset.type === 'stock' && oldPrice > 0) {
-            console.log(`Alert: ${asset.name} price dropped to $${newPrice.toFixed(2)}`);
-            if (audioRef.current) {
-              audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
-            }
+          // Alert logic (simplified for fetched data)
+          const newPrice = quote.c;
+          if (userAlertPreferences.includes(currentAsset.id) && newPrice < oldPrice && oldPrice > 0) {
+             const isStablecoin = currentAsset.type === 'crypto' && (currentAsset.symbol === 'USDT' || currentAsset.symbol === 'USDC' || currentAsset.symbol === 'DAI' || currentAsset.symbol === 'TUSD' || currentAsset.symbol === 'USDP');
+             if (!isStablecoin) { // Exclude stablecoins from audio alerts for minor fluctuations
+                console.log(`Alert: ${currentAsset.name} price dropped to $${newPrice.toFixed(currentAsset.type === 'crypto' && (currentAsset.symbol === 'BTC' || currentAsset.symbol === 'ETH') ? 8 : 2)}`);
+                if (audioRef.current) {
+                    audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
+                }
+             }
           }
-
-          // Alert for crypto price drops if oldPrice is available and user has alerts set
-          // Exclude stablecoins from triggering audio alerts for their very minor simulated fluctuations
-          if (
-            userAlertPreferences.includes(asset.id) &&
-            newPrice < oldPrice &&
-            asset.type === 'crypto' &&
-            oldPrice > 0 &&
-            !(asset.symbol === 'USDT' || asset.symbol === 'USDC' || asset.symbol === 'DAI' || asset.symbol === 'TUSD' || asset.symbol === 'USDP')
-          ) {
-            console.log(`Alert: ${asset.name} price dropped to $${newPrice.toFixed(asset.symbol === 'BTC' || asset.symbol === 'ETH' ? 8 : (asset.price < 0.01 ? 6 : (asset.price < 1 ? 4 : 2)))}`);
-            if (audioRef.current) {
-              audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
-            }
-          }
+          previousPricesRef.current.set(currentAsset.id, newPrice);
 
           return {
-            ...asset,
-            price: parseFloat(newPrice.toFixed(asset.symbol === 'BTC' || asset.symbol === 'ETH' ? 8 : (asset.price < 0.01 ? 6 : (asset.price < 1 ? 4 : 2)))),
-            change24h: parseFloat(newChange24h.toFixed(2)),
+            ...currentAsset,
+            price: newPrice,
+            change24h: quote.dp,
+            dailyChange: quote.d,
+            dailyHigh: quote.h,
+            dailyLow: quote.l,
+            dailyOpen: quote.o,
+            previousClose: quote.pc,
           };
-        });
-        
-        previousPricesRef.current = newPreviousPrices;
-        return updatedAssets;
+        }
+        return currentAsset; // Return old asset if fetch failed
       });
-    }, SIMULATION_INTERVAL);
+
+      const newAssets = await Promise.all(updatedAssetsPromises);
+      setAssets(newAssets);
+    }, FETCH_INTERVAL);
 
     return () => clearInterval(intervalId);
-  }, [assets, userAlertPreferences, isLoading]); // userAlertPreferences added as dependency
+  }, [assets, isLoading, userAlertPreferences]); 
 
-  // Derive filtered assets using useMemo
   const filteredAssets = useMemo(() => {
-    if (isLoading) return []; // Return empty if still in initial loading phase to show skeletons
+    if (isLoading && assets.length === 0) return [];
 
     let tempAssets = [...assets]; 
 
@@ -163,8 +185,8 @@ export default function DashboardPage() {
     setActiveFilters(filters);
   };
 
-  const bitcoinAssetForWidget = useMemo(() => assets.find(asset => asset.id === 'bitcoin'), [assets]);
-  const appleAssetForWidget = useMemo(() => assets.find(asset => asset.id === 'aapl'), [assets]);
+  const bitcoinAssetForWidget = useMemo(() => assets.find(asset => asset.symbol === 'BTC'), [assets]);
+  const appleAssetForWidget = useMemo(() => assets.find(asset => asset.symbol === 'AAPL'), [assets]);
   
   return (
     <div className="space-y-8">
@@ -174,11 +196,11 @@ export default function DashboardPage() {
           <div className="w-full flex justify-start gap-4">
             <BitcoinMiniChartWidget 
               currentPrice={bitcoinAssetForWidget?.price}
-              currentChangePercent={bitcoinAssetForWidget?.change24h}
+              currentChangePercent={bitcoinAssetForWidget?.change24h ?? undefined}
             />
             <AppleStockMiniChartWidget 
               currentPrice={appleAssetForWidget?.price}
-              currentChangePercent={appleAssetForWidget?.change24h}
+              currentChangePercent={appleAssetForWidget?.change24h ?? undefined}
             />
           </div>
 
@@ -188,9 +210,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {isLoading ? ( 
+        {(isLoading && assets.length === 0) ? ( 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
-            {[...Array(8)].map((_, i) => ( 
+            {[...Array(INITIAL_ASSETS_TO_LOAD)].map((_, i) => ( 
               <Card key={i} className="overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-3 pb-2">
                    <Skeleton className="h-10 w-10 rounded-full" />
