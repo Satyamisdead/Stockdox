@@ -16,6 +16,7 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
   const scriptAddedRef = useRef(false); 
 
   useEffect(() => {
+    // Ensure this code runs only on the client
     if (typeof window === 'undefined' || !chartContainerRef.current) {
       return;
     }
@@ -23,74 +24,72 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
     const tradingViewSymbol = () => {
       let tvSymbol = symbol.toUpperCase();
       if (assetType === 'stock') {
-        if (exchange) {
-          if (exchange.toUpperCase().includes('NASDAQ')) tvSymbol = `NASDAQ:${symbol.toUpperCase()}`;
-          else if (exchange.toUpperCase().includes('NYSE')) tvSymbol = `NYSE:${symbol.toUpperCase()}`;
-          else {
-            const simpleExchange = exchange.split(' ')[0].toUpperCase();
-            tvSymbol = `${simpleExchange}:${symbol.toUpperCase()}`;
-          }
-        } else {
-           tvSymbol = symbol.toUpperCase(); 
-        }
+        const upperExchange = exchange?.toUpperCase();
+        if (upperExchange === 'NASDAQ') tvSymbol = `NASDAQ:${symbol.toUpperCase()}`;
+        else if (upperExchange === 'NYSE') tvSymbol = `NYSE:${symbol.toUpperCase()}`;
+        else if (upperExchange) tvSymbol = `${upperExchange}:${symbol.toUpperCase()}`;
+        // If no exchange or not a major one, TradingView might still find common symbols like 'AAPL'
       } else if (assetType === 'crypto') {
-        const commonCryptoExchanges = ["BINANCE", "COINBASE", "KRAKEN", "BITSTAMP", "KUCOIN", "BYBIT", "OKX"];
-        let found = false;
-        for (const ex of commonCryptoExchanges) {
-          if (ex === (exchange?.toUpperCase())) {
-             tvSymbol = `${ex}:${symbol.toUpperCase()}USDT`;
-             found = true;
-             break;
-          }
-        }
-        if (!found) {
-          if (symbol.toUpperCase() === 'BTC') { tvSymbol = `BINANCE:BTCUSDT`; }
-          else if (symbol.toUpperCase() === 'ETH') { tvSymbol = `BINANCE:ETHUSDT`; }
-          else { tvSymbol = `BINANCE:${symbol.toUpperCase()}USDT`;  }
-        }
+        // Default to USDT pairing on a major exchange like Binance or use provided exchange.
+        const cryptoExchange = exchange ? exchange.toUpperCase() : "BINANCE";
+        if (symbol.toUpperCase() === 'BTC') tvSymbol = `${cryptoExchange}:BTCUSDT`;
+        else if (symbol.toUpperCase() === 'ETH') tvSymbol = `${cryptoExchange}:ETHUSDT`;
+        else tvSymbol = `${cryptoExchange}:${symbol.toUpperCase()}USDT`; 
       }
+      console.log(`[AssetChart] Attempting TradingView Symbol: ${tvSymbol} for ${name} (${symbol}, ${assetType}, exchange: ${exchange})`);
       return tvSymbol;
     };
 
     const initializeWidget = () => {
       if (chartContainerRef.current && typeof (window as any).TradingView !== 'undefined') {
+        // Clear previous widget if any
         chartContainerRef.current.innerHTML = ''; 
         
+        // Dark theme color values from your globals.css (approximated HEX/RGBA)
+        const darkCardBackground = '#0D0D0D'; // hsl(0 0% 5%)
+        const darkBorderTransparent = 'rgba(38, 38, 38, 0.2)'; // hsla(0, 0%, 15%, 0.2)
+        const darkCardForeground = '#D3D3D3'; // hsl(0 0% 82.7%)
+        const darkPrimaryYellow = '#FFD700'; // hsl(51 100% 50%)
+        const candleDownColor = '#AAAAAA'; // Light grey
+
         const widgetOptions = {
           autosize: true,
           symbol: tradingViewSymbol(),
           interval: "D",
           timezone: "Etc/UTC",
-          theme: "dark",
-          style: "1", 
+          theme: "dark", // Using TradingView's dark theme as a base
+          style: "1", // Candlesticks
           locale: "en",
           enable_publishing: false,
           allow_symbol_change: true,
           container_id: chartContainerRef.current.id,
-          hide_side_toolbar: true, 
+          hide_side_toolbar: true,
           details: true, 
-          // Removing calendar, hotlist, news to make it more compact
-          // "calendar": false, // Already removed by default in minimal widgets. Explicitly keeping it commented.
-          // "hotlist": false, // Already removed by default.
-          // "news": [], // Already removed by default.
+          // Removed calendar, hotlist, news for compactness
           overrides: {
-            "mainSeriesProperties.candleStyle.upColor": "#FFD700", // Bright Yellow
-            "mainSeriesProperties.candleStyle.downColor": "#AAAAAA", // Light Grey (changed from D3D3D3 as AAAA is more distinct on black)
+            "mainSeriesProperties.candleStyle.upColor": darkPrimaryYellow,
+            "mainSeriesProperties.candleStyle.downColor": candleDownColor,
             "mainSeriesProperties.candleStyle.drawBorder": true,
-            "mainSeriesProperties.candleStyle.borderUpColor": "#FFD700",
-            "mainSeriesProperties.candleStyle.borderDownColor": "#AAAAAA",
-            "mainSeriesProperties.candleStyle.wickUpColor": "#FFD700",
-            "mainSeriesProperties.candleStyle.wickDownColor": "#AAAAAA",
-            "paneProperties.backgroundType": "solid", 
-            "paneProperties.background": "hsl(var(--card))", // Match card background from theme
-            "paneProperties.vertGridProperties.color": "hsla(var(--border), 0.2)", // Softer grid lines
-            "paneProperties.horzGridProperties.color": "hsla(var(--border), 0.2)", // Softer grid lines
-            "scalesProperties.textColor": "hsl(var(--card-foreground))", // Match card text from theme
-            "mainSeriesProperties.priceLineColor": "hsl(var(--primary))" // Primary color for price line
+            "mainSeriesProperties.candleStyle.borderUpColor": darkPrimaryYellow,
+            "mainSeriesProperties.candleStyle.borderDownColor": candleDownColor,
+            "mainSeriesProperties.candleStyle.wickUpColor": darkPrimaryYellow,
+            "mainSeriesProperties.candleStyle.wickDownColor": candleDownColor,
+            
+            "paneProperties.backgroundType": "solid",
+            "paneProperties.background": darkCardBackground,
+            "paneProperties.vertGridProperties.color": darkBorderTransparent,
+            "paneProperties.horzGridProperties.color": darkBorderTransparent,
+            "scalesProperties.textColor": darkCardForeground,
+            "mainSeriesProperties.priceLineColor": darkPrimaryYellow 
           },
         };
         
         new (window as any).TradingView.widget(widgetOptions);
+      } else if (chartContainerRef.current && !scriptAddedRef.current) {
+        // Script might not be loaded yet, wait for script.onload
+        console.warn("[AssetChart] TradingView script not loaded yet, widget initialization deferred.");
+      } else if (!chartContainerRef.current) {
+        console.warn("[AssetChart] Chart container ref is not available.");
       }
     };
 
@@ -100,30 +99,41 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
       script.src = 'https://s3.tradingview.com/tv.js';
       script.async = true;
       script.onload = () => {
+        console.log("[AssetChart] TradingView script loaded successfully.");
         scriptAddedRef.current = true;
         initializeWidget();
       };
       script.onerror = () => {
-        console.error("TradingView script failed to load.");
+        console.error("[AssetChart] TradingView script failed to load.");
       }
       document.head.appendChild(script);
     } else {
+      // Script already added, just initialize
       initializeWidget();
     }
 
-  }, [symbol, assetType, exchange, name]); // Dependencies for re-initializing if asset changes
+    // Cleanup function to remove the script if the component unmounts,
+    // though generally not strictly necessary if scriptAddedRef prevents re-adding.
+    // return () => {
+    //   const tvScript = document.getElementById('tradingview-widget-script');
+    //   if (tvScript && tvScript.parentElement === document.head) {
+    //      // document.head.removeChild(tvScript); // Be cautious with removing shared scripts
+    //      // scriptAddedRef.current = false; // Reset if script removal is aggressive
+    //   }
+    // };
+  }, [symbol, assetType, exchange, name]); // Re-initialize if these key props change
 
   return (
     <Card className="h-[350px] md:h-[450px] w-full flex flex-col shadow-lg">
       <CardHeader className="shrink-0">
-        <CardTitle className="font-headline">{name} ({symbol}) Chart</CardTitle>
+        <CardTitle className="font-headline">{name} ({symbol.toUpperCase()}) Chart</CardTitle>
         <CardDescription>Interactive chart powered by TradingView</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow pb-4 pr-2"> 
+      <CardContent className="flex-grow pb-4 pr-2 flex"> {/* Added flex here */}
         <div 
-          id={`tradingview_chart_widget_${symbol.replace(/[^a-zA-Z0-9]/g, '')}_${assetType}`} // Ensure unique ID
+          id={`tradingview_chart_widget_${symbol.replace(/[^a-zA-Z0-9]/g, '')}_${assetType}`} 
           ref={chartContainerRef} 
-          className="h-full w-full"
+          className="h-full w-full" // Ensure div takes full space of CardContent
         />
       </CardContent>
     </Card>
@@ -131,3 +141,4 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
 };
 
 export default AssetChart;
+
