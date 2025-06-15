@@ -7,6 +7,7 @@ import SiteHeader from '@/components/core/SiteHeader';
 import SiteFooter from '@/components/core/SiteFooter';
 import MobileBottomNav from '@/components/core/MobileBottomNav';
 import InstallPWAHandler from '@/components/core/InstallPWAHandler';
+import ChatbotLauncher from '@/components/chatbot/ChatbotLauncher';
 
 export const metadata: Metadata = {
   title: 'Stockdox',
@@ -60,6 +61,7 @@ export default function RootLayout({
           <SiteFooter />
           <MobileBottomNav />
           <InstallPWAHandler />
+          <ChatbotLauncher />
           <Toaster />
         </FirebaseProvider>
       </body>
