@@ -45,7 +45,7 @@ export default function MobileBottomNav() {
   
   const navItemsBase = [
     { id: 'home', href: "/", label: "Home", icon: Home, requiresAuth: false },
-    { id: 'games', href: "/games", label: "Take a Break", icon: Gamepad2, requiresAuth: false },
+    { id: 'take-a-break', href: "/games", label: "Take a Break", icon: Gamepad2, requiresAuth: false },
     { id: 'news', href: "/news", label: "News", icon: Newspaper, requiresAuth: false },
   ];
 
@@ -60,24 +60,28 @@ export default function MobileBottomNav() {
   const navItems = [...navItemsBase, ...dynamicItems];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border/60 shadow-md md:hidden z-50">
-      <div className="flex justify-around items-center h-full">
+    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border shadow-lg md:hidden z-50">
+      <div className="flex justify-around items-stretch h-full">
         {navItems.map((item) => {
-          const isActive = item.href ? (pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/")) : false;
+          const isActive = item.href ? (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) : false;
           // Specific check for home to avoid it being active for all sub-routes
           const isHomeActive = item.href === "/" && pathname === "/";
           const finalIsActive = item.href === "/" ? isHomeActive : isActive;
           
+          const itemClasses = cn(
+            "flex flex-col items-center justify-center flex-1 h-full text-sm pt-1 pb-0.5 transition-colors duration-150 ease-in-out",
+            finalIsActive 
+              ? "bg-accent text-primary" 
+              : "text-muted-foreground hover:text-primary hover:bg-accent/50"
+          );
+
           if (item.action) {
             return (
               <button
                 key={item.id}
                 onClick={item.action}
                 aria-label={item.label}
-                className={cn(
-                  "flex flex-col items-center justify-center w-full h-full text-sm pt-1 pb-0.5",
-                  "text-muted-foreground hover:text-primary transition-colors"
-                )}
+                className={itemClasses}
               >
                 <item.icon className="h-5 w-5 mb-0.5" />
                 <span className="text-[11px] leading-tight">{item.label}</span>
@@ -88,10 +92,7 @@ export default function MobileBottomNav() {
               <Link
                 key={item.id}
                 href={item.href}
-                className={cn(
-                  "flex flex-col items-center justify-center w-full h-full text-sm pt-1 pb-0.5",
-                  finalIsActive ? "text-primary" : "text-muted-foreground hover:text-primary"
-                )}
+                className={itemClasses}
               >
                 <item.icon className={cn("h-5 w-5 mb-0.5", finalIsActive ? "text-primary" : "")} />
                 <span className="text-[11px] leading-tight">{item.label}</span>
