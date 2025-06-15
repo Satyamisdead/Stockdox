@@ -10,13 +10,13 @@ import type { Asset } from "@/types";
 import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService";
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
 import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton"; // Card Skeleton is used within AssetCard
 
 const FETCH_INTERVAL = 30000; // Fetch new quotes every 30 seconds
 
 export default function DashboardPage() {
   // Initialize assets with placeholder structure, but undefined prices for fetching
-  const [assets, setAssets] = useState<Asset[]>(() => 
+  const [assets, setAssets] = useState<Asset[]>(() =>
     placeholderAssets.map(pAsset => ({
       ...pAsset,
       price: undefined,
@@ -31,33 +31,47 @@ export default function DashboardPage() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<{ type: "all" | "stock" | "crypto" }>({ type: "all" });
-  const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
-
+  // No global isLoading state, individual cards will manage their loading appearance
 
   useEffect(() => {
     const fetchInitialAssetData = async () => {
-      console.log("Fetching initial asset data...");
-      setIsInitialDataLoading(true);
+      console.log("Fetching initial asset data for all placeholder assets...");
 
       const assetPromises = placeholderAssets.map(async (pAsset) => {
         try {
           const profile = await fetchProfileBySymbol(pAsset.symbol, pAsset.type);
           const quote = await fetchQuoteBySymbol(pAsset.symbol);
 
-          // Use placeholder name/symbol if profile fetch fails but quote succeeds for some reason
           const name = profile?.name || pAsset.name;
           const symbol = pAsset.symbol.toUpperCase();
           const logoUrl = profile?.logo || pAsset.logoUrl;
           const dataAiHint = profile?.logo ? undefined : pAsset.dataAiHint;
 
+          let fetchedAssetData: Asset = {
+            ...pAsset, // Spread placeholder first for all its default values
+            id: pAsset.id,
+            symbol: symbol,
+            name: name,
+            type: pAsset.type,
+            logoUrl: logoUrl,
+            sector: profile?.finnhubIndustry || pAsset.sector,
+            exchange: profile?.exchange || pAsset.exchange,
+            marketCap: profile?.marketCapitalization ?? pAsset.marketCap,
+            icon: pAsset.icon,
+            dataAiHint: dataAiHint,
+            // Price data will be undefined initially, then populated
+            price: undefined,
+            change24h: undefined,
+            dailyChange: undefined,
+            dailyHigh: undefined,
+            dailyLow: undefined,
+            dailyOpen: undefined,
+            previousClose: undefined,
+          };
 
-          if (quote && quote.c !== undefined && quote.c !== 0) { // Prioritize quote for price data, ensure price is not 0
-            return {
-              ...pAsset, // Spread placeholder first for all its default values
-              id: pAsset.id, // ensure id from placeholder is used
-              symbol: symbol,
-              name: name,
-              type: pAsset.type,
+          if (quote && quote.c !== undefined && quote.c !== 0) {
+            fetchedAssetData = {
+              ...fetchedAssetData,
               price: quote.c,
               change24h: quote.dp,
               dailyChange: quote.d,
@@ -65,50 +79,40 @@ export default function DashboardPage() {
               dailyLow: quote.l,
               dailyOpen: quote.o,
               previousClose: quote.pc,
-              marketCap: profile?.marketCapitalization ?? pAsset.marketCap,
-              logoUrl: logoUrl,
-              sector: profile?.finnhubIndustry || pAsset.sector,
-              exchange: profile?.exchange || pAsset.exchange,
-              icon: pAsset.icon,
-              dataAiHint: dataAiHint,
-            } as Asset;
-          } else if (profile) { // Fallback to profile if quote fails, but price will be from placeholder (or undefined if not set)
-             console.warn(`Could not fetch Finnhub quote for ${pAsset.symbol} or quote was zero. Using profile data and placeholder price.`);
-             return {
-              ...pAsset,
-              id: pAsset.id,
-              symbol: symbol,
-              name: name,
-              logoUrl: logoUrl,
-              marketCap: profile.marketCapitalization ?? pAsset.marketCap,
-              sector: profile.finnhubIndustry || pAsset.sector,
-              exchange: profile.exchange || pAsset.exchange,
-              icon: pAsset.icon,
-              dataAiHint: dataAiHint,
-              price: pAsset.price, // Fallback to placeholder price
-              change24h: pAsset.change24h, // Fallback to placeholder change
-            } as Asset;
+            };
+          } else if (profile) {
+             console.warn(`Could not fetch Finnhub quote for ${pAsset.symbol} or quote was zero. Using profile data and placeholder price if available.`);
+             fetchedAssetData.price = pAsset.price; // Fallback to placeholder price if any
+             fetchedAssetData.change24h = pAsset.change24h;
           } else {
             console.warn(`Could not fetch full Finnhub data for ${pAsset.symbol}. Using initial placeholder data with undefined price.`);
-            return { ...pAsset, price: undefined, change24h: undefined }; // Ensure price is undefined if no data
+            // Price and change already undefined
           }
+          return fetchedAssetData;
         } catch (error) {
           console.error(`Error fetching data for ${pAsset.symbol}:`, error);
-          return { ...pAsset, price: undefined, change24h: undefined }; // Fallback to placeholder with undefined price on error
+          // Return placeholder with undefined price on error
+          return { 
+            ...pAsset, 
+            price: undefined, 
+            change24h: undefined,
+            dailyChange: undefined,
+            dailyHigh: undefined,
+            dailyLow: undefined,
+            dailyOpen: undefined,
+            previousClose: undefined,
+          }; 
         }
       });
 
       try {
-        const fetchedAssets = await Promise.all(assetPromises);
-        console.log("Fetched assets:", fetchedAssets.length);
-        setAssets(fetchedAssets.filter(asset => asset !== null) as Asset[]);
+        const fetchedAssetsResults = await Promise.all(assetPromises);
+        console.log("Fetched assets results:", fetchedAssetsResults.length);
+        setAssets(fetchedAssetsResults.filter(asset => asset !== null) as Asset[]);
       } catch (error) {
-        console.error("Error fetching one or more assets:", error);
-        // In case of Promise.all failing, assets would remain as their initial placeholder structure
-      } finally {
-        setIsInitialDataLoading(false);
-        console.log("Finished fetching initial data. isInitialDataLoading: false");
+        console.error("Error fetching one or more assets during initial load:", error);
       }
+      console.log("Finished attempting to fetch initial data for all assets.");
     };
 
     fetchInitialAssetData();
@@ -116,43 +120,49 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    if (isInitialDataLoading || assets.length === 0) return; 
+    // Only start polling if there are assets, to avoid errors if initial fetch fails catastrophically (though unlikely with current setup)
+    if (assets.length === 0) return;
 
-    // Convert setAssets call to handle the promise correctly
     const intervalId = setInterval(async () => {
         console.log("Polling for new quotes...");
-        const currentAssets = assets; // Get current state
-        const updatedAssetsPromises = currentAssets.map(async (asset) => {
-            if (!asset.symbol) return asset;
-            // Only update if it had an initial price from Finnhub or if we want to retry all
-            // For simplicity, let's assume we always try to get the latest quote
-            const quote = await fetchQuoteBySymbol(asset.symbol);
-            if (quote && quote.c !== undefined && quote.c !== 0) { // Ensure quote is valid and price is not 0
-                return {
-                    ...asset,
-                    price: quote.c,
-                    change24h: quote.dp,
-                    dailyChange: quote.d,
-                    dailyHigh: quote.h,
-                    dailyLow: quote.l,
-                    dailyOpen: quote.o,
-                    previousClose: quote.pc,
-                };
-            }
-            return asset; // Return original asset if new quote is invalid
+        // Use functional update to ensure we're working with the latest state
+        setAssets(currentAssets => {
+            const updatedAssetsPromises = currentAssets.map(async (asset) => {
+                if (!asset.symbol || asset.price === undefined) { // Don't poll if symbol missing or initial fetch failed for price
+                    return asset;
+                }
+                const quote = await fetchQuoteBySymbol(asset.symbol);
+                if (quote && quote.c !== undefined && quote.c !== 0) {
+                    return {
+                        ...asset,
+                        price: quote.c,
+                        change24h: quote.dp,
+                        dailyChange: quote.d,
+                        dailyHigh: quote.h,
+                        dailyLow: quote.l,
+                        dailyOpen: quote.o,
+                        previousClose: quote.pc,
+                    };
+                }
+                return asset; 
+            });
+            // This part needs to be handled carefully with functional updates
+            // Since Promise.all itself is async, directly returning it inside setAssets won't work as expected.
+            // We should resolve promises then update state.
+            Promise.all(updatedAssetsPromises).then(newAssets => {
+                 // Check if component is still mounted or if assets changed to avoid race conditions
+                 // For simplicity here, directly setting. In complex scenarios, add checks.
+                setAssets(newAssets); 
+                console.log("Quotes updated via polling.");
+            }).catch(error => {
+                console.error("Error updating quotes during polling:", error);
+            });
+            return currentAssets; // Return current assets immediately, update will happen once promises resolve
         });
-        try {
-            const newAssets = await Promise.all(updatedAssetsPromises);
-            setAssets(newAssets);
-            console.log("Quotes updated via polling.");
-        } catch (error) {
-            console.error("Error updating quotes during polling:", error);
-        }
     }, FETCH_INTERVAL);
 
-
     return () => clearInterval(intervalId);
-  }, [assets, isInitialDataLoading]); // assets dependency is important for polling to use latest data
+  }, [assets.length]); // Re-run effect if asset count changes (e.g., if we had dynamic list) - for now, mostly for initial setup
 
 
   const filteredAssets = useMemo(() => {
@@ -206,6 +216,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* 
+          No global preloader here. 
+          AssetCards will individually show skeletons if their price is undefined.
+        */}
         {filteredAssets.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
             {filteredAssets.map((asset) => (
@@ -213,45 +227,19 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          // Show skeletons if filteredAssets is empty but assets array (potentially being fetched) is not.
-          // This caters to the initial render before Finnhub data populates and for search/filter resulting in no matches.
-          isInitialDataLoading && assets.some(a => a.price === undefined) ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
-                {placeholderAssets.map((pAsset) => ( // Use placeholderAssets for skeleton count
-                <Card key={pAsset.id} className="hover:shadow-primary/20 hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <div className="flex items-center gap-3">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div>
-                        <Skeleton className="h-5 w-24 mb-1" />
-                        <Skeleton className="h-3 w-16" />
-                        </div>
-                    </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow flex flex-col justify-between">
-                    <div className="space-y-1 mt-1 mb-2">
-                        <Skeleton className="h-7 w-2/3" />
-                        <Skeleton className="h-4 w-1/3" />
-                    </div>
-                    <div className="mt-4 flex justify-between items-center">
-                        <Skeleton className="h-8 w-20" />
-                        <Skeleton className="h-8 w-8" />
-                    </div>
-                    </CardContent>
-                </Card>
-                ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-                <p className="text-xl text-muted-foreground">No assets found matching your criteria.</p>
-                {searchQuery && <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters.</p>}
-            </div>
-          )
+          // This message shows if, after attempting to load data, no assets match filters OR
+          // if initial placeholder list itself was empty (which it isn't in our case).
+          // AssetCards handle their own skeleton state if price data is pending.
+          <div className="text-center py-16">
+              <p className="text-xl text-muted-foreground">
+                {assets.some(a => a.price === undefined) && searchQuery === "" && activeFilters.type === "all" 
+                  ? "Loading asset data..." // Message if still fetching initial data for non-filtered view
+                  : "No assets found matching your criteria."}
+              </p>
+              {searchQuery && <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters.</p>}
+          </div>
         )}
       </section>
     </div>
   );
 }
-    
-
-    

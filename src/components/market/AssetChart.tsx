@@ -26,32 +26,27 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
         if (exchange) {
           if (exchange.toUpperCase().includes('NASDAQ')) tvSymbol = `NASDAQ:${symbol.toUpperCase()}`;
           else if (exchange.toUpperCase().includes('NYSE')) tvSymbol = `NYSE:${symbol.toUpperCase()}`;
-          // Finnhub exchange names can be "NEW YORK STOCK EXCHANGE, INC." or "NASDAQ NMS - GLOBAL MARKET"
-          // We need to simplify them for TradingView.
           else {
-            const simpleExchange = exchange.split(' ')[0].toUpperCase(); // Basic heuristic
+            const simpleExchange = exchange.split(' ')[0].toUpperCase();
             tvSymbol = `${simpleExchange}:${symbol.toUpperCase()}`;
           }
         } else {
-           // If no exchange, just use symbol - TradingView might pick a default exchange
            tvSymbol = symbol.toUpperCase(); 
         }
       } else if (assetType === 'crypto') {
         const commonCryptoExchanges = ["BINANCE", "COINBASE", "KRAKEN", "BITSTAMP", "KUCOIN", "BYBIT", "OKX"];
         let found = false;
-
-        // Try common USDT pairings first
         for (const ex of commonCryptoExchanges) {
-          if (ex === (exchange?.toUpperCase())) { // If exchange prop is provided and matches
+          if (ex === (exchange?.toUpperCase())) {
              tvSymbol = `${ex}:${symbol.toUpperCase()}USDT`;
              found = true;
              break;
           }
         }
-        if (!found) { // Generic fallbacks
+        if (!found) {
           if (symbol.toUpperCase() === 'BTC') { tvSymbol = `BINANCE:BTCUSDT`; }
           else if (symbol.toUpperCase() === 'ETH') { tvSymbol = `BINANCE:ETHUSDT`; }
-          else { tvSymbol = `BINANCE:${symbol.toUpperCase()}USDT`;  } // Default if not BTC/ETH or specific exchange
+          else { tvSymbol = `BINANCE:${symbol.toUpperCase()}USDT`;  }
         }
       }
       return tvSymbol;
@@ -75,23 +70,23 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
           hide_side_toolbar: true, 
           details: true, 
           // Removing calendar, hotlist, news to make it more compact
-          // "calendar": false,
-          // "hotlist": false,
-          // "news": [], 
+          // "calendar": false, // Already removed by default in minimal widgets. Explicitly keeping it commented.
+          // "hotlist": false, // Already removed by default.
+          // "news": [], // Already removed by default.
           overrides: {
-            "mainSeriesProperties.candleStyle.upColor": "#FFD700", // Yellow
-            "mainSeriesProperties.candleStyle.downColor": "#AAAAAA", // Light Grey
+            "mainSeriesProperties.candleStyle.upColor": "#FFD700", // Bright Yellow
+            "mainSeriesProperties.candleStyle.downColor": "#AAAAAA", // Light Grey (changed from D3D3D3 as AAAA is more distinct on black)
             "mainSeriesProperties.candleStyle.drawBorder": true,
             "mainSeriesProperties.candleStyle.borderUpColor": "#FFD700",
             "mainSeriesProperties.candleStyle.borderDownColor": "#AAAAAA",
             "mainSeriesProperties.candleStyle.wickUpColor": "#FFD700",
             "mainSeriesProperties.candleStyle.wickDownColor": "#AAAAAA",
             "paneProperties.backgroundType": "solid", 
-            "paneProperties.background": "hsl(var(--card))", 
-            "paneProperties.vertGridProperties.color": "hsla(var(--border), 0.5)",
-            "paneProperties.horzGridProperties.color": "hsla(var(--border), 0.5)",
-            "scalesProperties.textColor": "hsl(var(--card-foreground))",
-            "mainSeriesProperties.priceLineColor": "hsl(var(--primary))"
+            "paneProperties.background": "hsl(var(--card))", // Match card background from theme
+            "paneProperties.vertGridProperties.color": "hsla(var(--border), 0.2)", // Softer grid lines
+            "paneProperties.horzGridProperties.color": "hsla(var(--border), 0.2)", // Softer grid lines
+            "scalesProperties.textColor": "hsl(var(--card-foreground))", // Match card text from theme
+            "mainSeriesProperties.priceLineColor": "hsl(var(--primary))" // Primary color for price line
           },
         };
         
@@ -116,24 +111,17 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
       initializeWidget();
     }
 
-    return () => {
-      // Clean up the widget if the component unmounts
-      // if (chartContainerRef.current) {
-      // chartContainerRef.current.innerHTML = ''; // This can cause issues if script re-runs too quickly
-      // }
-    };
-
-  }, [symbol, assetType, exchange, name]);
+  }, [symbol, assetType, exchange, name]); // Dependencies for re-initializing if asset changes
 
   return (
     <Card className="h-[350px] md:h-[450px] w-full flex flex-col shadow-lg">
-      <CardHeader>
+      <CardHeader className="shrink-0">
         <CardTitle className="font-headline">{name} ({symbol}) Chart</CardTitle>
         <CardDescription>Interactive chart powered by TradingView</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow pb-4 pr-2"> 
         <div 
-          id={`tradingview_chart_widget_${symbol.replace(/[^a-zA-Z0-9]/g, '')}`} 
+          id={`tradingview_chart_widget_${symbol.replace(/[^a-zA-Z0-9]/g, '')}_${assetType}`} // Ensure unique ID
           ref={chartContainerRef} 
           className="h-full w-full"
         />
@@ -143,5 +131,3 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
 };
 
 export default AssetChart;
-
-    
