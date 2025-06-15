@@ -5,10 +5,9 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import AssetCard from "@/components/market/AssetCard";
 import SearchBar from "@/components/market/SearchBar";
 import FilterControls from "@/components/market/FilterControls";
-import { placeholderAssets as initialAssetSymbols } from "@/lib/placeholder-data"; 
+import { placeholderAssets as initialAssetSymbols } from "@/lib/placeholder-data";
 import type { Asset } from "@/types";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import Loading from "@/app/loading"; // Import the global loading component
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
 import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,7 +33,7 @@ export default function DashboardPage() {
       audioRef.current = new Audio('/audio/alert.mp3');
     }
   }, []);
-  
+
   useEffect(() => {
     const fetchUserAlerts = async () => {
       if (user && !authLoading) {
@@ -49,7 +48,7 @@ export default function DashboardPage() {
 
   // Load initial data from Finnhub
   useEffect(() => {
-    const symbolsToLoad = initialAssetSymbols; 
+    const symbolsToLoad = initialAssetSymbols;
 
     const fetchInitialAssetData = async () => {
       setIsLoading(true);
@@ -57,7 +56,6 @@ export default function DashboardPage() {
 
       const assetDataPromises = symbolsToLoad.map(async (initialAsset) => {
         try {
-          // Fetch profile and quote in parallel for each asset
           const [profile, quote] = await Promise.all([
             fetchProfileBySymbol(initialAsset.symbol, initialAsset.type),
             fetchQuoteBySymbol(initialAsset.symbol)
@@ -80,13 +78,13 @@ export default function DashboardPage() {
               logoUrl: profile.logo || initialAsset.logoUrl,
               sector: profile.finnhubIndustry || initialAsset.sector,
               exchange: profile.exchange,
-              volume24h: initialAsset.volume24h,
-              peRatio: initialAsset.peRatio,
-              epsDilutedTTM: initialAsset.epsDilutedTTM,
-              circulatingSupply: initialAsset.circulatingSupply,
-              allTimeHigh: initialAsset.allTimeHigh,
+              volume24h: initialAsset.volume24h, // Placeholder, Finnhub quote doesn't have this directly
+              peRatio: initialAsset.peRatio, // Placeholder, needs fundamental data
+              epsDilutedTTM: initialAsset.epsDilutedTTM, // Placeholder
+              circulatingSupply: initialAsset.circulatingSupply, // Placeholder for crypto
+              allTimeHigh: initialAsset.allTimeHigh, // Placeholder for crypto
               icon: initialAsset.icon,
-              dataAiHint: profile.logo ? undefined : initialAsset.dataAiHint,
+              dataAiHint: profile.logo ? undefined : initialAsset.dataAiHint, // Use hint if Finnhub logo is missing
             };
             if(assetData.price !== undefined) initialPrices.set(assetData.id, assetData.price);
             return assetData;
@@ -95,8 +93,8 @@ export default function DashboardPage() {
             const fallbackAsset: Asset = {
                 ...initialAsset,
                 id: initialAsset.symbol.toLowerCase(),
-                price: initialAsset.price, 
-                change24h: initialAsset.change24h, 
+                price: initialAsset.price,
+                change24h: initialAsset.change24h,
             };
             if (fallbackAsset.price !== undefined) {
                  initialPrices.set(fallbackAsset.id, fallbackAsset.price);
@@ -105,10 +103,10 @@ export default function DashboardPage() {
           }
         } catch (error) {
           console.error(`Error fetching data for ${initialAsset.symbol}:`, error);
-          const fallbackOnError: Asset = {
+          const fallbackOnError: Asset = { // Fallback to ensure the app doesn't break
             ...initialAsset,
             id: initialAsset.symbol.toLowerCase(),
-            price: initialAsset.price, 
+            price: initialAsset.price,
             change24h: initialAsset.change24h,
           };
           if (fallbackOnError.price !== undefined) {
@@ -117,33 +115,32 @@ export default function DashboardPage() {
           return fallbackOnError;
         }
       });
-      
+
       const fetchedAssetsResults = await Promise.all(assetDataPromises);
-      // Filter out any potential nulls if map function could return null (though current logic returns fallbacks)
       const validAssets = fetchedAssetsResults.filter(asset => asset !== null) as Asset[];
-      
+
       setAssets(validAssets);
       previousPricesRef.current = initialPrices;
       setIsLoading(false);
     };
 
     fetchInitialAssetData();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   // Interval to update quotes
   useEffect(() => {
-    if (isLoading || assets.length === 0) return;
+    if (assets.length === 0) return; // Don't run interval if initial assets haven't loaded
 
     const intervalId = setInterval(async () => {
       const updatedAssetsPromises = assets.map(async (currentAsset) => {
         const quote = await fetchQuoteBySymbol(currentAsset.symbol);
         if (quote && quote.c !== undefined) {
           const oldPrice = previousPricesRef.current.get(currentAsset.id) || currentAsset.price || 0;
-          
+
           const newPrice = quote.c;
           if (userAlertPreferences.includes(currentAsset.id) && newPrice < oldPrice && oldPrice > 0) {
              const isStablecoin = currentAsset.type === 'crypto' && (currentAsset.symbol === 'USDT' || currentAsset.symbol === 'USDC' || currentAsset.symbol === 'DAI' || currentAsset.symbol === 'TUSD' || currentAsset.symbol === 'USDP');
-             if (!isStablecoin) { 
+             if (!isStablecoin) {
                 console.log(`Alert: ${currentAsset.name} price dropped to $${newPrice.toFixed(currentAsset.type === 'crypto' && (currentAsset.symbol === 'BTC' || currentAsset.symbol === 'ETH') ? 8 : 2)}`);
                 if (audioRef.current) {
                     audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
@@ -171,12 +168,10 @@ export default function DashboardPage() {
     }, FETCH_INTERVAL);
 
     return () => clearInterval(intervalId);
-  }, [assets, isLoading, userAlertPreferences]); 
+  }, [assets, userAlertPreferences]); // Re-run if assets list itself changes (e.g. after initial load)
 
   const filteredAssets = useMemo(() => {
-    if (isLoading && assets.length === 0) return [];
-
-    let tempAssets = [...assets]; 
+    let tempAssets = [...assets];
 
     if (searchQuery) {
       tempAssets = tempAssets.filter(
@@ -189,9 +184,9 @@ export default function DashboardPage() {
     if (activeFilters.type !== "all") {
       tempAssets = tempAssets.filter(asset => asset.type === activeFilters.type);
     }
-    
+
     return tempAssets;
-  }, [assets, searchQuery, activeFilters, isLoading]);
+  }, [assets, searchQuery, activeFilters]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -203,18 +198,22 @@ export default function DashboardPage() {
 
   const bitcoinAssetForWidget = useMemo(() => assets.find(asset => asset.symbol === 'BTC'), [assets]);
   const appleAssetForWidget = useMemo(() => assets.find(asset => asset.symbol === 'AAPL'), [assets]);
-  
+
+  if (isLoading) {
+    return <Loading />; // Show global loader during initial bulk data fetch
+  }
+
   return (
     <div className="space-y-8">
       <section className="space-y-6">
         <div className="bg-background py-4 border-b border-border/40 shadow-sm flex flex-col items-start gap-4">
-            
+
           <div className="w-full flex justify-start gap-4">
-            <BitcoinMiniChartWidget 
+            <BitcoinMiniChartWidget
               currentPrice={bitcoinAssetForWidget?.price}
               currentChangePercent={bitcoinAssetForWidget?.change24h ?? undefined}
             />
-            <AppleStockMiniChartWidget 
+            <AppleStockMiniChartWidget
               currentPrice={appleAssetForWidget?.price}
               currentChangePercent={appleAssetForWidget?.change24h ?? undefined}
             />
@@ -226,29 +225,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {(isLoading && assets.length === 0) ? ( 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
-            {[...Array(initialAssetSymbols.length)].map((_, i) => ( 
-              <Card key={i} className="overflow-hidden">
-                <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                   <Skeleton className="h-10 w-10 rounded-full" />
-                   <div className="space-y-1 flex-grow">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-2">
-                  <Skeleton className="h-7 w-2/3" />
-                  <Skeleton className="h-4 w-1/3" />
-                  <div className="mt-4 flex justify-between items-center pt-2">
-                    <Skeleton className="h-9 w-24" />
-                    <Skeleton className="h-9 w-9 rounded-md" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : filteredAssets.length > 0 ? (
+        {filteredAssets.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
             {filteredAssets.map((asset) => (
               <AssetCard key={asset.id} asset={asset} />

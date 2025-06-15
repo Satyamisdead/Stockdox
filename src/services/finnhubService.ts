@@ -16,7 +16,6 @@ const getApiKey = (): string | undefined => {
   if (typeof window !== 'undefined') {
     API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY;
     if (!API_KEY) {
-      // This log might be redundant if the above already caught it, but good for direct calls.
       console.error("Finnhub API Key is missing. Ensure NEXT_PUBLIC_FINNHUB_API_KEY is set.");
     }
   }
@@ -38,10 +37,10 @@ export async function fetchQuoteBySymbol(symbol: string): Promise<FinnhubQuote |
     }
     const data: FinnhubQuote = await response.json();
     // Finnhub returns 0 for all fields if symbol is not found or other issues.
-    // A more robust check might be needed if 0 is a valid price for some assets.
-    if (data.c === 0 && data.pc === 0 && data.t === 0) {
-        console.warn(`Finnhub returned all zeros for ${symbol}, might be an invalid symbol or no data.`);
-        return null; // Or handle as "no data"
+    // Check if critical price data is zero, indicating no useful data was returned.
+    if (data.c === 0 && data.pc === 0 && data.o === 0 && data.h === 0 && data.l === 0 && data.t === 0) {
+        console.warn(`Finnhub returned all zero values for quote ${symbol}, likely an invalid symbol or no data available.`);
+        return null;
     }
     return data;
   } catch (error) {
@@ -54,17 +53,15 @@ export async function fetchProfileBySymbol(symbol: string, assetType: 'stock' | 
   const currentApiKey = getApiKey();
   if (!currentApiKey) return null;
 
-  // For crypto, Finnhub doesn't have a direct "profile" like stocks.
-  // We can return a basic profile or fetch other relevant crypto data later.
-  // For now, if it's crypto, we might just return name/ticker from a predefined list or other source.
-  // This example focuses on stock profiles.
   if (assetType === 'crypto') {
-    // Basic profile for crypto
+    // For crypto, provide a basic profile; Finnhub's /stock/profile2 is for stocks.
+    // Use a known pattern for TradingView SVG logos if direct Finnhub logo isn't available.
+    // The placeholder-data.ts already has more specific logo URLs for crypto which are preferred.
     return {
-      name: symbol.toUpperCase(), // Often name and symbol are same or similar
+      name: symbol.toUpperCase(),
       ticker: symbol.toUpperCase(),
       finnhubIndustry: 'Cryptocurrency',
-      logo: `https://s3-symbol-logo.tradingview.com/crypto/XTVC${symbol.toUpperCase()}--big.svg` // Default TV logo pattern
+      // logo: `https://s3-symbol-logo.tradingview.com/crypto/XTVC${symbol.toUpperCase()}--big.svg` // This is a generic fallback, specific ones in placeholder data are better.
     };
   }
 
@@ -72,11 +69,14 @@ export async function fetchProfileBySymbol(symbol: string, assetType: 'stock' | 
     const response = await fetch(`${FINNHUB_API_BASE_URL}/stock/profile2?symbol=${symbol.toUpperCase()}&token=${currentApiKey}`);
     if (!response.ok) {
       console.error(`Error fetching profile for ${symbol}: ${response.status} ${response.statusText}`);
+      const errorData = await response.text();
+      console.error("Finnhub error details for profile:", errorData);
       return null;
     }
     const data: FinnhubProfile = await response.json();
-    if (Object.keys(data).length === 0) { // Finnhub returns empty object for unknown symbols
-        console.warn(`Finnhub returned an empty profile for ${symbol}.`);
+    // Check if Finnhub returned an empty object, indicating symbol not found.
+    if (Object.keys(data).length === 0 && data.constructor === Object) {
+        console.warn(`Finnhub returned an empty profile object for ${symbol}.`);
         return null;
     }
     return data;
