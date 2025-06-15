@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { auth } from '@/lib/firebase'; // Direct import
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { UserCircle, LogOut, LineChart, Eye, Loader2 } from 'lucide-react';
+import { UserCircle, LogOut, LineChart, Eye } from 'lucide-react'; // Removed Loader2
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,15 +20,16 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton'; // Added Skeleton
 
 export default function SiteHeader() {
-  const { user, loading: authLoading } = useAuth(); // Renamed loading to authLoading
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
   const handleSignOut = async () => {
-    if (auth) { // Use imported auth
+    if (auth) {
       try {
         await signOut(auth);
         toast({ title: "Signed Out", description: "You have been successfully signed out." });
@@ -53,15 +54,19 @@ export default function SiteHeader() {
           <Button variant="ghost" asChild>
             <Link href="/" className="gap-1.5"><LineChart size={18}/>Dashboard</Link>
           </Button>
-          {user && ( // Only show watchlist if user is logged in
+          {user && !authLoading && ( // Show watchlist only if user is logged in and auth is resolved
             <Button variant="ghost" asChild>
               <Link href="/watchlist" className="gap-1.5"><Eye size={18}/>Watchlist</Link>
             </Button>
           )}
+          {authLoading && !user && ( // Placeholder for watchlist button if loading and no user known yet
+             <Skeleton className="h-9 w-28" /> // Matches approx size of watchlist button
+          )}
           
           {authLoading ? (
-            <div className="flex items-center justify-center h-9 w-24">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <div className="flex items-center gap-2" aria-busy="true" aria-live="polite">
+              <Skeleton className="h-9 w-[70px] rounded-md" /> {/* Placeholder for "Sign In" button */}
+              <Skeleton className="h-9 w-[70px] rounded-md" /> {/* Placeholder for "Sign Up" button */}
             </div>
           ) : user ? (
             <> {/* Fragment to group DropdownMenu and dedicated Logout Button */}
@@ -91,7 +96,6 @@ export default function SiteHeader() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Dedicated Logout Button */}
               <Button variant="ghost" size="icon" onClick={handleSignOut} title="Log Out" className="h-9 w-9">
                 <LogOut className="h-5 w-5" />
               </Button>
