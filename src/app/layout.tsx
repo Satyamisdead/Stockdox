@@ -9,10 +9,43 @@ import MobileBottomNav from '@/components/core/MobileBottomNav';
 import InstallPWAHandler from '@/components/core/InstallPWAHandler';
 import ChatbotLauncher from '@/components/chatbot/ChatbotLauncher';
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // Fallback for local dev
+
 export const metadata: Metadata = {
   title: 'Stockdox',
   description: 'Real-time stock and cryptocurrency tracking application. Your go-to PWA for market insights.',
   manifest: '/manifest.json',
+  metadataBase: new URL(siteUrl), // Required for absolute image URLs in Open Graph
+  openGraph: {
+    title: 'Stockdox',
+    description: 'Real-time stock and cryptocurrency tracking application. Your go-to PWA for market insights.',
+    url: siteUrl,
+    siteName: 'Stockdox',
+    images: [
+      {
+        url: '/og-image.png', // Path relative to the public folder
+        width: 1200,
+        height: 630,
+        alt: 'Stockdox App Preview',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Stockdox',
+    description: 'Real-time stock and cryptocurrency tracking application. Your go-to PWA for market insights.',
+    images: ['/og-image.png'], // Path relative to the public folder
+    // creator: '@yourtwitterhandle', // Optional: Add your Twitter handle
+  },
+  icons: { // Consolidate favicon links here
+    icon: [
+      { url: '/favicon.ico', sizes: 'any', type: 'image/x-icon' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.png', // For apple-touch-icon
+  },
 };
 
 export default function RootLayout({
@@ -27,7 +60,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
         
-        {/* PWA Meta Tags */}
+        {/* PWA Meta Tags - some are covered by Next.js metadata, others can remain for full control */}
         <meta name="application-name" content="Stockdox" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" /> 
@@ -42,11 +75,15 @@ export default function RootLayout({
         {/* Viewport settings for responsiveness */}
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-        {/* Favicon links - Assumes these exist in /public, remove if not or update paths */}
+        {/* Favicon links are now handled by the metadata object's 'icons' property, 
+            but you can keep specific ones here if Next.js metadata doesn't cover a niche case.
+            The ones in the metadata object should be sufficient for most modern browsers & PWA.
+        */}
+        {/* 
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" /> 
+        */}
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col bg-background text-foreground">
         <FirebaseProvider>
