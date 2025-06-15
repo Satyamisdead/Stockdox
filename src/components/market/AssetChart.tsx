@@ -25,13 +25,16 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
       let tvSymbol = symbol.toUpperCase();
       if (assetType === 'stock') {
         const upperExchange = exchange?.toUpperCase();
-        if (upperExchange === 'NASDAQ') tvSymbol = `NASDAQ:${symbol.toUpperCase()}`;
-        else if (upperExchange === 'NYSE') tvSymbol = `NYSE:${symbol.toUpperCase()}`;
-        else if (upperExchange) tvSymbol = `${upperExchange}:${symbol.toUpperCase()}`;
-        // If no exchange or not a major one, TradingView might still find common symbols like 'AAPL'
+        if (upperExchange === 'NASDAQ' || upperExchange === 'NYSE') {
+          tvSymbol = `${upperExchange}:${symbol.toUpperCase()}`;
+        } else {
+          // For other exchanges or if no exchange is provided,
+          // just use the symbol. TradingView can often resolve major symbols.
+          tvSymbol = symbol.toUpperCase();
+        }
       } else if (assetType === 'crypto') {
-        // Default to USDT pairing on a major exchange like Binance or use provided exchange.
         const cryptoExchange = exchange ? exchange.toUpperCase() : "BINANCE";
+        // Common pairs, otherwise assume <SYMBOL>USDT
         if (symbol.toUpperCase() === 'BTC') tvSymbol = `${cryptoExchange}:BTCUSDT`;
         else if (symbol.toUpperCase() === 'ETH') tvSymbol = `${cryptoExchange}:ETHUSDT`;
         else tvSymbol = `${cryptoExchange}:${symbol.toUpperCase()}USDT`; 
@@ -45,27 +48,25 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
         // Clear previous widget if any
         chartContainerRef.current.innerHTML = ''; 
         
-        // Dark theme color values from your globals.css (approximated HEX/RGBA)
-        const darkCardBackground = '#0D0D0D'; // hsl(0 0% 5%)
-        const darkBorderTransparent = 'rgba(38, 38, 38, 0.2)'; // hsla(0, 0%, 15%, 0.2)
-        const darkCardForeground = '#D3D3D3'; // hsl(0 0% 82.7%)
-        const darkPrimaryYellow = '#FFD700'; // hsl(51 100% 50%)
-        const candleDownColor = '#AAAAAA'; // Light grey
+        const darkCardBackground = '#0D0D0D'; 
+        const darkBorderTransparent = 'rgba(38, 38, 38, 0.2)'; 
+        const darkCardForeground = '#D3D3D3'; 
+        const darkPrimaryYellow = '#FFD700'; 
+        const candleDownColor = '#AAAAAA'; 
 
         const widgetOptions = {
           autosize: true,
           symbol: tradingViewSymbol(),
           interval: "D",
           timezone: "Etc/UTC",
-          theme: "dark", // Using TradingView's dark theme as a base
-          style: "1", // Candlesticks
+          theme: "dark", 
+          style: "1", 
           locale: "en",
           enable_publishing: false,
           allow_symbol_change: true,
           container_id: chartContainerRef.current.id,
           hide_side_toolbar: true,
           details: true, 
-          // Removed calendar, hotlist, news for compactness
           overrides: {
             "mainSeriesProperties.candleStyle.upColor": darkPrimaryYellow,
             "mainSeriesProperties.candleStyle.downColor": candleDownColor,
@@ -86,7 +87,6 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
         
         new (window as any).TradingView.widget(widgetOptions);
       } else if (chartContainerRef.current && !scriptAddedRef.current) {
-        // Script might not be loaded yet, wait for script.onload
         console.warn("[AssetChart] TradingView script not loaded yet, widget initialization deferred.");
       } else if (!chartContainerRef.current) {
         console.warn("[AssetChart] Chart container ref is not available.");
@@ -108,20 +108,10 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
       }
       document.head.appendChild(script);
     } else {
-      // Script already added, just initialize
       initializeWidget();
     }
 
-    // Cleanup function to remove the script if the component unmounts,
-    // though generally not strictly necessary if scriptAddedRef prevents re-adding.
-    // return () => {
-    //   const tvScript = document.getElementById('tradingview-widget-script');
-    //   if (tvScript && tvScript.parentElement === document.head) {
-    //      // document.head.removeChild(tvScript); // Be cautious with removing shared scripts
-    //      // scriptAddedRef.current = false; // Reset if script removal is aggressive
-    //   }
-    // };
-  }, [symbol, assetType, exchange, name]); // Re-initialize if these key props change
+  }, [symbol, assetType, exchange, name]); 
 
   return (
     <Card className="h-[350px] md:h-[450px] w-full flex flex-col shadow-lg">
@@ -129,11 +119,11 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
         <CardTitle className="font-headline">{name} ({symbol.toUpperCase()}) Chart</CardTitle>
         <CardDescription>Interactive chart powered by TradingView</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow pb-4 pr-2 flex"> {/* Added flex here */}
+      <CardContent className="flex-grow pb-4 pr-2 flex"> 
         <div 
           id={`tradingview_chart_widget_${symbol.replace(/[^a-zA-Z0-9]/g, '')}_${assetType}`} 
           ref={chartContainerRef} 
-          className="h-full w-full" // Ensure div takes full space of CardContent
+          className="h-full w-full"
         />
       </CardContent>
     </Card>
@@ -141,4 +131,3 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
 };
 
 export default AssetChart;
-
