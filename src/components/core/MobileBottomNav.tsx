@@ -45,7 +45,7 @@ export default function MobileBottomNav() {
   
   const navItemsBase = [
     { id: 'home', href: "/", label: "Home", icon: Home, requiresAuth: false },
-    { id: 'games', href: "/games", label: "Games", icon: Gamepad2, requiresAuth: false },
+    { id: 'games', href: "/games", label: "Take a Break", icon: Gamepad2, requiresAuth: false },
     { id: 'news', href: "/news", label: "News", icon: Newspaper, requiresAuth: false },
   ];
 
