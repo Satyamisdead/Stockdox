@@ -6,7 +6,7 @@ import AssetCard from "@/components/market/AssetCard";
 import SearchBar from "@/components/market/SearchBar";
 import FilterControls from "@/components/market/FilterControls";
 import { placeholderAssets as initialAssetSymbols } from "@/lib/placeholder-data"; // Use this for initial symbols and types
-import type { Asset, FinnhubQuote, FinnhubProfile } from "@/types";
+import type { Asset } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
@@ -16,7 +16,6 @@ import { getAlertedAssetIds } from "@/services/userPreferenceService";
 import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService";
 
 const FETCH_INTERVAL = 30000; // Fetch new quotes every 30 seconds
-const INITIAL_ASSETS_TO_LOAD = 8; // Load a subset of assets initially for performance
 
 export default function DashboardPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -50,7 +49,8 @@ export default function DashboardPage() {
 
   // Load initial data from Finnhub
   useEffect(() => {
-    const symbolsToLoad = initialAssetSymbols.slice(0, INITIAL_ASSETS_TO_LOAD);
+    // Load all assets defined in placeholder-data.ts
+    const symbolsToLoad = initialAssetSymbols; 
 
     const fetchInitialAssetData = async () => {
       setIsLoading(true);
@@ -92,12 +92,11 @@ export default function DashboardPage() {
         } else {
            console.warn(`Could not fetch full data for ${initialAsset.symbol}. Profile: ${!!profile}, Quote: ${!!quote}`);
            // Fallback to placeholder if API fails for some assets
-           // This maintains UI consistency but shows potentially stale placeholder data.
             const fallbackAsset: Asset = {
                 ...initialAsset,
                 id: initialAsset.symbol.toLowerCase(),
-                price: initialAsset.price, // fallback price
-                change24h: initialAsset.change24h, // fallback change
+                price: initialAsset.price, 
+                change24h: initialAsset.change24h, 
             };
             fetchedAssets.push(fallbackAsset);
             if (fallbackAsset.price !== undefined) {
@@ -123,11 +122,10 @@ export default function DashboardPage() {
         if (quote && quote.c !== undefined) {
           const oldPrice = previousPricesRef.current.get(currentAsset.id) || currentAsset.price || 0;
           
-          // Alert logic (simplified for fetched data)
           const newPrice = quote.c;
           if (userAlertPreferences.includes(currentAsset.id) && newPrice < oldPrice && oldPrice > 0) {
              const isStablecoin = currentAsset.type === 'crypto' && (currentAsset.symbol === 'USDT' || currentAsset.symbol === 'USDC' || currentAsset.symbol === 'DAI' || currentAsset.symbol === 'TUSD' || currentAsset.symbol === 'USDP');
-             if (!isStablecoin) { // Exclude stablecoins from audio alerts for minor fluctuations
+             if (!isStablecoin) { 
                 console.log(`Alert: ${currentAsset.name} price dropped to $${newPrice.toFixed(currentAsset.type === 'crypto' && (currentAsset.symbol === 'BTC' || currentAsset.symbol === 'ETH') ? 8 : 2)}`);
                 if (audioRef.current) {
                     audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
@@ -212,7 +210,8 @@ export default function DashboardPage() {
 
         {(isLoading && assets.length === 0) ? ( 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
-            {[...Array(INITIAL_ASSETS_TO_LOAD)].map((_, i) => ( 
+            {/* Show skeletons based on the number of assets we intend to load initially */}
+            {[...Array(initialAssetSymbols.length)].map((_, i) => ( 
               <Card key={i} className="overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-3 pb-2">
                    <Skeleton className="h-10 w-10 rounded-full" />
@@ -241,6 +240,7 @@ export default function DashboardPage() {
         ) : (
           <div className="text-center py-16">
             <p className="text-xl text-muted-foreground">No assets found matching your criteria.</p>
+            {searchQuery && <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters.</p>}
           </div>
         )}
       </section>
