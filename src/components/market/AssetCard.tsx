@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { getAlertedAssetIds, toggleAlertForAsset } from "@/services/userPreferenceService";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 
 type AssetCardProps = {
   asset: Asset;
@@ -76,12 +77,11 @@ export default function AssetCard({ asset }: AssetCardProps) {
     }
   };
 
-  // Determine icon: Lucide component, string character, or FallbackIcon
   let IconComponent;
   if (asset.icon && typeof asset.icon !== 'string') {
     IconComponent = asset.icon;
   } else {
-    IconComponent = FallbackIcon; // Default fallback
+    IconComponent = FallbackIcon;
   }
 
 
@@ -89,15 +89,20 @@ export default function AssetCard({ asset }: AssetCardProps) {
     <Card className="hover:shadow-primary/20 hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-3">
-          {asset.logoUrl && asset.logoUrl !== 'https://placehold.co/40x40.png' ? ( // Check if logoUrl is not the placeholder
+          {asset.logoUrl && asset.logoUrl !== 'https://placehold.co/40x40.png' ? (
             <Image 
               src={asset.logoUrl} 
               alt={`${asset.name} logo`} 
               width={40} 
               height={40} 
               className="rounded-full"
-              data-ai-hint={asset.dataAiHint || asset.name.toLowerCase().split(" ")[0]} // Use first word of name if no specific hint
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} // Hide image on error
+              data-ai-hint={asset.dataAiHint || asset.name.toLowerCase().split(" ")[0]}
+              onError={(e) => { 
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevent infinite loop if fallback also fails
+                target.src = 'https://placehold.co/40x40.png'; 
+                target.dataset.aiHint = 'default logo';
+              }}
             />
           ) : typeof asset.icon === 'string' && asset.icon.length === 1 ? (
              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-lg font-bold text-primary">
@@ -108,7 +113,7 @@ export default function AssetCard({ asset }: AssetCardProps) {
           )}
           <div>
             <CardTitle className="text-lg font-medium font-headline">{asset.name || asset.symbol}</CardTitle>
-            <CardDescription className="text-xs text-muted-foreground">{asset.symbol} - {asset.type === 'stock' ? 'Stock' : 'Crypto'}</CardDescription>
+            <CardDescription className="text-xs text-muted-foreground">{asset.symbol} - {asset.type === 'stock' ? (asset.sector || 'Stock') : 'Crypto'}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -127,7 +132,7 @@ export default function AssetCard({ asset }: AssetCardProps) {
               <Link href={`/asset/${asset.id}`}>View Details</Link>
             </Button>
             <Button variant="ghost" size="icon" title="Set Alert" onClick={handleSetAlert} disabled={isAlertLoading || authLoading}>
-              {isAlertLoading || (authLoading && !user) ? ( // Show loader if auth is loading and user isn't determined yet
+              {isAlertLoading || (authLoading && !user) ? ( 
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <BellRing className={cn("h-4 w-4", isAlertActive ? "text-primary fill-primary/20" : "text-muted-foreground hover:text-primary")} />
@@ -139,3 +144,5 @@ export default function AssetCard({ asset }: AssetCardProps) {
     </Card>
   );
 }
+
+    

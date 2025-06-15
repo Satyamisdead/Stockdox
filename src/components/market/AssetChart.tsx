@@ -26,23 +26,32 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
         if (exchange) {
           if (exchange.toUpperCase().includes('NASDAQ')) tvSymbol = `NASDAQ:${symbol.toUpperCase()}`;
           else if (exchange.toUpperCase().includes('NYSE')) tvSymbol = `NYSE:${symbol.toUpperCase()}`;
-          else tvSymbol = `${exchange.split(' ')[0].toUpperCase()}:${symbol.toUpperCase()}`;
+          // Finnhub exchange names can be "NEW YORK STOCK EXCHANGE, INC." or "NASDAQ NMS - GLOBAL MARKET"
+          // We need to simplify them for TradingView.
+          else {
+            const simpleExchange = exchange.split(' ')[0].toUpperCase(); // Basic heuristic
+            tvSymbol = `${simpleExchange}:${symbol.toUpperCase()}`;
+          }
         } else {
+           // If no exchange, just use symbol - TradingView might pick a default exchange
            tvSymbol = symbol.toUpperCase(); 
         }
       } else if (assetType === 'crypto') {
-        // Prefer more specific exchange pairs if known, otherwise default to BINANCE:SYMBOLUSDT
-        // This mapping can be expanded based on common TradingView crypto symbols
         const commonCryptoExchanges = ["BINANCE", "COINBASE", "KRAKEN", "BITSTAMP", "KUCOIN", "BYBIT", "OKX"];
         let found = false;
+
+        // Try common USDT pairings first
         for (const ex of commonCryptoExchanges) {
-            // Attempt common pairings like BTCUSDT, ETHUSDT. Some exchanges might list BTCUSD.
-            // This is a heuristic. A more robust solution might involve a symbol mapping service.
-            if (symbol.toUpperCase() === 'BTC') { tvSymbol = `${ex}:BTCUSDT`; found = true; break;}
-            if (symbol.toUpperCase() === 'ETH') { tvSymbol = `${ex}:ETHUSDT`; found = true; break;}
+          if (ex === (exchange?.toUpperCase())) { // If exchange prop is provided and matches
+             tvSymbol = `${ex}:${symbol.toUpperCase()}USDT`;
+             found = true;
+             break;
+          }
         }
-        if (!found) { // Default if not BTC/ETH or a more specific mapping isn't set
-            tvSymbol = `BINANCE:${symbol.toUpperCase()}USDT`; 
+        if (!found) { // Generic fallbacks
+          if (symbol.toUpperCase() === 'BTC') { tvSymbol = `BINANCE:BTCUSDT`; }
+          else if (symbol.toUpperCase() === 'ETH') { tvSymbol = `BINANCE:ETHUSDT`; }
+          else { tvSymbol = `BINANCE:${symbol.toUpperCase()}USDT`;  } // Default if not BTC/ETH or specific exchange
         }
       }
       return tvSymbol;
@@ -50,7 +59,7 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
 
     const initializeWidget = () => {
       if (chartContainerRef.current && typeof (window as any).TradingView !== 'undefined') {
-        chartContainerRef.current.innerHTML = ''; // Clear previous widget
+        chartContainerRef.current.innerHTML = ''; 
         
         const widgetOptions = {
           autosize: true,
@@ -58,29 +67,32 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
           interval: "D",
           timezone: "Etc/UTC",
           theme: "dark",
-          style: "1", // Candlesticks
+          style: "1", 
           locale: "en",
           enable_publishing: false,
           allow_symbol_change: true,
           container_id: chartContainerRef.current.id,
-          hide_side_toolbar: true, // For compactness
-          details: true, // Shows OHL C under legend
-          // Removed hotlist, calendar, news for more compactness
+          hide_side_toolbar: true, 
+          details: true, 
+          // Removing calendar, hotlist, news to make it more compact
+          // "calendar": false,
+          // "hotlist": false,
+          // "news": [], 
           overrides: {
-            "mainSeriesProperties.candleStyle.upColor": "#FFD700",    // Yellow
-            "mainSeriesProperties.candleStyle.downColor": "#AAAAAA",  // Light Grey
+            "mainSeriesProperties.candleStyle.upColor": "#FFD700", // Yellow
+            "mainSeriesProperties.candleStyle.downColor": "#AAAAAA", // Light Grey
             "mainSeriesProperties.candleStyle.drawBorder": true,
             "mainSeriesProperties.candleStyle.borderUpColor": "#FFD700",
             "mainSeriesProperties.candleStyle.borderDownColor": "#AAAAAA",
             "mainSeriesProperties.candleStyle.wickUpColor": "#FFD700",
             "mainSeriesProperties.candleStyle.wickDownColor": "#AAAAAA",
-            // You can also override background and grid colors if needed
-            // "paneProperties.background": "#1A1A1A", // Example: very dark grey
-            // "paneProperties.vertGridProperties.color": "#333333",
-            // "paneProperties.horzGridProperties.color": "#333333",
+            "paneProperties.backgroundType": "solid", // Or "gradient"
+            "paneProperties.background": "hsl(var(--card))", // Match card background
+            "paneProperties.vertGridProperties.color": "hsla(var(--border), 0.5)",
+            "paneProperties.horzGridProperties.color": "hsla(var(--border), 0.5)",
+            "scalesProperties.textColor": "hsl(var(--card-foreground))",
+            "mainSeriesProperties.priceLineColor": "hsl(var(--primary))"
           },
-          // For further compactness, especially on mobile, you might consider:
-          // hide_top_toolbar: true, // If you want to remove the top toolbar with timeframes, etc.
         };
         
         new (window as any).TradingView.widget(widgetOptions);
@@ -105,24 +117,25 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
     }
 
     return () => {
+      // Clean up the widget if the component unmounts, though TradingView might handle this internally too
       if (chartContainerRef.current) {
-        chartContainerRef.current.innerHTML = '';
+        // chartContainerRef.current.innerHTML = ''; // This can cause issues if script re-runs too quickly
       }
     };
 
-  }, [symbol, assetType, exchange, name]); // Added name to dependencies, though not directly used in logic, good practice if future options depend on it.
+  }, [symbol, assetType, exchange, name]);
 
   return (
-    <Card className="h-[350px] md:h-[450px] w-full"> {/* Adjusted height for compactness */}
+    <Card className="h-[400px] md:h-[500px] w-full flex flex-col shadow-lg"> {/* Slightly increased height for better chart view */}
       <CardHeader>
-        <CardTitle>{name} Chart</CardTitle>
-        <CardDescription>Powered by TradingView</CardDescription>
+        <CardTitle className="font-headline">{name} ({symbol}) Chart</CardTitle>
+        <CardDescription>Interactive chart powered by TradingView</CardDescription>
       </CardHeader>
-      <CardContent className="h-full pb-6">
+      <CardContent className="flex-grow pb-4 pr-2"> {/* Ensure padding doesn't shrink chart area too much */}
         <div 
-          id={`tradingview_chart_widget_${symbol.replace(/[^a-zA-Z0-9]/g, '')}`} // Ensure ID is DOM-friendly
+          id={`tradingview_chart_widget_${symbol.replace(/[^a-zA-Z0-9]/g, '')}`} 
           ref={chartContainerRef} 
-          style={{ height: 'calc(100% - 40px)', width: '100%' }}
+          className="h-full w-full"
         />
       </CardContent>
     </Card>
@@ -130,3 +143,5 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
 };
 
 export default AssetChart;
+
+    
