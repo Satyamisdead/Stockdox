@@ -2,85 +2,112 @@
 "use client";
 
 import { useMemo, useEffect, useState } from "react";
-import { placeholderNews, getAssetById as getPlaceholderAssetById } from "@/lib/placeholder-data"; // Keep for news and initial structure
-import type { Asset, NewsArticle, FinnhubQuote, FinnhubProfile } from "@/types";
+import { useParams, notFound, useRouter } from "next/navigation"; 
+import type { Asset, NewsArticle } from "@/types";
+import { getAssetById as getPlaceholderAssetById, placeholderNews } from "@/lib/placeholder-data";
 import Image from "next/image";
 import PriceDisplay from "@/components/market/PriceDisplay";
 import AssetChart from "@/components/market/AssetChart";
 import NewsItem from "@/components/market/NewsItem";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { notFound, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Info, DollarSign, Bitcoin, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService";
 import Loading from "@/app/loading"; 
-import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function AssetDetailPage({ params }: { params: { id: string } }) {
+export default function AssetDetailPage() {
   const router = useRouter();
-  const [asset, setAsset] = useState<Asset | null | undefined>(undefined); // undefined for loading, null for not found
+  const routeParams = useParams<{ id?: string }>(); // Use the hook
+
+  const assetId = routeParams?.id;
+
+  const [asset, setAsset] = useState<Asset | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const assetId = params.id;
-    if (!assetId) {
+    // This effect handles the case where assetId might not be available initially,
+    // or if params resolves but 'id' is missing.
+    if (routeParams && typeof routeParams.id === 'undefined' && Object.keys(routeParams).length > 0) {
+      // routeParams object is available and has keys, but 'id' is not one of them.
+      setIsLoading(false);
       notFound();
       return;
     }
 
+    if (!assetId) {
+      // If assetId is still not available, it might be because useParams hasn't resolved yet.
+      // We keep isLoading true unless routeParams has resolved to an empty object or object without 'id'.
+      if (routeParams && Object.keys(routeParams).length === 0) {
+         // If routeParams resolved to an empty object and we still have no assetId, it's a notFound.
+         setIsLoading(false);
+         notFound();
+      }
+      return; 
+    }
+
+    setAsset(undefined); 
+    setIsLoading(true);
+
     const fetchData = async () => {
-      setIsLoading(true);
       const placeholderAsset = getPlaceholderAssetById(assetId); 
       
       if (!placeholderAsset) {
         setAsset(null); 
         setIsLoading(false);
+        notFound(); 
         return;
       }
 
-      const profile = await fetchProfileBySymbol(placeholderAsset.symbol, placeholderAsset.type);
-      const quote = await fetchQuoteBySymbol(placeholderAsset.symbol);
+      try {
+        const profile = await fetchProfileBySymbol(placeholderAsset.symbol, placeholderAsset.type);
+        const quote = await fetchQuoteBySymbol(placeholderAsset.symbol);
 
-      if (profile && quote && quote.c !== undefined) {
-        const fetchedAssetData: Asset = {
-          id: placeholderAsset.id,
-          symbol: placeholderAsset.symbol.toUpperCase(),
-          name: profile.name || placeholderAsset.name,
-          type: placeholderAsset.type,
-          price: quote.c,
-          change24h: quote.dp,
-          dailyChange: quote.d,
-          dailyHigh: quote.h,
-          dailyLow: quote.l,
-          dailyOpen: quote.o,
-          previousClose: quote.pc,
-          marketCap: profile.marketCapitalization,
-          logoUrl: profile.logo || placeholderAsset.logoUrl,
-          sector: profile.finnhubIndustry || placeholderAsset.sector,
-          exchange: profile.exchange,
-          volume24h: placeholderAsset.volume24h,
-          peRatio: placeholderAsset.peRatio,
-          epsDilutedTTM: placeholderAsset.epsDilutedTTM,
-          epsDilutedGrowthTTMYoY: placeholderAsset.epsDilutedGrowthTTMYoY,
-          dividendYieldTTM: placeholderAsset.dividendYieldTTM,
-          circulatingSupply: placeholderAsset.circulatingSupply,
-          allTimeHigh: placeholderAsset.allTimeHigh,
-          relativeVolume: placeholderAsset.relativeVolume,
-          icon: placeholderAsset.icon,
-          dataAiHint: profile.logo ? undefined : placeholderAsset.dataAiHint,
-        };
-        setAsset(fetchedAssetData);
-      } else {
-        console.warn(`Could not fetch full Finnhub data for ${placeholderAsset.symbol}. Using placeholder data.`);
-        setAsset(placeholderAsset); 
+        if (profile && quote && quote.c !== undefined) {
+          const fetchedAssetData: Asset = {
+            id: placeholderAsset.id,
+            symbol: placeholderAsset.symbol.toUpperCase(),
+            name: profile.name || placeholderAsset.name,
+            type: placeholderAsset.type,
+            price: quote.c,
+            change24h: quote.dp,
+            dailyChange: quote.d,
+            dailyHigh: quote.h,
+            dailyLow: quote.l,
+            dailyOpen: quote.o,
+            previousClose: quote.pc,
+            marketCap: profile.marketCapitalization,
+            logoUrl: profile.logo || placeholderAsset.logoUrl,
+            sector: profile.finnhubIndustry || placeholderAsset.sector,
+            exchange: profile.exchange,
+            volume24h: placeholderAsset.volume24h,
+            peRatio: placeholderAsset.peRatio,
+            epsDilutedTTM: placeholderAsset.epsDilutedTTM,
+            epsDilutedGrowthTTMYoY: placeholderAsset.epsDilutedGrowthTTMYoY,
+            dividendYieldTTM: placeholderAsset.dividendYieldTTM,
+            circulatingSupply: placeholderAsset.circulatingSupply,
+            allTimeHigh: placeholderAsset.allTimeHigh,
+            relativeVolume: placeholderAsset.relativeVolume,
+            icon: placeholderAsset.icon,
+            dataAiHint: profile.logo ? undefined : placeholderAsset.dataAiHint,
+          };
+          setAsset(fetchedAssetData);
+        } else {
+          console.warn(`Could not fetch full Finnhub data for ${placeholderAsset.symbol}. Using placeholder data including its price/change.`);
+          setAsset(placeholderAsset); 
+        }
+      } catch (error) {
+        console.error(`Error fetching data for ${assetId}:`, error);
+        setAsset(placeholderAsset); // Fallback to placeholder on error
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchData();
-  }, [params.id]);
+  }, [assetId, routeParams, notFound]);
 
 
   const relatedNews = useMemo(() => {
@@ -104,11 +131,18 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
   }
 
   if (asset === null) { 
-    notFound();
+    // This state means the placeholderAsset was not found, notFound() should have been called.
+    // This return is a defensive measure.
+    return null; 
   }
   
+  // If not loading and asset is still undefined, it means something went wrong or assetId was invalid.
+  // The useEffect should call notFound() in such cases.
   if (!asset) { 
-      return <Loading />; 
+    // This is a fallback. If notFound() was correctly called, this shouldn't be hit often.
+    // However, if assetId was valid, but fetching failed and error handling didn't set asset to placeholder.
+    notFound(); // Ensure notFound is triggered.
+    return null; // Return null to satisfy TypeScript after notFound call.
   }
 
 
@@ -143,7 +177,7 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
   } else if (asset.type === 'crypto') {
      let pricePrecision = 2;
      if (asset.price !== undefined) {
-        if (asset.symbol === 'BTC' || asset.symbol === 'ETH') pricePrecision = 2; // For TradingView consistency, less precision can be better. TV handles it.
+        if (asset.symbol === 'BTC' || asset.symbol === 'ETH') pricePrecision = 2;
         else if (asset.price < 0.01) pricePrecision = 6;
         else if (asset.price < 1) pricePrecision = 4;
      }
@@ -160,7 +194,7 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
       { label: "Circulating Supply", value: asset.circulatingSupply || "N/A" },
       { label: "All-Time High", value: asset.allTimeHigh || "N/A" },
       { label: "Asset Type", value: "Cryptocurrency" },
-      { label: "Exchange", value: asset.exchange || "N/A" }, // Exchange here is from Finnhub, may differ from TradingView's
+      { label: "Exchange", value: asset.exchange || "N/A" },
     ];
   }
 
@@ -182,7 +216,7 @@ export default function AssetDetailPage({ params }: { params: { id: string } }) 
               height={60} 
               className="rounded-full shadow-lg"
               data-ai-hint={asset.dataAiHint || asset.name.toLowerCase().split(" ")[0]}
-              onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/60x60.png'; (e.target as HTMLImageElement).dataset.aiHint = 'default logo'; }} // Fallback to placeholder on error
+              onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/60x60.png'; (e.target as HTMLImageElement).dataset.aiHint = 'default logo'; }}
             />
           ) : typeof asset.icon === 'string' && asset.icon.length === 1 ? (
              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-2xl font-bold text-primary">
