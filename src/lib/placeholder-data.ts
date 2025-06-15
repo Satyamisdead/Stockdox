@@ -14,7 +14,7 @@ export const placeholderAssets: Asset[] = [
     name: 'Apple Inc.', 
     symbol: 'AAPL', 
     type: 'stock', 
-    price: 170.50, 
+    price: 196.50, 
     change24h: 1.25, 
     marketCap: 2.8e12, 
     volume24h: 50e6, 
