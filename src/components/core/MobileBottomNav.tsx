@@ -2,47 +2,28 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Home, User, Eye, LogOut, Gamepad2, Newspaper } from "lucide-react"; 
+import { usePathname } from "next/navigation";
+import { Home, User, Eye, LogIn, Gamepad2, Newspaper } from "lucide-react"; 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function MobileBottomNav() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const { user, loading } = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
 
   if (!isMobile) {
     return null;
   }
 
-  // Do not show bottom nav on signin/signup pages for better UX
-  if (pathname === "/signin" || pathname === "/signup") {
+  // Do not show bottom nav on signin/signup/profile pages for better UX
+  if (pathname === "/signin" || pathname === "/signup" || pathname === "/profile") {
     return null;
   }
 
-  const handleSignOut = async () => {
-    if (auth) {
-      try {
-        await signOut(auth);
-        toast({ title: "Signed Out", description: "You have been successfully signed out." });
-        router.push('/'); 
-        router.refresh(); 
-      } catch (error) {
-        console.error("Sign out error:", error);
-        toast({ title: "Sign Out Error", description: "Failed to sign out. Please try again.", variant: "destructive" });
-      }
-    } else {
-      toast({ title: "Error", description: "Authentication service not available.", variant: "destructive" });
-    }
-  };
-  
   const navItemsBase = [
     { id: 'home', href: "/", label: "Home", icon: Home, requiresAuth: false },
     { id: 'take-a-break', href: "/games", label: "Take a Break", icon: Gamepad2, requiresAuth: false },
@@ -52,9 +33,9 @@ export default function MobileBottomNav() {
   let dynamicItems = [];
   if (user && !loading) {
     dynamicItems.push({ id: 'watchlist', href: "/watchlist", label: "Watchlist", icon: Eye, requiresAuth: true });
-    dynamicItems.push({ id: 'logout', label: "Logout", icon: LogOut, action: handleSignOut, requiresAuth: true });
+    dynamicItems.push({ id: 'profile', href: "/profile", label: "Profile", icon: User, requiresAuth: true });
   } else if (!loading && !user) {
-    dynamicItems.push({ id: 'signin', href: "/signin", label: "Sign In", icon: User, requiresAuth: false });
+    dynamicItems.push({ id: 'signin', href: "/signin", label: "Sign In", icon: LogIn, requiresAuth: false });
   }
   
   const navItems = [...navItemsBase, ...dynamicItems];
@@ -64,7 +45,6 @@ export default function MobileBottomNav() {
       <div className="flex justify-around items-stretch h-full">
         {navItems.map((item) => {
           const isActive = item.href ? (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) : false;
-          // Specific check for home to avoid it being active for all sub-routes
           const isHomeActive = item.href === "/" && pathname === "/";
           const finalIsActive = item.href === "/" ? isHomeActive : isActive;
           
@@ -75,19 +55,7 @@ export default function MobileBottomNav() {
               : "text-muted-foreground hover:text-primary hover:bg-accent/50"
           );
 
-          if (item.action) {
-            return (
-              <button
-                key={item.id}
-                onClick={item.action}
-                aria-label={item.label}
-                className={itemClasses}
-              >
-                <item.icon className="h-5 w-5 mb-0.5" />
-                <span className="text-[11px] leading-tight">{item.label}</span>
-              </button>
-            );
-          } else if (item.href) {
+          if (item.href) {
             return (
               <Link
                 key={item.id}
