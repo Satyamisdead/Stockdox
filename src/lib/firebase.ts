@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, AppleAuthProvider, EmailAuthProvider, type Auth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, EmailAuthProvider, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfigValues = {
@@ -16,7 +16,6 @@ let app: FirebaseApp | undefined = undefined;
 let auth: Auth | undefined = undefined;
 let db: Firestore | undefined = undefined;
 let googleProvider: GoogleAuthProvider | undefined = undefined;
-let appleProvider: AppleAuthProvider | undefined = undefined;
 const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
 
 if (typeof window !== "undefined") {
@@ -58,7 +57,6 @@ if (typeof window !== "undefined") {
         auth = getAuth(app);
         console.log("Firebase Service: getAuth successful.");
         googleProvider = new GoogleAuthProvider(); // Initialize provider only if auth is successful
-        appleProvider = new AppleAuthProvider();
       } catch (authError) {
         console.error("Firebase Service: getAuth failed:", authError);
         console.error(
@@ -68,7 +66,6 @@ if (typeof window !== "undefined") {
         );
         auth = undefined; // Ensure auth is undefined on failure
         googleProvider = undefined;
-        appleProvider = undefined;
       }
 
       try {
@@ -89,4 +86,4 @@ if (typeof window !== "undefined") {
   console.log("Firebase Service: Not on client-side, skipping Firebase initialization.");
 }
 
-export { app, auth, db, googleProvider, appleProvider, emailProvider };
+export { app, auth, db, googleProvider, emailProvider };
