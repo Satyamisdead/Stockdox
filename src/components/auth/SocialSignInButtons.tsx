@@ -15,37 +15,41 @@ export default function SocialSignInButtons() {
   const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
 
-  const handleSocialSignIn = async (provider: 'google') => {
-    setIsLoadingGoogle(true);
-    if (!auth || !googleProvider) {
+  const handleSocialSignIn = async (providerName: 'google') => {
+    const provider = googleProvider;
+    const setIsLoading = setIsLoadingGoogle;
+    
+    setIsLoading(true);
+
+    if (!auth || !provider) {
       toast({
         title: "Configuration Error",
-        description: `Firebase authentication for Google Sign-In is not configured.`,
+        description: `Firebase authentication for ${providerName} Sign-In is not configured.`,
         variant: "destructive"
       });
-      setIsLoadingGoogle(false);
+      setIsLoading(false);
       return;
     }
 
     try {
-      await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(auth, provider);
       const redirectPath = searchParams.get('redirect');
       const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
-      toast({ title: "Success", description: `Signed in with Google successfully.` });
+      toast({ title: "Success", description: `Signed in with ${providerName} successfully.` });
       router.push(targetPath);
       router.refresh();
     } catch (error) {
       const authError = error as AuthError;
-      let errorMessage = authError.message || `Failed to sign in with Google.`;
+      let errorMessage = authError.message || `Failed to sign in with ${providerName}.`;
       if (authError.code === 'auth/popup-closed-by-user') {
         errorMessage = 'Sign-in process was cancelled.';
       } else if (authError.code === 'auth/account-exists-with-different-credential') {
         errorMessage = 'An account already exists with the same email address but different sign-in credentials. Try signing in with a different method.';
       }
-      console.error(`Google sign-in error:`, authError.code, authError.message);
+      console.error(`${providerName} sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
     } finally {
-      setIsLoadingGoogle(false);
+      setIsLoading(false);
     }
   };
 
