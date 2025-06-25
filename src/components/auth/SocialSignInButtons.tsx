@@ -15,48 +15,44 @@ export default function SocialSignInButtons() {
   const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
 
-  const handleSocialSignIn = async (providerName: 'google') => {
-    const provider = googleProvider;
-    const setIsLoading = setIsLoadingGoogle;
-    
-    setIsLoading(true);
+  const handleGoogleSignIn = async () => {
+    setIsLoadingGoogle(true);
 
-    if (!auth || !provider) {
+    if (!auth || !googleProvider) {
       toast({
         title: "Configuration Error",
-        description: `Firebase authentication for ${providerName} Sign-In is not configured.`,
+        description: `Firebase authentication for Google Sign-In is not configured.`,
         variant: "destructive"
       });
-      setIsLoading(false);
+      setIsLoadingGoogle(false);
       return;
     }
 
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithPopup(auth, googleProvider);
       const redirectPath = searchParams.get('redirect');
       const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
-      toast({ title: "Success", description: `Signed in with ${providerName} successfully.` });
+      toast({ title: "Success", description: `Signed in with Google successfully.` });
       router.push(targetPath);
       router.refresh();
     } catch (error) {
       const authError = error as AuthError;
-      let errorMessage = authError.message || `Failed to sign in with ${providerName}.`;
+      let errorMessage = authError.message || `Failed to sign in with Google.`;
       if (authError.code === 'auth/popup-closed-by-user') {
         errorMessage = 'Sign-in process was cancelled.';
       } else if (authError.code === 'auth/account-exists-with-different-credential') {
         errorMessage = 'An account already exists with the same email address but different sign-in credentials. Try signing in with a different method.';
       }
-      console.error(`${providerName} sign-in error:`, authError.code, authError.message);
+      console.error(`Google sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      setIsLoadingGoogle(false);
     }
   };
 
-
   return (
     <div className="space-y-2">
-      <Button variant="outline" className="w-full gap-2" onClick={() => handleSocialSignIn('google')} disabled={isLoadingGoogle}>
+      <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle}>
         {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Chrome className="h-4 w-4" />}
          Sign in with Google
       </Button>
