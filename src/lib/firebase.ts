@@ -56,7 +56,7 @@ if (typeof window !== "undefined") {
         console.log("Firebase Service: Calling getAuth...");
         auth = getAuth(app);
         console.log("Firebase Service: getAuth successful.");
-        googleProvider = new GoogleAuthProvider(); // Initialize provider only if auth is successful
+        googleProvider = new GoogleAuthProvider();
       } catch (authError) {
         console.error("Firebase Service: getAuth failed:", authError);
         console.error(
