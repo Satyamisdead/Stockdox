@@ -16,7 +16,7 @@ let app: FirebaseApp | undefined = undefined;
 let auth: Auth | undefined = undefined;
 let db: Firestore | undefined = undefined;
 let googleProvider: GoogleAuthProvider | undefined = undefined;
-let appleProvider: undefined = undefined; // Explicitly undefined
+let appleProvider: undefined = undefined;
 const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
 
 if (typeof window !== "undefined") {
@@ -58,7 +58,7 @@ if (typeof window !== "undefined") {
         auth = getAuth(app);
         console.log("Firebase Service: getAuth successful.");
         googleProvider = new GoogleAuthProvider();
-        // Apple provider is not initialized
+        
       } catch (authError) {
         console.error("Firebase Service: getAuth failed:", authError);
         console.error(
@@ -68,6 +68,7 @@ if (typeof window !== "undefined") {
         );
         auth = undefined; // Ensure auth is undefined on failure
         googleProvider = undefined;
+        appleProvider = undefined;
       }
 
       try {
