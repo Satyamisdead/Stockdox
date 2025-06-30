@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { auth, googleProvider } from "@/lib/firebase"; // Import providers
+import { auth, googleProvider } from "@/lib/firebase"; // appleProvider will not be imported here to prevent crash
 import { signInWithPopup, type AuthError } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -19,13 +19,23 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
+// Inline SVG for Apple Icon
+const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24px" height="24px" {...props} fill="currentColor">
+    <path d="M19.3,13.7c-0.6,1.8-2,3.3-3.8,3.3c-1.3,0-2.2-0.6-3.4-0.6s-2.2,0.6-3.5,0.6c-1.8,0-3.4-1.6-4-3.4 C3.6,11.5,4.3,6.8,7.6,5.3C8.8,4.7,10.4,4.5,12,4.5c0.5,0,1.1,0.1,1.6,0.2c0.4,0.1,0.8,0.2,1.2,0.4c-1.1,0.9-1.8,2.3-1.8,3.8 c0,0.2,0,0.3,0,0.5c0.2,0,0.3,0,0.5,0c1.7,0,3.2-1,4.2-2.3C19.7,8.2,19.9,11.3,19.3,13.7z" />
+    <path d="M12.1,4.1C11.1,4.1,9.9,4.4,8.9,4.8C8.3,4.1,8,3.1,8.3,2.2C9.5,2.4,10.8,2.8,11.8,3.6C11.9,3.7,12,3.9,12.1,4.1z" />
+  </svg>
+);
+
+
 export default function SocialSignInButtons() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isLoadingApple, setIsLoadingApple] = useState(false); // Add state for Apple button
 
-  const handleSignIn = async () => {
+  const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
     
     try {
@@ -62,12 +72,24 @@ export default function SocialSignInButtons() {
       setIsLoadingGoogle(false);
     }
   };
+  
+  const handleAppleSignIn = async () => {
+    toast({
+      title: "Feature Not Available",
+      description: "Sign in with Apple is currently unavailable due to a project configuration issue. The development team has been notified.",
+      variant: "default",
+    });
+  };
 
   return (
     <div className="space-y-2">
-      <Button variant="outline" className="w-full gap-2" onClick={handleSignIn} disabled={isLoadingGoogle}>
+      <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle || isLoadingApple}>
         {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
          Sign in with Google
+      </Button>
+       <Button variant="outline" className="w-full gap-2" onClick={handleAppleSignIn} disabled={isLoadingApple || isLoadingGoogle}>
+        {isLoadingApple ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AppleIcon className="h-5 w-5" />}
+         Sign in with Apple
       </Button>
     </div>
   );
