@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button, ButtonProps } from "@/components/ui/button";
 import { auth, googleProvider } from "@/lib/firebase"; // Import providers
 import { signInWithPopup, type AuthError } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,30 +19,50 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
+// Inline SVG for Apple Icon
+const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" {...props}>
+        <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-1.842.038-3.54 1.182-4.446 2.972-1.938 3.823-.48 9.576 1.482 12.65 1.002 1.562 2.08 3.323 3.516 3.323.019 0 1.482-.019 1.482-.019.019 0 1.501.019 1.501.019 1.417 0 2.535-1.742 3.516-3.323 1.98-3.055 3.457-8.808 1.482-12.65-.964-1.842-2.673-3.01-4.526-2.972-.589-.02-1.138.038-1.723.038-.285.019-.551.057-.801.057Zm.057-3.416c.038 0 .057.019.095.019.133.019.248.019.382.019.782 0 1.482-.362 2.02-.915-.982-.763-2.23-1.182-3.419-1.22-.648-.038-1.277.172-1.763.458.172.648.515 1.258 1.048 1.649.229.172.477.267.744.267.114 0 .229-.019.324-.038Z"/>
+    </svg>
+);
+
 
 export default function SocialSignInButtons() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isLoadingApple, setIsLoadingApple] = useState(false);
 
-  const handleGoogleSignIn = async () => {
-    setIsLoadingGoogle(true);
-    if (!auth || !googleProvider) {
+  const handleSignIn = async (providerName: 'google' | 'apple') => {
+    if (providerName === 'google') setIsLoadingGoogle(true);
+    if (providerName === 'apple') setIsLoadingApple(true);
+
+    if (providerName === 'apple') {
       toast({
-        title: "Configuration Error",
-        description: "Firebase authentication for Google Sign-In is not configured.",
-        variant: "destructive"
+        title: "Coming Soon",
+        description: "Sign in with Apple is not yet available.",
+        variant: "default"
       });
-      setIsLoadingGoogle(false);
+      setIsLoadingApple(false);
       return;
     }
 
     try {
-      await signInWithPopup(auth, googleProvider);
+      if (providerName === 'google' && auth && googleProvider) {
+        await signInWithPopup(auth, googleProvider);
+        toast({ title: "Success", description: `Signed in with Google successfully.` });
+      } else {
+         toast({
+          title: "Error",
+          description: `Sign in with ${providerName} is not configured correctly.`,
+          variant: "destructive"
+        });
+        return;
+      }
+
       const redirectPath = searchParams.get('redirect');
       const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
-      toast({ title: "Success", description: `Signed in with Google successfully.` });
       router.push(targetPath);
       router.refresh();
     } catch (error) {
@@ -58,15 +78,25 @@ export default function SocialSignInButtons() {
       console.error(`Google sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
     } finally {
-      setIsLoadingGoogle(false);
+      if (providerName === 'google') setIsLoadingGoogle(false);
+      if (providerName === 'apple') setIsLoadingApple(false);
     }
+
   };
 
   return (
     <div className="space-y-2">
-      <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle}>
+      <Button variant="outline" className="w-full gap-2" onClick={() => handleSignIn('google')} disabled={isLoadingGoogle || isLoadingApple}>
         {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
          Sign in with Google
+      </Button>
+      <Button
+        variant="outline"
+        className="w-full gap-2"
+        onClick={() => handleSignIn('apple')}
+        disabled={isLoadingGoogle || isLoadingApple}>
+        {isLoadingApple ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AppleIcon className="h-5 w-5" />}
+         Sign in with Apple
       </Button>
     </div>
   );

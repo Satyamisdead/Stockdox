@@ -26,6 +26,7 @@ import SocialSignInButtons from "./SocialSignInButtons";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
+// Define the form schema using Zod
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
@@ -38,6 +39,7 @@ type AuthFormProps = {
 export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Hook for showing toasts (notifications)
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -49,6 +51,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     },
   });
 
+  // Handler for form submission (email/password sign-in/sign-up)
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     if (!auth) { 
@@ -70,6 +73,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       }
       const redirectPath = searchParams.get('redirect');
       const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
+      // Redirect to the target path or home page on success
       router.push(targetPath);
       router.refresh(); // Refresh to ensure layout updates with new auth state
     } catch (error) {
@@ -88,10 +92,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
+  // Render the authentication form
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold font-headline">{mode === "signin" ? "Welcome Back" : "Create an Account"}</h1>
+        {/* Conditional subtitle based on mode */}
         <p className="text-muted-foreground">
           {mode === "signin" ? "Sign in to access your Stockdox dashboard." : "Enter your email and password to sign up."}
         </p>
@@ -103,6 +109,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
+                {/* Label and input for email */}
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input placeholder="you@example.com" {...field} type="email" autoComplete="email" />
@@ -116,6 +123,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem>
+                {/* Label and input for password */}
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input placeholder="••••••••" {...field} type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} />
@@ -124,10 +132,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
               </FormItem>
             )}
           />
+          {/* Submit button with loading indicator */}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {mode === "signin" ? "Sign In" : "Sign Up"}
           </Button>
+          {/* Divider or "Or continue with" section */}
         </form>
       </Form>
       <div className="relative my-6">
@@ -140,6 +150,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           </span>
         </div>
       </div>
+      {/* Social sign-in buttons component */}
       <SocialSignInButtons />
     </div>
   );
