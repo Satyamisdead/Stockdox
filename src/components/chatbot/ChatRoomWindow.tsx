@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, Loader2, User } from 'lucide-react'; 
+import { Send, Loader2, User } from 'lucide-react'; 
 import { cn } from '@/lib/utils';
 import { stockdoxChat, type StockdoxChatInput } from '@/ai/flows/stockdox-chat-flow';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -118,8 +118,8 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  <Bot size={18}/>
+                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                  AI
                 </AvatarFallback>
               </Avatar>
               <SheetTitle className="text-primary font-headline">Stockdox AI</SheetTitle>
@@ -139,8 +139,8 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
             >
               {msg.sender === 'ai' && (
                 <Avatar className="h-7 w-7 mr-2 self-start shrink-0">
-                   <AvatarFallback className="bg-muted text-muted-foreground">
-                    <Bot size={16} />
+                   <AvatarFallback className="bg-muted text-muted-foreground font-semibold text-xs">
+                    AI
                   </AvatarFallback>
                 </Avatar>
               )}
@@ -175,8 +175,8 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
           {isLoadingAI && (
             <div className="flex items-center justify-start mb-3 w-full">
                <Avatar className="h-7 w-7 mr-2 self-start shrink-0">
-                  <AvatarFallback className="bg-muted text-muted-foreground">
-                    <Bot size={16} />
+                  <AvatarFallback className="bg-muted text-muted-foreground font-semibold text-xs">
+                    AI
                   </AvatarFallback>
                 </Avatar>
               <div className="p-2.5 rounded-xl shadow-md bg-card text-card-foreground rounded-bl-none border flex items-center space-x-2">
