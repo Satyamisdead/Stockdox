@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import ChatRoomWindow from './ChatRoomWindow';
+import { Bot } from 'lucide-react';
 
 export default function ChatbotLauncher() {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -21,11 +22,12 @@ export default function ChatbotLauncher() {
     <>
       <Button
         variant="default"
-        className="fixed right-4 bottom-20 md:right-6 md:bottom-6 h-14 rounded-full shadow-lg z-50 animate-pulse hover:animate-none flex items-center px-6"
+        size="icon"
+        className="fixed right-4 bottom-20 md:right-6 md:bottom-6 h-16 w-16 rounded-full shadow-lg z-50 flex items-center justify-center animate-pulse hover:animate-none"
         onClick={() => setIsChatOpen(true)}
         aria-label="Open Stockdox AI Chat"
       >
-        <span className="font-bold text-lg">Ask AI</span>
+        <Bot className="h-8 w-8" />
       </Button>
       <ChatRoomWindow isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </>
