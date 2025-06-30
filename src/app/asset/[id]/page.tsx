@@ -262,7 +262,7 @@ export default function AssetDetailPage() {
               ))}
                <div className="pt-2 text-xs text-muted-foreground/70 flex items-start gap-1.5">
                 <Info size={14} className="mt-0.5 shrink-0"/> 
-                <span>Financial data is sourced from Finnhub & placeholders. Values may not be fully comprehensive for all assets. Chart by TradingView.</span>
+                <span>Financial data is sourced from Finnhub & placeholders. Values may not be fully comprehensive for all assets. Chart by Stockdox.</span>
               </div>
             </CardContent>
           </Card>
