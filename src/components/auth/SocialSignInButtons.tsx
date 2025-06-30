@@ -9,11 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Chrome, Loader2 } from "lucide-react";
 import { useState } from "react";
 
+// The AppleIcon SVG is removed as it's no longer needed.
+
 export default function SocialSignInButtons() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  // isLoadingApple state is removed.
 
   const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
@@ -50,12 +53,15 @@ export default function SocialSignInButtons() {
     }
   };
 
+  // The handleAppleSignIn function is removed.
+
   return (
     <div className="space-y-2">
       <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle}>
         {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Chrome className="h-4 w-4" />}
          Sign in with Google
       </Button>
+      {/* The Apple Sign-In button is removed. */}
     </div>
   );
 }

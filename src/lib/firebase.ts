@@ -16,7 +16,7 @@ let app: FirebaseApp | undefined = undefined;
 let auth: Auth | undefined = undefined;
 let db: Firestore | undefined = undefined;
 let googleProvider: GoogleAuthProvider | undefined = undefined;
-let appleProvider: undefined = undefined;
+let appleProvider: undefined = undefined; // Explicitly set to undefined
 const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
 
 if (typeof window !== "undefined") {
