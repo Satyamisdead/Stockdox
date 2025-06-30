@@ -37,7 +37,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
       const initialAiMessage: Message = {
         id: Date.now().toString() + 'ai-initial',
         sender: 'ai',
-        text: "Hello! I am Stockdox AI, created by Alston Tahir and powered by Satyam Tiwari. How can I assist you with your financial queries today?",
+        text: "Hello! I am Stockdox AI. How can I assist you with your financial queries today?",
         timestamp: new Date(),
       };
       setMessages([initialAiMessage]);
