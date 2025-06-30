@@ -63,7 +63,7 @@ export default function RootLayout({
         {/* PWA Meta Tags - some are covered by Next.js metadata, others can remain for full control */}
         <meta name="application-name" content="Stockdox" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" /> 
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" /> 
         <meta name="apple-mobile-web-app-title" content="Stockdox" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -80,10 +80,10 @@ export default function RootLayout({
         <FirebaseProvider>
           <SiteHeader />
           {/* Main content padding:
-              pt-16 (header) / pb-20 (mobile nav) for mobile
+              pt-6 (no header) / pb-20 (mobile nav) for mobile
               pt-8 (header) / md:pb-8 (footer) for desktop
           */}
-          <main className="flex-grow container mx-auto px-4 pt-16 md:pt-8 pb-20 md:pb-8">
+          <main className="flex-grow container mx-auto px-4 pt-6 md:pt-8 pb-20 md:pb-8">
             {children}
           </main>
           <SiteFooter />

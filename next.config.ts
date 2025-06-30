@@ -6,7 +6,7 @@ const pwaConfig = {
   dest: 'public',
   register: true,
   skipWaiting: true,
-  // disable: process.env.NODE_ENV === 'development', // uncomment to disable PWA in development
+  disable: process.env.NODE_ENV === 'development', // uncomment to disable PWA in development
   // exclude: [ // Example: exclude admin routes from PWA caching
   //   ({ asset, compilation }) => asset.name.startsWith("server/") || asset.name.match(/^.+\\.map$/) || asset.name.includes('admin'),
   // ],
