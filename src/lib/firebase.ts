@@ -16,7 +16,6 @@ let app: FirebaseApp | undefined = undefined;
 let auth: Auth | undefined = undefined;
 let db: Firestore | undefined = undefined;
 let googleProvider: GoogleAuthProvider | undefined = undefined;
-let appleProvider: undefined = undefined; // Explicitly set to undefined
 const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
 
 if (typeof window !== "undefined") {
@@ -68,7 +67,6 @@ if (typeof window !== "undefined") {
         );
         auth = undefined; // Ensure auth is undefined on failure
         googleProvider = undefined;
-        appleProvider = undefined;
       }
 
       try {
@@ -89,4 +87,4 @@ if (typeof window !== "undefined") {
   console.log("Firebase Service: Not on client-side, skipping Firebase initialization.");
 }
 
-export { app, auth, db, googleProvider, appleProvider, emailProvider };
+export { app, auth, db, googleProvider, emailProvider };
