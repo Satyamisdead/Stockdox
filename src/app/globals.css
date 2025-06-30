@@ -97,15 +97,11 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+/Edge */
-    user-select: none; /* Standard */
   }
 
-  input,
-  textarea,
-  [contenteditable="true"] {
+  /* Allow text selection on specific elements for better UX */
+  p, h1, h2, h3, h4, h5, h6, span, div,
+  input, textarea, [contenteditable="true"] {
     -webkit-user-select: auto;
     -moz-user-select: auto;
     -ms-user-select: auto;

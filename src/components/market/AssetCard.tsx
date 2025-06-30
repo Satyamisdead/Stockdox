@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { getAlertedAssetIds, toggleAlertForAsset } from "@/services/userPreferenceService";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
+import { Skeleton } from "@/components/ui/skeleton";
 
 type AssetCardProps = {
   asset: Asset;
@@ -144,5 +144,3 @@ export default function AssetCard({ asset }: AssetCardProps) {
     </Card>
   );
 }
-
-    

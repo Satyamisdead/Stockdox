@@ -37,13 +37,9 @@ export const metadata: Metadata = {
     title: 'Stockdox',
     description: 'Real-time stock and cryptocurrency tracking application. Your go-to PWA for market insights.',
     images: ['/og-image.png'], // Path relative to the public folder
-    // creator: '@yourtwitterhandle', // Optional: Add your Twitter handle
   },
   icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any', type: 'image/x-icon' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-    ],
+    icon: '/favicon.svg',
     apple: '/apple-touch-icon.png',
   },
 };
@@ -60,17 +56,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
         
-        {/* PWA Meta Tags - some are covered by Next.js metadata, others can remain for full control */}
+        {/* PWA Meta Tags */}
         <meta name="application-name" content="Stockdox" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black" /> 
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /> 
         <meta name="apple-mobile-web-app-title" content="Stockdox" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#000000" /> 
         <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#FFD700" /> 
+        <meta name="theme-color" content="#000000" /> 
 
         {/* Viewport settings for responsiveness */}
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -79,10 +75,6 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen flex flex-col bg-background text-foreground">
         <FirebaseProvider>
           <SiteHeader />
-          {/* Main content padding:
-              pt-6 (no header) / pb-20 (mobile nav) for mobile
-              pt-8 (header) / md:pb-8 (footer) for desktop
-          */}
           <main className="flex-grow container mx-auto px-4 pt-6 md:pt-8 pb-20 md:pb-8">
             {children}
           </main>
