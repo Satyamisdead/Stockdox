@@ -21,7 +21,7 @@ export default function SocialSignInButtons() {
     if (!auth || !googleProvider) {
       toast({
         title: "Configuration Error",
-        description: `Firebase authentication for Google Sign-In is not configured.`,
+        description: "Firebase authentication for Google Sign-In is not configured.",
         variant: "destructive"
       });
       setIsLoadingGoogle(false);
