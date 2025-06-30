@@ -19,8 +19,8 @@ export default function MobileBottomNav() {
     return null;
   }
 
-  // Do not show bottom nav on signin/signup/profile pages for better UX
-  if (pathname === "/signin" || pathname === "/signup" || pathname === "/profile") {
+  // Do not show bottom nav on profile page for better UX
+  if (pathname === "/profile") {
     return null;
   }
 
