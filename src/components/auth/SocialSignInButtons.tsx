@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { auth, googleProvider } from "@/lib/firebase"; // Import googleProvider
+import { auth, googleProvider } from "@/lib/firebase"; // Import providers
 import { signInWithPopup, type AuthError } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -28,7 +28,6 @@ export default function SocialSignInButtons() {
 
   const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
-
     if (!auth || !googleProvider) {
       toast({
         title: "Configuration Error",
