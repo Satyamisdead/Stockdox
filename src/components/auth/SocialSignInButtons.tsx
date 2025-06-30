@@ -33,24 +33,24 @@ export default function SocialSignInButtons() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
-  const [isLoadingApple, setIsLoadingApple] = useState(false); // Add state for Apple button
-
+  
   const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
     
+    if (!auth || !googleProvider) {
+      toast({
+        title: "Firebase Not Configured",
+        description: "The app is not connected to Firebase. Please see the developer console (F12) for instructions on how to set up your .env.local file.",
+        variant: "destructive",
+        duration: 10000,
+      });
+      setIsLoadingGoogle(false);
+      return;
+    }
+
     try {
-      if (auth && googleProvider) {
-        await signInWithPopup(auth, googleProvider);
-        toast({ title: "Success", description: `Signed in with Google successfully.` });
-      } else {
-         toast({
-          title: "Error",
-          description: `Google Sign-in is not configured correctly. Please check Firebase settings.`,
-          variant: "destructive"
-        });
-        setIsLoadingGoogle(false);
-        return;
-      }
+      await signInWithPopup(auth, googleProvider);
+      toast({ title: "Success", description: `Signed in with Google successfully.` });
 
       const redirectPath = searchParams.get('redirect');
       const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
@@ -65,6 +65,8 @@ export default function SocialSignInButtons() {
         errorMessage = 'An account already exists with the same email address but different sign-in credentials. Try signing in with a different method.';
       } else if (authError.code === 'auth/cancelled-popup-request') {
         errorMessage = 'Multiple sign-in attempts detected. Please try again.';
+      } else if (authError.code === 'auth/unauthorized-domain') {
+          errorMessage = "This domain is not authorized for sign-in. Please add it to your Firebase project's settings.";
       }
       console.error(`Google sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
@@ -75,20 +77,20 @@ export default function SocialSignInButtons() {
   
   const handleAppleSignIn = async () => {
     toast({
-      title: "Feature Not Available",
-      description: "Sign in with Apple is currently unavailable due to a project configuration issue. The development team has been notified.",
+      title: "Feature Coming Soon",
+      description: "Sign in with Apple is not yet available. Please use Google Sign-In or email/password.",
       variant: "default",
     });
   };
 
   return (
     <div className="space-y-2">
-      <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle || isLoadingApple}>
+      <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle}>
         {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
          Sign in with Google
       </Button>
-       <Button variant="outline" className="w-full gap-2" onClick={handleAppleSignIn} disabled={isLoadingApple || isLoadingGoogle}>
-        {isLoadingApple ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AppleIcon className="h-5 w-5" />}
+       <Button variant="outline" className="w-full gap-2" onClick={handleAppleSignIn} disabled={true}>
+        <AppleIcon className="h-5 w-5" />
          Sign in with Apple
       </Button>
     </div>

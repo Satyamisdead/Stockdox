@@ -56,9 +56,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
     setIsLoading(true);
     if (!auth) { 
       toast({ 
-        title: "Configuration Error", 
-        description: "Firebase authentication is not configured. Please ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in your .env.local file and restart your development server.", 
-        variant: "destructive" 
+        title: "Firebase Not Configured", 
+        description: "The app is not connected to Firebase. Please see the developer console (F12) for instructions on how to set up your .env.local file.", 
+        variant: "destructive",
+        duration: 10000,
       });
       setIsLoading(false);
       return;
@@ -84,6 +85,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
         errorMessage = 'Invalid email or password.';
       } else if (authError.code === 'auth/email-already-in-use') {
         errorMessage = 'This email address is already in use.';
+      } else if (authError.code === 'auth/unauthorized-domain') {
+          errorMessage = "This domain is not authorized for sign-in. Please add it to your Firebase project's settings.";
       }
       console.error(`${mode} error:`, authError.code, authError.message);
       toast({ title: `${mode === "signup" ? "Sign Up" : "Sign In"} Error`, description: errorMessage, variant: "destructive" });
