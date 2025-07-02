@@ -8,8 +8,7 @@ const pwaConfig = {
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
   fallbacks: {
-    // route: '/offline', // For offline GET requests
-    document: '/offline', // For document requests
+    document: '/offline',
   }
 };
 
@@ -53,4 +52,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPWA(nextConfig);
+const finalConfig = process.env.NODE_ENV === 'development' ? nextConfig : withPWA(nextConfig);
+
+export default finalConfig;

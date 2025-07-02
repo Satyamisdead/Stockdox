@@ -6,10 +6,10 @@ const pwaConfig = {
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development', // uncomment to disable PWA in development
-  // exclude: [ // Example: exclude admin routes from PWA caching
-  //   ({ asset, compilation }) => asset.name.startsWith("server/") || asset.name.match(/^.+\\.map$/) || asset.name.includes('admin'),
-  // ],
+  disable: process.env.NODE_ENV === 'development',
+  fallbacks: {
+    document: '/offline',
+  }
 };
 
 const withPWA = withPWAInit(pwaConfig);
@@ -43,7 +43,7 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https://',
         hostname: 'static2.finnhub.io',
         port: '',
         pathname: '/**',
@@ -52,4 +52,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPWA(nextConfig);
+const finalConfig = process.env.NODE_ENV === 'development' ? nextConfig : withPWA(nextConfig);
+
+export default finalConfig;
