@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import AssetCard from "@/components/market/AssetCard";
 import SearchBar from "@/components/market/SearchBar";
 import FilterControls from "@/components/market/FilterControls";
@@ -11,6 +11,8 @@ import type { Asset } from "@/types";
 // import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService"; 
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
 import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget";
+import Logo from "@/components/core/Logo";
+import { cn } from "@/lib/utils";
 
 // Simulation interval for price fluctuations
 const SIMULATION_INTERVAL = 5000; // e.g., update every 5 seconds
@@ -33,6 +35,26 @@ export default function DashboardPage() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<{ type: "all" | "stock" | "crypto" }>({ type: "all" });
+
+  const [isMobileHeaderVisible, setIsMobileHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  // Effect for scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      // Hide header when scrolling down past a certain threshold, show when scrolling up
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        setIsMobileHeaderVisible(false);
+      } else {
+        setIsMobileHeaderVisible(true);
+      }
+      lastScrollY.current = currentScrollY <= 0 ? 0 : currentScrollY; // For Mobile or negative scrolling
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Effect for simulating price fluctuations
   useEffect(() => {
@@ -118,42 +140,52 @@ export default function DashboardPage() {
   const appleAssetForWidget = useMemo(() => assets.find(asset => asset.symbol === 'AAPL'), [assets]);
 
   return (
-    <div className="space-y-8">
-      <section className="space-y-6">
-        <div className="bg-background py-4 border-b border-border/40 shadow-sm flex flex-col items-start gap-4">
-           <div className="w-full flex justify-start gap-4">
-            <BitcoinMiniChartWidget
-              currentPrice={bitcoinAssetForWidget?.price}
-              currentChangePercent={bitcoinAssetForWidget?.change24h ?? undefined}
-            />
-            <AppleStockMiniChartWidget
-              currentPrice={appleAssetForWidget?.price}
-              currentChangePercent={appleAssetForWidget?.change24h ?? undefined}
-            />
-          </div>
-
-          <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4">
-            <SearchBar onSearch={handleSearch} />
-            <FilterControls onFilterChange={handleFilterChange} />
-          </div>
-        </div>
-
-        {/* No global preloader, AssetCards handle their own state based on props */}
-        {filteredAssets.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
-            {filteredAssets.map((asset) => (
-              <AssetCard key={asset.id} asset={asset} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-              <p className="text-xl text-muted-foreground">
-                No assets found matching your criteria.
-              </p>
-              {searchQuery && <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters.</p>}
-          </div>
+    <>
+      <div
+        className={cn(
+          "fixed top-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-sm p-3 shadow-md transition-transform duration-300 md:hidden",
+          isMobileHeaderVisible ? "translate-y-0" : "-translate-y-full"
         )}
-      </section>
-    </div>
+      >
+        <Logo />
+      </div>
+      <div className="space-y-8 pt-16 md:pt-0">
+        <section className="space-y-6">
+          <div className="bg-background py-4 border-b border-border/40 shadow-sm flex flex-col items-start gap-4">
+            <div className="w-full flex justify-start gap-4">
+              <BitcoinMiniChartWidget
+                currentPrice={bitcoinAssetForWidget?.price}
+                currentChangePercent={bitcoinAssetForWidget?.change24h ?? undefined}
+              />
+              <AppleStockMiniChartWidget
+                currentPrice={appleAssetForWidget?.price}
+                currentChangePercent={appleAssetForWidget?.change24h ?? undefined}
+              />
+            </div>
+
+            <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4">
+              <SearchBar onSearch={handleSearch} />
+              <FilterControls onFilterChange={handleFilterChange} />
+            </div>
+          </div>
+
+          {/* No global preloader, AssetCards handle their own state based on props */}
+          {filteredAssets.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
+              {filteredAssets.map((asset) => (
+                <AssetCard key={asset.id} asset={asset} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+                <p className="text-xl text-muted-foreground">
+                  No assets found matching your criteria.
+                </p>
+                {searchQuery && <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters.</p>}
+            </div>
+          )}
+        </section>
+      </div>
+    </>
   );
 }
