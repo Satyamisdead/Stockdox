@@ -16,10 +16,9 @@ let app: FirebaseApp | undefined = undefined;
 let auth: Auth | undefined = undefined;
 let db: Firestore | undefined = undefined;
 let googleProvider: GoogleAuthProvider | undefined = undefined;
-// The import for AppleAuthProvider causes a build error due to a dependency issue.
-// It has been removed to allow the app to build.
-// To fix this permanently, the user must run `rm -rf node_modules && npm install`.
-let appleProvider: any = undefined;
+// AppleAuthProvider is causing a build error, so we are disabling it for now.
+// It can be re-enabled once the dependency issue is resolved.
+let appleProvider: any | undefined = undefined; 
 const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
 
 if (typeof window !== "undefined") {
@@ -82,12 +81,13 @@ Firebase will not be initialized until this is fixed.
       try {
         auth = getAuth(app);
         googleProvider = new GoogleAuthProvider();
-        // appleProvider is intentionally not initialized here to prevent build errors.
-        console.log("Firebase Service: getAuth and Google provider successful. Apple sign-in is disabled to prevent build errors.");
+        // appleProvider = new AppleAuthProvider(); // Disabled due to build error
+        console.log("Firebase Service: getAuth, Google providers successful.");
       } catch (authError) {
         console.error("Firebase Service: getAuth failed:", authError);
         auth = undefined;
         googleProvider = undefined;
+        appleProvider = undefined;
       }
 
       try {

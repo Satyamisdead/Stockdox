@@ -77,14 +77,39 @@ export default function SocialSignInButtons() {
   };
   
   const handleAppleSignIn = async () => {
-    // This function now shows an informational toast instead of attempting to sign in.
-    // This is because the firebase dependency is broken and doesn't export AppleAuthProvider.
-    toast({
-      title: "Apple Sign-In Unavailable",
-      description: "To fix this, please run 'rm -rf node_modules && npm install' in the terminal and restart the server.",
-      variant: "destructive",
-      duration: 15000, // Keep the toast visible longer
-    });
+    setIsLoadingApple(true);
+    if (!auth || !appleProvider) {
+      toast({
+        title: "Apple Sign-In Not Available",
+        description: "The Apple Sign-In module is not available in the current environment. This is likely a dependency issue. Please run `npm install` and restart the server. If the problem persists, the 'firebase' package may need an update.",
+        variant: "destructive",
+        duration: 10000,
+      });
+      setIsLoadingApple(false);
+      return;
+    }
+
+    try {
+      await signInWithPopup(auth, appleProvider);
+      toast({ title: "Success", description: `Signed in with Apple successfully.` });
+
+      const redirectPath = searchParams.get('redirect');
+      const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
+      router.push(targetPath);
+      router.refresh();
+    } catch (error) {
+      const authError = error as AuthError;
+      let errorMessage = authError.message || `Failed to sign in with Apple.`;
+      if (authError.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign-in process was cancelled.';
+      } else if (authError.code === 'auth/account-exists-with-different-credential') {
+        errorMessage = 'An account already exists with the same email address but different sign-in credentials. Try signing in with a different method.';
+      }
+      console.error(`Apple sign-in error:`, authError.code, authError.message);
+      toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
+    } finally {
+      setIsLoadingApple(false);
+    }
   };
 
   return (
