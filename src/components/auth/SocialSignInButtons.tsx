@@ -2,12 +2,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { auth, googleProvider } from "@/lib/firebase"; // appleProvider will not be imported here to prevent crash
+import { auth, googleProvider } from "@/lib/firebase";
 import { signInWithPopup, type AuthError } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Inline SVG for Google Icon
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -75,24 +76,28 @@ export default function SocialSignInButtons() {
     }
   };
   
-  const handleAppleSignIn = async () => {
-    toast({
-      title: "Feature Coming Soon",
-      description: "Sign in with Apple is not yet available. Please use Google Sign-In or email/password.",
-      variant: "default",
-    });
-  };
-
   return (
     <div className="space-y-2">
       <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle}>
         {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
          Sign in with Google
       </Button>
-       <Button variant="outline" className="w-full gap-2" onClick={handleAppleSignIn} disabled={true}>
-        <AppleIcon className="h-5 w-5" />
-         Sign in with Apple
-      </Button>
+       <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {/* The button is wrapped in a span because disabled buttons don't trigger tooltips */}
+            <span tabIndex={0} className="inline-block w-full">
+              <Button variant="outline" className="w-full gap-2" disabled={true}>
+                <AppleIcon className="h-5 w-5" />
+                Sign in with Apple
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Apple Sign-In requires a project dependency update. Run 'npm install' to fix.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }
