@@ -8,7 +8,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Inline SVG for Google Icon
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -76,28 +75,25 @@ export default function SocialSignInButtons() {
     }
   };
   
+  const handleAppleSignIn = () => {
+    toast({
+      title: "Apple Sign-In Not Available",
+      description: "This feature is not fully configured due to a missing project dependency. Please contact support or the site administrator.",
+      variant: "default",
+      duration: 8000,
+    });
+  };
+
   return (
     <div className="space-y-2">
       <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle}>
         {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
          Sign in with Google
       </Button>
-       <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {/* The button is wrapped in a span because disabled buttons don't trigger tooltips */}
-            <span tabIndex={0} className="inline-block w-full">
-              <Button variant="outline" className="w-full gap-2" disabled={true}>
-                <AppleIcon className="h-5 w-5" />
-                Sign in with Apple
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Apple Sign-In requires a project dependency update. Run 'npm install' to fix.</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Button variant="outline" className="w-full gap-2" onClick={handleAppleSignIn}>
+        <AppleIcon className="h-5 w-5" />
+        Sign in with Apple
+      </Button>
     </div>
   );
 }
