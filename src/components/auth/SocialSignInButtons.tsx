@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { auth, googleProvider } from "@/lib/firebase";
+import { auth, googleProvider, appleProvider } from "@/lib/firebase";
 import { signInWithPopup, type AuthError } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +33,7 @@ export default function SocialSignInButtons() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isLoadingApple, setIsLoadingApple] = useState(false);
   
   const handleGoogleSignIn = async () => {
     setIsLoadingGoogle(true);
@@ -75,23 +76,25 @@ export default function SocialSignInButtons() {
     }
   };
   
-  const handleAppleSignIn = () => {
+  const handleAppleSignIn = async () => {
+    // This function now shows an informational toast instead of attempting to sign in.
+    // This is because the firebase dependency is broken and doesn't export AppleAuthProvider.
     toast({
-      title: "Apple Sign-In Not Available",
-      description: "This feature is not fully configured due to a missing project dependency. Please contact support or the site administrator.",
-      variant: "default",
-      duration: 8000,
+      title: "Apple Sign-In Unavailable",
+      description: "To fix this, please run 'rm -rf node_modules && npm install' in the terminal and restart the server.",
+      variant: "destructive",
+      duration: 15000, // Keep the toast visible longer
     });
   };
 
   return (
     <div className="space-y-2">
-      <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle}>
+      <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle || isLoadingApple}>
         {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
          Sign in with Google
       </Button>
-      <Button variant="outline" className="w-full gap-2" onClick={handleAppleSignIn}>
-        <AppleIcon className="h-5 w-5" />
+      <Button variant="outline" className="w-full gap-2" onClick={handleAppleSignIn} disabled={isLoadingApple || isLoadingGoogle}>
+        {isLoadingApple ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AppleIcon className="h-5 w-5" />}
         Sign in with Apple
       </Button>
     </div>
