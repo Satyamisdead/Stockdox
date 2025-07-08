@@ -6,6 +6,7 @@ import { useParams, notFound, useRouter } from "next/navigation";
 import type { Asset, NewsArticle } from "@/types";
 import { getAssetById as getPlaceholderAssetById, placeholderNews } from "@/lib/placeholder-data";
 import Image from "next/image";
+import Link from "next/link";
 import PriceDisplay from "@/components/market/PriceDisplay";
 import AssetChart from "@/components/market/AssetChart";
 import NewsItem from "@/components/market/NewsItem";
@@ -20,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AssetDetailPage() {
   const router = useRouter();
-  const routeParams = useParams<{ id?: string }>(); // Use the hook
+  const routeParams = useParams<{ id?: string }>();
 
   const assetId = routeParams?.id;
 
@@ -28,20 +29,14 @@ export default function AssetDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // This effect handles the case where assetId might not be available initially,
-    // or if params resolves but 'id' is missing.
     if (routeParams && typeof routeParams.id === 'undefined' && Object.keys(routeParams).length > 0) {
-      // routeParams object is available and has keys, but 'id' is not one of them.
       setIsLoading(false);
       notFound();
       return;
     }
 
     if (!assetId) {
-      // If assetId is still not available, it might be because useParams hasn't resolved yet.
-      // We keep isLoading true unless routeParams has resolved to an empty object or object without 'id'.
       if (routeParams && Object.keys(routeParams).length === 0) {
-         // If routeParams resolved to an empty object and we still have no assetId, it's a notFound.
          setIsLoading(false);
          notFound();
       }
@@ -131,18 +126,12 @@ export default function AssetDetailPage() {
   }
 
   if (asset === null) { 
-    // This state means the placeholderAsset was not found, notFound() should have been called.
-    // This return is a defensive measure.
     return null; 
   }
   
-  // If not loading and asset is still undefined, it means something went wrong or assetId was invalid.
-  // The useEffect should call notFound() in such cases.
   if (!asset) { 
-    // This is a fallback. If notFound() was correctly called, this shouldn't be hit often.
-    // However, if assetId was valid, but fetching failed and error handling didn't set asset to placeholder.
-    notFound(); // Ensure notFound is triggered.
-    return null; // Return null to satisfy TypeScript after notFound call.
+    notFound();
+    return null;
   }
 
 
@@ -287,4 +276,3 @@ export default function AssetDetailPage() {
     </div>
   );
 }
-
