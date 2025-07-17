@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { auth, googleProvider, appleProvider } from "@/lib/firebase";
-import { signInWithPopup, type AuthError } from "firebase/auth";
+import { signInWithPopup, signInWithRedirect, type AuthError } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -41,7 +41,7 @@ export default function SocialSignInButtons() {
     if (!auth || !googleProvider) {
       toast({
         title: "Firebase Not Configured",
-        description: "The app is not connected to Firebase. Please see the developer console (F12) for instructions on how to set up your .env.local file.",
+        description: "The app is not connected to Firebase. Please check your developer console.",
         variant: "destructive",
         duration: 10000,
       });
@@ -50,29 +50,19 @@ export default function SocialSignInButtons() {
     }
 
     try {
-      await signInWithPopup(auth, googleProvider);
-      toast({ title: "Success", description: `Signed in with Google successfully.` });
-
-      const redirectPath = searchParams.get('redirect');
-      const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
-      router.push(targetPath);
-      router.refresh();
+      // Use signInWithRedirect for better compatibility with WebViews
+      await signInWithRedirect(auth, googleProvider);
+      // The redirect will navigate away, so no toast or router push is needed here.
+      // The result is handled by getRedirectResult in the FirebaseProvider.
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = authError.message || `Failed to sign in with Google.`;
-      if (authError.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Sign-in process was cancelled.';
-      } else if (authError.code === 'auth/account-exists-with-different-credential') {
-        errorMessage = 'An account already exists with the same email address but different sign-in credentials. Try signing in with a different method.';
-      } else if (authError.code === 'auth/cancelled-popup-request') {
-        errorMessage = 'Multiple sign-in attempts detected. Please try again.';
-      } else if (authError.code === 'auth/unauthorized-domain') {
+      if (authError.code === 'auth/unauthorized-domain') {
           errorMessage = "This domain is not authorized for sign-in. Please add it to your Firebase project's settings.";
       }
       console.error(`Google sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
-    } finally {
-      setIsLoadingGoogle(false);
+      setIsLoadingGoogle(false); // Only stop loading on error
     }
   };
   
