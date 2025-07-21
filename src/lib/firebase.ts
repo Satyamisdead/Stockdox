@@ -79,8 +79,9 @@ Firebase will not be initialized until this is fixed.
       try {
         auth = getAuth(app);
         googleProvider = new GoogleAuthProvider();
-        appleProvider = new AppleAuthProvider();
-        console.log("Firebase Service: getAuth, Google, and Apple providers successful.");
+        // Do not initialize AppleAuthProvider to prevent the crash
+        // appleProvider = new AppleAuthProvider(); 
+        console.log("Firebase Service: getAuth and Google provider successful.");
       } catch (authError) {
         console.error("Firebase Service: getAuth failed:", authError);
         auth = undefined;
