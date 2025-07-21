@@ -117,7 +117,7 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
     <Card className="h-[350px] md:h-[450px] w-full flex flex-col shadow-lg">
       <CardHeader className="shrink-0">
         <CardTitle className="font-headline">{name} ({symbol.toUpperCase()}) Chart</CardTitle>
-        <CardDescription>realtime chart powered by Stockdox</CardDescription>
+        <CardDescription>Realtime chart Powered By TradingView</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow pb-4 pr-2 flex"> 
         <div 
