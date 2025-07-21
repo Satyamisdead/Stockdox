@@ -71,7 +71,7 @@ export default function SocialSignInButtons() {
     if (!auth || !appleProvider) {
       toast({
         title: "Apple Sign-In Not Available",
-        description: "The Apple Sign-In module is not available in the current environment. This is likely a dependency issue. Please run `npm install` and restart the server. If the problem persists, the 'firebase' package may need an update.",
+        description: "Apple sign-in is not configured for this application. Please contact support if this issue persists.",
         variant: "destructive",
         duration: 10000,
       });
@@ -94,6 +94,8 @@ export default function SocialSignInButtons() {
         errorMessage = 'Sign-in process was cancelled.';
       } else if (authError.code === 'auth/account-exists-with-different-credential') {
         errorMessage = 'An account already exists with the same email address but different sign-in credentials. Try signing in with a different method.';
+      } else if (authError.code === 'auth/unauthorized-domain') {
+          errorMessage = "This domain is not authorized for Apple Sign-In. Please check your Firebase and Apple Developer configurations.";
       }
       console.error(`Apple sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });

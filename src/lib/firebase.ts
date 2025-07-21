@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, EmailAuthProvider, type Auth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, AppleAuthProvider, EmailAuthProvider, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfigValues = {
@@ -16,9 +16,7 @@ let app: FirebaseApp | undefined = undefined;
 let auth: Auth | undefined = undefined;
 let db: Firestore | undefined = undefined;
 let googleProvider: GoogleAuthProvider | undefined = undefined;
-// AppleAuthProvider is causing a build error, so we are disabling it for now.
-// It can be re-enabled once the dependency issue is resolved.
-let appleProvider: any | undefined = undefined; 
+let appleProvider: AppleAuthProvider | undefined = undefined;
 const emailProvider = typeof window !== "undefined" ? EmailAuthProvider.PROVIDER_ID : undefined;
 
 if (typeof window !== "undefined") {
@@ -81,8 +79,8 @@ Firebase will not be initialized until this is fixed.
       try {
         auth = getAuth(app);
         googleProvider = new GoogleAuthProvider();
-        // appleProvider = new AppleAuthProvider(); // Disabled due to build error
-        console.log("Firebase Service: getAuth, Google providers successful.");
+        appleProvider = new AppleAuthProvider();
+        console.log("Firebase Service: getAuth, Google, and Apple providers successful.");
       } catch (authError) {
         console.error("Firebase Service: getAuth failed:", authError);
         auth = undefined;
