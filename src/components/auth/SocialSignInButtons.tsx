@@ -71,7 +71,7 @@ export default function SocialSignInButtons() {
     if (!auth || !appleProvider) {
       toast({
         title: "Apple Sign-In Not Available",
-        description: "Apple sign-in is not configured for this application, or there is an issue with your environment. Please contact support.",
+        description: "Apple sign-in is not configured for this application. Please ensure Firebase is correctly initialized.",
         variant: "destructive",
         duration: 10000,
       });
