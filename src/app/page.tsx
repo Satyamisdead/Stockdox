@@ -141,15 +141,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div
-        className={cn(
-          "fixed top-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-sm p-3 shadow-md transition-transform duration-300 md:hidden",
-          isMobileHeaderVisible ? "translate-y-0" : "-translate-y-full"
-        )}
-      >
-        <Logo />
-      </div>
-      <div className="space-y-8 pt-16 md:pt-0">
+      <div className="space-y-8 pt-4 md:pt-0">
         <section className="space-y-6">
           <div className="bg-background py-4 border-b border-border/40 shadow-sm flex flex-col items-start gap-4">
             <div className="w-full flex justify-start gap-4">
