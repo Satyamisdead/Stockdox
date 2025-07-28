@@ -4,15 +4,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeftRight, CircleDot, Gem, Heart, ShieldAlert, Trophy, ArrowLeft, ArrowRight, Play } from 'lucide-react';
+import { Slider } from "@/components/ui/slider";
+import { Gem, Heart, ShieldAlert, Trophy, Play, Pause, ChevronsUp } from 'lucide-react';
 
 const GAME_WIDTH = 600;
 const GAME_HEIGHT = 450;
 const PADDLE_WIDTH = 100;
 const PADDLE_HEIGHT = 15;
-const PADDLE_SPEED = 25;
 const BALL_RADIUS = 7;
 const BALL_SPEED_INITIAL = 4;
+const BALL_SPEED_INCREMENT = 0.5; // Speed increase per level
 const BRICK_ROWS = 5;
 const BRICK_COLS = 10;
 const BRICK_HEIGHT = 20;
@@ -32,7 +33,7 @@ interface Brick {
   color: string;
 }
 
-type GameState = "IDLE" | "PLAYING" | "GAME_OVER" | "LEVEL_CLEAR";
+type GameState = "IDLE" | "PLAYING" | "PAUSED" | "GAME_OVER" | "LEVEL_CLEAR";
 
 const brickColors = [
   "hsl(var(--chart-1))",
@@ -49,11 +50,13 @@ export default function GamesPage() {
     y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
     dx: 0,
     dy: 0,
+    speed: BALL_SPEED_INITIAL,
     launched: false,
   });
   const [bricks, setBricks] = useState<Brick[]>([]);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(INITIAL_LIVES);
+  const [level, setLevel] = useState(1);
   const [gameState, setGameState] = useState<GameState>("IDLE");
   const [dynamicScale, setDynamicScale] = useState(1);
 
@@ -78,40 +81,65 @@ export default function GamesPage() {
     setBricks(newBricks);
   }, []);
 
-  const resetBallAndPaddle = useCallback(() => {
+  const resetBallAndPaddle = useCallback((isNewLevel = false) => {
     setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
-    setBall({
+    setBall(prev => ({
       x: GAME_WIDTH / 2,
       y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
       dx: 0,
       dy: 0,
+      speed: isNewLevel ? prev.speed + BALL_SPEED_INCREMENT : BALL_SPEED_INITIAL,
       launched: false,
-    });
+    }));
   }, []);
 
-  const startGame = useCallback(() => {
-    initializeBricks();
+  const resetGame = useCallback(() => {
+    setLevel(1);
     setScore(0);
     setLives(INITIAL_LIVES);
+    initializeBricks();
     resetBallAndPaddle();
-    setGameState("PLAYING");
+    setGameState("IDLE");
   }, [initializeBricks, resetBallAndPaddle]);
+
+  const handleLevelClear = useCallback(() => {
+      setLevel(prev => prev + 1);
+      setLives(prev => Math.min(INITIAL_LIVES, prev + 1)); // Bonus life for clearing level
+      initializeBricks();
+      resetBallAndPaddle(true);
+      setGameState("IDLE");
+  }, [initializeBricks, resetBallAndPaddle]);
+  
+  const handleStartPause = () => {
+    if (gameState === "IDLE") {
+      setGameState("PLAYING");
+      if (!ball.launched) {
+        launchBall();
+      }
+    } else if (gameState === "PLAYING") {
+      setGameState("PAUSED");
+    } else if (gameState === "PAUSED") {
+      setGameState("PLAYING");
+    }
+  };
 
   const launchBall = useCallback(() => {
     if (gameState === "PLAYING" && !ball.launched) {
-      const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
-      setBall(prev => ({
-        ...prev,
-        dx: BALL_SPEED_INITIAL * Math.cos(randomAngle - Math.PI/2),
-        dy: -BALL_SPEED_INITIAL * Math.sin(randomAngle - Math.PI/2),
-        launched: true,
-      }));
+      setBall(prev => {
+        const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
+        return {
+          ...prev,
+          dx: prev.speed * Math.cos(randomAngle - Math.PI / 2),
+          dy: -prev.speed * Math.sin(randomAngle - Math.PI / 2),
+          launched: true,
+        };
+      });
     }
   }, [ball.launched, gameState]);
 
   useEffect(() => {
-    startGame();
-  }, [startGame]);
+    resetGame();
+  }, [resetGame]);
 
   useEffect(() => {
     const calculateScale = () => {
@@ -126,33 +154,23 @@ export default function GamesPage() {
     return () => window.removeEventListener('resize', calculateScale);
   }, []);
 
-  const movePaddleLeft = () => {
-    if (gameState !== "PLAYING") return;
-    setPaddleX(prev => Math.max(0, prev - PADDLE_SPEED));
-  };
-
-  const movePaddleRight = () => {
-    if (gameState !== "PLAYING") return;
-    setPaddleX(prev => Math.min(GAME_WIDTH - PADDLE_WIDTH, prev + PADDLE_SPEED));
+  const handlePaddleMove = (value: number[]) => {
+      if (gameState === "PAUSED" || gameState === "GAME_OVER") return;
+      const newPaddleX = (value[0] / 100) * (GAME_WIDTH - PADDLE_WIDTH);
+      setPaddleX(newPaddleX);
   };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (gameState !== "PLAYING") return;
-
-      if (e.key === "ArrowLeft") {
-        movePaddleLeft();
-      } else if (e.key === "ArrowRight") {
-        movePaddleRight();
-      } else if (e.key === " " && !ball.launched && gameState === "PLAYING") {
+      if (e.key === " " && (gameState === "IDLE" || gameState === "PLAYING" || gameState === "PAUSED")) {
         e.preventDefault();
-        launchBall();
+        handleStartPause();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, ball.launched, launchBall]);
+  }, [gameState, ball.launched]);
 
 
   useEffect(() => {
@@ -190,7 +208,7 @@ export default function GamesPage() {
           newDy = -Math.abs(newDy);
           newY = GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 1;
           let hitPos = (newX - (paddleX + PADDLE_WIDTH / 2)) / (PADDLE_WIDTH / 2);
-          newDx = hitPos * BALL_SPEED_INITIAL * 0.8;
+          newDx = hitPos * prevBall.speed * 0.8;
         }
 
         let newScore = score;
@@ -203,7 +221,7 @@ export default function GamesPage() {
               newY - BALL_RADIUS < brick.y + brick.height
             ) {
               newDy = -newDy;
-              newScore += 10;
+              newScore += 10 * level;
               return { ...brick, active: false };
             }
           }
@@ -219,6 +237,7 @@ export default function GamesPage() {
               setGameState("GAME_OVER");
               return 0;
             } else {
+              setGameState("IDLE");
               resetBallAndPaddle();
               return currentLives;
             }
@@ -236,15 +255,33 @@ export default function GamesPage() {
       animationFrameId.current = requestAnimationFrame(gameLoop);
     };
 
-    if (ball.launched || gameState === "PLAYING") {
-        animationFrameId.current = requestAnimationFrame(gameLoop);
-    }
+    animationFrameId.current = requestAnimationFrame(gameLoop);
     
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [gameState, paddleX, bricks, score, resetBallAndPaddle, ball.launched]);
+  }, [gameState, paddleX, bricks, score, resetBallAndPaddle, ball.launched, level]);
 
+
+  useEffect(() => {
+    if (gameState === "LEVEL_CLEAR") {
+        const timer = setTimeout(() => {
+            handleLevelClear();
+        }, 2000);
+        return () => clearTimeout(timer);
+    }
+  }, [gameState, handleLevelClear]);
+
+  const getButtonText = () => {
+    if (gameState === "PLAYING") return "Pause";
+    if (gameState === "PAUSED") return "Resume";
+    return "Start";
+  };
+  
+  const getButtonIcon = () => {
+    if (gameState === "PLAYING") return <Pause className="w-5 h-5 sm:w-6 sm:h-6 mr-0 sm:mr-2"/>;
+    return <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-0 sm:mr-2"/>;
+  };
 
   return (
     <div className="flex flex-col items-center justify-center py-6 sm:py-10 space-y-4">
@@ -252,6 +289,9 @@ export default function GamesPage() {
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-xl sm:text-2xl font-headline text-primary">Take a Break</CardTitle>
           <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm">
+             <div className="flex items-center text-foreground">
+                <ChevronsUp className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Level: {level}
+            </div>
             <div className="flex items-center text-foreground">
                 <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Score: {score}
             </div>
@@ -266,7 +306,7 @@ export default function GamesPage() {
             className="w-full mx-auto"
             style={{ 
               maxWidth: GAME_WIDTH, 
-              height: GAME_HEIGHT * dynamicScale // Ensure layout space for scaled game
+              height: GAME_HEIGHT * dynamicScale 
             }}
           >
             <div
@@ -279,7 +319,6 @@ export default function GamesPage() {
                 transformOrigin: 'top left',
               }}
             >
-              {/* Paddle */}
               <div
                 className="absolute bg-primary rounded"
                 style={{
@@ -290,10 +329,9 @@ export default function GamesPage() {
                 }}
               />
 
-              {/* Ball */}
-              { (gameState === "PLAYING" || gameState === "IDLE" || gameState === "GAME_OVER") &&
+              { (gameState !== "LEVEL_CLEAR") &&
                   <div
-                    className="absolute bg-accent rounded-full shadow-md"
+                    className="absolute bg-primary rounded-full shadow-lg"
                     style={{
                       left: ball.x - BALL_RADIUS,
                       top: ball.y - BALL_RADIUS,
@@ -303,7 +341,6 @@ export default function GamesPage() {
                   />
               }
 
-              {/* Bricks */}
               {bricks.map((brick, index) =>
                 brick.active ? (
                   <div
@@ -321,12 +358,15 @@ export default function GamesPage() {
                 ) : null
               )}
 
-              {/* Game Messages */}
-              {gameState === "IDLE" && (
-                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-background p-4">
-                      <CircleDot className="w-12 h-12 sm:w-16 sm:h-16 text-primary mb-3 sm:mb-4"/>
-                      <p className="text-lg sm:text-2xl font-bold mb-1 sm:mb-2 text-center">Press SPACE or Launch Button</p>
-                      <p className="text-xs sm:text-sm text-center">(Use Arrows or On-Screen Buttons to Move)</p>
+              {gameState === "IDLE" && !ball.launched && (
+                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4">
+                      <h2 className="text-2xl font-bold mb-2">Level {level}</h2>
+                      <p className="text-lg">Press Start</p>
+                  </div>
+              )}
+               {gameState === "PAUSED" && (
+                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4">
+                      <p className="text-2xl font-bold">Paused</p>
                   </div>
               )}
                {gameState === "GAME_OVER" && (
@@ -334,15 +374,14 @@ export default function GamesPage() {
                   <ShieldAlert className="w-12 h-12 sm:w-16 sm:h-16 text-destructive mb-3 sm:mb-4"/>
                   <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Game Over!</p>
                   <p className="text-md sm:text-xl mb-3 sm:mb-4">Final Score: {score}</p>
-                  <Button onClick={startGame} variant="default" size="lg">Restart</Button>
+                  <Button onClick={resetGame} variant="default" size="lg">Restart</Button>
                 </div>
               )}
               {gameState === "LEVEL_CLEAR" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-primary-foreground p-4">
                    <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-primary mb-3 sm:mb-4"/>
-                  <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">You Win!</p>
-                  <p className="text-md sm:text-xl mb-3 sm:mb-4">Final Score: {score}</p>
-                  <Button onClick={startGame} variant="default" size="lg">Play Again</Button>
+                  <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Level {level} Cleared!</p>
+                  <p className="text-md sm:text-xl">Next level loading...</p>
                 </div>
               )}
             </div>
@@ -350,40 +389,31 @@ export default function GamesPage() {
         </CardContent>
       </Card>
 
-      {/* Touch Controls */}
-      <div className="flex justify-center items-center space-x-3 sm:space-x-4 w-full px-4 sm:px-0 mt-2">
+      <div className="w-full max-w-sm px-4 flex items-center gap-4">
+        <Slider
+            defaultValue={[50]}
+            max={100}
+            step={1}
+            onValueChange={handlePaddleMove}
+            value={[(paddleX / (GAME_WIDTH - PADDLE_WIDTH)) * 100]}
+            disabled={gameState === "GAME_OVER"}
+            className="w-full"
+            aria-label="Move Paddle"
+        />
         <Button 
-          onClick={movePaddleLeft} 
-          aria-label="Move Left" 
-          variant="outline" 
-          className="p-3 sm:p-4 aspect-square h-auto"
-          disabled={gameState !== "PLAYING"}
-        >
-          <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6"/>
-        </Button>
-        <Button 
-          onClick={launchBall} 
-          aria-label="Launch Ball" 
+          onClick={handleStartPause} 
+          aria-label={getButtonText()}
           variant="default" 
-          className="p-3 sm:p-4 text-sm sm:text-base h-auto"
-          disabled={ball.launched || gameState !== "PLAYING"}
+          className="p-3 sm:p-4 text-sm sm:text-base h-auto w-32"
+          disabled={gameState === "GAME_OVER" || gameState === "LEVEL_CLEAR"}
         >
-          <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-0 sm:mr-2"/> <span className="hidden sm:inline">Launch</span>
-        </Button>
-        <Button 
-          onClick={movePaddleRight} 
-          aria-label="Move Right" 
-          variant="outline" 
-          className="p-3 sm:p-4 aspect-square h-auto"
-          disabled={gameState !== "PLAYING"}
-        >
-          <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6"/>
+          {getButtonIcon()} <span className="hidden sm:inline">{getButtonText()}</span>
         </Button>
       </div>
 
       <div className="text-center text-muted-foreground text-xs sm:text-sm max-w-md px-4 mt-2">
-        <p><ArrowLeftRight className="inline h-3 w-3 sm:h-4 sm:w-4 mr-1"/> Use <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Arrow Keys</kbd> or on-screen buttons to move.</p>
-        <p className="mt-1"><kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Spacebar</kbd> or on-screen button to launch.</p>
+        <p>Use the slider to control the paddle.</p>
+        <p className="mt-1">Press <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Spacebar</kbd> or the button to start/pause.</p>
       </div>
     </div>
   );
