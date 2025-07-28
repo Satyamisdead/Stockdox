@@ -43,6 +43,54 @@ const brickColors = [
   "hsl(var(--chart-5))",
 ];
 
+// Audio Context for sound effects
+let audioContext: AudioContext | null = null;
+const playSound = (type: 'brick' | 'paddle' | 'wall' | 'loseLife') => {
+  if (typeof window === 'undefined') return;
+  if (!audioContext) {
+    try {
+      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch (e) {
+      console.error("AudioContext not supported");
+      return;
+    }
+  }
+
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+
+  switch(type) {
+    case 'brick':
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+      break;
+    case 'paddle':
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // A3
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+      break;
+    case 'wall':
+       oscillator.type = 'sine';
+       oscillator.frequency.setValueAtTime(110, audioContext.currentTime); // A2
+       gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+       break;
+    case 'loseLife':
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+      break;
+  }
+
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + 0.2);
+};
+
+
 export default function GamesPage() {
   const [paddleX, setPaddleX] = useState((GAME_WIDTH - PADDLE_WIDTH) / 2);
   const [ball, setBall] = useState({
@@ -104,17 +152,31 @@ export default function GamesPage() {
 
   const handleLevelClear = useCallback(() => {
       setLevel(prev => prev + 1);
-      setLives(prev => Math.min(INITIAL_LIVES, prev + 1)); // Bonus life for clearing level
+      setLives(prev => Math.min(INITIAL_LIVES + 2, prev + 1)); // Bonus life for clearing level, max 5
       initializeBricks();
       resetBallAndPaddle(true);
       setGameState("IDLE");
   }, [initializeBricks, resetBallAndPaddle]);
   
+  const launchBall = useCallback(() => {
+      setBall(prev => {
+        const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
+        const speed = prev.speed;
+        return {
+          ...prev,
+          dx: speed * Math.cos(randomAngle) * (Math.random() > 0.5 ? 1 : -1),
+          dy: -speed * Math.sin(randomAngle),
+          launched: true,
+        };
+      });
+  }, []);
+
   const handleStartPause = () => {
-    if (gameState === "IDLE") {
+    if (gameState === "IDLE" || gameState === "GAME_OVER") {
       setGameState("PLAYING");
       if (!ball.launched) {
-        launchBall();
+        // Delay launch slightly to allow state to update
+        setTimeout(() => launchBall(), 100);
       }
     } else if (gameState === "PLAYING") {
       setGameState("PAUSED");
@@ -122,20 +184,6 @@ export default function GamesPage() {
       setGameState("PLAYING");
     }
   };
-
-  const launchBall = useCallback(() => {
-    if (gameState === "PLAYING" && !ball.launched) {
-      setBall(prev => {
-        const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
-        return {
-          ...prev,
-          dx: prev.speed * Math.cos(randomAngle - Math.PI / 2),
-          dy: -prev.speed * Math.sin(randomAngle - Math.PI / 2),
-          launched: true,
-        };
-      });
-    }
-  }, [ball.launched, gameState]);
 
   useEffect(() => {
     resetGame();
@@ -189,31 +237,36 @@ export default function GamesPage() {
         let newY = prevBall.y + prevBall.dy;
         let newDx = prevBall.dx;
         let newDy = prevBall.dy;
-
+        
+        // Wall collision
         if (newX + BALL_RADIUS > GAME_WIDTH || newX - BALL_RADIUS < 0) {
           newDx = -newDx;
-          newX = prevBall.x;
+          playSound('wall');
         }
         if (newY - BALL_RADIUS < 0) {
           newDy = -newDy;
-          newY = prevBall.y;
+          playSound('wall');
         }
 
+        // Paddle collision
         if (
           newY + BALL_RADIUS > GAME_HEIGHT - PADDLE_HEIGHT &&
-          newY - BALL_RADIUS < GAME_HEIGHT &&
-          newX > paddleX &&
-          newX < paddleX + PADDLE_WIDTH
+          newY + BALL_RADIUS < GAME_HEIGHT &&
+          newX + BALL_RADIUS > paddleX &&
+          newX - BALL_RADIUS < paddleX + PADDLE_WIDTH
         ) {
           newDy = -Math.abs(newDy);
           newY = GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 1;
           let hitPos = (newX - (paddleX + PADDLE_WIDTH / 2)) / (PADDLE_WIDTH / 2);
-          newDx = hitPos * prevBall.speed * 0.8;
+          newDx = hitPos * prevBall.speed * 1.2;
+          playSound('paddle');
         }
 
+        // Brick collision
         let newScore = score;
         const newBricks = bricks.map(brick => {
           if (brick.active) {
+            // Check for collision
             if (
               newX + BALL_RADIUS > brick.x &&
               newX - BALL_RADIUS < brick.x + brick.width &&
@@ -222,15 +275,23 @@ export default function GamesPage() {
             ) {
               newDy = -newDy;
               newScore += 10 * level;
+              playSound('brick');
               return { ...brick, active: false };
             }
           }
           return brick;
         });
-        setBricks(newBricks);
+        
         if (newScore !== score) setScore(newScore);
-
-        if (newY + BALL_RADIUS > GAME_HEIGHT) {
+        
+        const activeBricksChanged = newBricks.some((b, i) => b.active !== bricks[i].active);
+        if (activeBricksChanged) {
+          setBricks(newBricks);
+        }
+        
+        // Lose life
+        if (newY - BALL_RADIUS > GAME_HEIGHT) {
+          playSound('loseLife');
           setLives(prevLives => {
             const currentLives = prevLives - 1;
             if (currentLives <= 0) {
@@ -242,13 +303,14 @@ export default function GamesPage() {
               return currentLives;
             }
           });
+          // Important: Reset ball state for the next turn
           return { ...prevBall, x: paddleX + PADDLE_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
         }
         
         return { ...prevBall, x: newX, y: newY, dx: newDx, dy: newDy };
       });
 
-      if (bricks.every(b => !b.active) && bricks.length > 0 && gameState === "PLAYING") {
+      if (bricks.length > 0 && bricks.every(b => !b.active) && gameState === "PLAYING") {
         setGameState("LEVEL_CLEAR");
       }
 
@@ -260,7 +322,7 @@ export default function GamesPage() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [gameState, paddleX, bricks, score, resetBallAndPaddle, ball.launched, level]);
+  }, [gameState, paddleX, bricks, score, resetBallAndPaddle, ball.launched, level, launchBall]);
 
 
   useEffect(() => {
@@ -275,6 +337,7 @@ export default function GamesPage() {
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
     if (gameState === "PAUSED") return "Resume";
+    if (gameState === "GAME_OVER") return "Restart";
     return "Start";
   };
   
@@ -326,17 +389,19 @@ export default function GamesPage() {
                   bottom: 0,
                   width: PADDLE_WIDTH,
                   height: PADDLE_HEIGHT,
+                  boxShadow: '0 0 10px hsl(var(--primary))'
                 }}
               />
 
               { (gameState !== "LEVEL_CLEAR") &&
                   <div
-                    className="absolute bg-primary rounded-full shadow-lg"
+                    className="absolute bg-destructive rounded-full"
                     style={{
                       left: ball.x - BALL_RADIUS,
                       top: ball.y - BALL_RADIUS,
                       width: BALL_RADIUS * 2,
                       height: BALL_RADIUS * 2,
+                      boxShadow: '0 0 12px hsl(var(--destructive))'
                     }}
                   />
               }
@@ -345,7 +410,7 @@ export default function GamesPage() {
                 brick.active ? (
                   <div
                     key={index}
-                    className="absolute rounded shadow"
+                    className="absolute rounded shadow transition-opacity duration-300"
                     style={{
                       left: brick.x,
                       top: brick.y,
@@ -358,28 +423,28 @@ export default function GamesPage() {
                 ) : null
               )}
 
-              {gameState === "IDLE" && !ball.launched && (
-                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4">
+              {gameState === "IDLE" && (
+                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4 animate-fade-in">
                       <h2 className="text-2xl font-bold mb-2">Level {level}</h2>
                       <p className="text-lg">Press Start</p>
                   </div>
               )}
                {gameState === "PAUSED" && (
-                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4">
+                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4 animate-fade-in">
                       <p className="text-2xl font-bold">Paused</p>
                   </div>
               )}
                {gameState === "GAME_OVER" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-background p-4">
-                  <ShieldAlert className="w-12 h-12 sm:w-16 sm:h-16 text-destructive mb-3 sm:mb-4"/>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-background p-4 animate-fade-in">
+                  <ShieldAlert className="w-12 h-12 sm:w-16 sm:h-16 text-destructive mb-3 sm:mb-4 animate-bounce"/>
                   <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Game Over!</p>
                   <p className="text-md sm:text-xl mb-3 sm:mb-4">Final Score: {score}</p>
                   <Button onClick={resetGame} variant="default" size="lg">Restart</Button>
                 </div>
               )}
               {gameState === "LEVEL_CLEAR" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-primary-foreground p-4">
-                   <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-primary mb-3 sm:mb-4"/>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-primary-foreground p-4 animate-fade-in">
+                   <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-primary mb-3 sm:mb-4 animate-bounce"/>
                   <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Level {level} Cleared!</p>
                   <p className="text-md sm:text-xl">Next level loading...</p>
                 </div>
@@ -401,11 +466,11 @@ export default function GamesPage() {
             aria-label="Move Paddle"
         />
         <Button 
-          onClick={handleStartPause} 
+          onClick={gameState === 'GAME_OVER' ? resetGame : handleStartPause} 
           aria-label={getButtonText()}
           variant="default" 
           className="p-3 sm:p-4 text-sm sm:text-base h-auto w-32"
-          disabled={gameState === "GAME_OVER" || gameState === "LEVEL_CLEAR"}
+          disabled={gameState === "LEVEL_CLEAR"}
         >
           {getButtonIcon()} <span className="hidden sm:inline">{getButtonText()}</span>
         </Button>
@@ -418,3 +483,5 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
