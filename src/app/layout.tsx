@@ -68,8 +68,8 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#000000" /> 
 
-        {/* Viewport settings for responsiveness */}
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        {/* Viewport settings for responsiveness and native-like feel */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col bg-background text-foreground">
