@@ -2,7 +2,7 @@
 "use client";
 
 import type { User } from 'firebase/auth';
-import { auth as firebaseAuthInstance } from '@/lib/firebase'; // Renamed import to avoid conflict
+import { auth as firebaseAuthInstance } from '@/lib/firebase';
 import { getRedirectResult } from 'firebase/auth';
 import type { Auth } from 'firebase/auth';
 import React, { createContext, useEffect, useState, type ReactNode } from 'react';
@@ -28,12 +28,9 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // First, handle potential redirect results
     getRedirectResult(firebaseAuthInstance)
       .then((result) => {
         if (result) {
-          // This means a redirect sign-in just completed.
-          // The onAuthStateChanged listener below will handle setting the user.
           console.log("FirebaseProvider: Handled redirect result for user:", result.user.uid);
         }
       })
@@ -46,16 +43,14 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
 
     const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
-      // We only stop the main loading indicator once the redirect check is also done.
       if (!isHandlingRedirect) {
           setLoading(false);
       }
     });
     
     return () => unsubscribe();
-  }, []);
+  }, [isHandlingRedirect]);
 
-  // Combine auth loading and redirect handling for the final loading state
   useEffect(() => {
     if (!isHandlingRedirect) {
         setLoading(false);

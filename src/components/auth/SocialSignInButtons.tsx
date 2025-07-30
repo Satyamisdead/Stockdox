@@ -3,8 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { auth, googleProvider, appleProvider } from "@/lib/firebase";
-import { signInWithPopup, signInWithRedirect, type AuthError } from "firebase/auth";
-import { useRouter, useSearchParams } from "next/navigation";
+import { signInWithRedirect, type AuthError } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -29,8 +28,6 @@ const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function SocialSignInButtons() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [isLoadingApple, setIsLoadingApple] = useState(false);
@@ -41,7 +38,7 @@ export default function SocialSignInButtons() {
     if (!auth || !googleProvider) {
       toast({
         title: "Firebase Not Configured",
-        description: "The app is not connected to Firebase. Please check your developer console.",
+        description: "Google sign-in is not available. Please check your developer console.",
         variant: "destructive",
         duration: 10000,
       });
@@ -50,10 +47,7 @@ export default function SocialSignInButtons() {
     }
 
     try {
-      // Use signInWithRedirect for better compatibility with WebViews
       await signInWithRedirect(auth, googleProvider);
-      // The redirect will navigate away, so no toast or router push is needed here.
-      // The result is handled by getRedirectResult in the FirebaseProvider.
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = authError.message || `Failed to sign in with Google.`;
@@ -62,7 +56,7 @@ export default function SocialSignInButtons() {
       }
       console.error(`Google sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
-      setIsLoadingGoogle(false); // Only stop loading on error
+      setIsLoadingGoogle(false);
     }
   };
   
@@ -80,26 +74,17 @@ export default function SocialSignInButtons() {
     }
 
     try {
-      await signInWithPopup(auth, appleProvider);
-      toast({ title: "Success", description: `Signed in with Apple successfully.` });
-
-      const redirectPath = searchParams.get('redirect');
-      const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
-      router.push(targetPath);
-      router.refresh();
+      await signInWithRedirect(auth, appleProvider);
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = authError.message || `Failed to sign in with Apple.`;
-      if (authError.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Sign-in process was cancelled.';
-      } else if (authError.code === 'auth/account-exists-with-different-credential') {
+      if (authError.code === 'auth/account-exists-with-different-credential') {
         errorMessage = 'An account already exists with the same email address but different sign-in credentials. Try signing in with a different method.';
       } else if (authError.code === 'auth/unauthorized-domain') {
           errorMessage = "This domain is not authorized for Apple Sign-In. Please check your Firebase and Apple Developer configurations.";
       }
       console.error(`Apple sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
-    } finally {
       setIsLoadingApple(false);
     }
   };
