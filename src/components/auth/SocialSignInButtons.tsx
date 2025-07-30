@@ -26,76 +26,54 @@ const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const REDIRECT_PENDING_KEY = 'firebase-redirect-pending';
 
 export default function SocialSignInButtons() {
   const { toast } = useToast();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [isLoadingApple, setIsLoadingApple] = useState(false);
   
-  const handleGoogleSignIn = async () => {
-    setIsLoadingGoogle(true);
-    
-    if (!auth || !googleProvider) {
+  const handleRedirectSignIn = async (provider: any, setLoading: (loading: boolean) => void) => {
+    setLoading(true);
+
+    if (!auth || !provider) {
+      const providerName = provider === googleProvider ? "Google" : "Apple";
       toast({
         title: "Firebase Not Configured",
-        description: "Google sign-in is not available. Please check your developer console.",
+        description: `${providerName} sign-in is not available. Please check your developer console.`,
         variant: "destructive",
         duration: 10000,
       });
-      setIsLoadingGoogle(false);
+      setLoading(false);
       return;
     }
 
     try {
-      await signInWithRedirect(auth, googleProvider);
+      sessionStorage.setItem(REDIRECT_PENDING_KEY, 'true');
+      await signInWithRedirect(auth, provider);
+      // Note: The user is redirected away, so code after this point might not execute immediately.
+      // Loading state will persist until the user returns and the page reloads.
     } catch (error) {
+      sessionStorage.removeItem(REDIRECT_PENDING_KEY);
       const authError = error as AuthError;
-      let errorMessage = authError.message || `Failed to sign in with Google.`;
+      const providerName = provider === googleProvider ? "Google" : "Apple";
+      let errorMessage = authError.message || `Failed to sign in with ${providerName}.`;
       if (authError.code === 'auth/unauthorized-domain') {
           errorMessage = "This domain is not authorized for sign-in. Please add it to your Firebase project's settings.";
       }
-      console.error(`Google sign-in error:`, authError.code, authError.message);
+      console.error(`${providerName} sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
-      setIsLoadingGoogle(false);
-    }
-  };
-  
-  const handleAppleSignIn = async () => {
-    setIsLoadingApple(true);
-    if (!auth || !appleProvider) {
-      toast({
-        title: "Apple Sign-In Not Available",
-        description: "Apple sign-in is not configured for this application. Please ensure Firebase is correctly initialized.",
-        variant: "destructive",
-        duration: 10000,
-      });
-      setIsLoadingApple(false);
-      return;
-    }
-
-    try {
-      await signInWithRedirect(auth, appleProvider);
-    } catch (error) {
-      const authError = error as AuthError;
-      let errorMessage = authError.message || `Failed to sign in with Apple.`;
-      if (authError.code === 'auth/account-exists-with-different-credential') {
-        errorMessage = 'An account already exists with the same email address but different sign-in credentials. Try signing in with a different method.';
-      } else if (authError.code === 'auth/unauthorized-domain') {
-          errorMessage = "This domain is not authorized for Apple Sign-In. Please check your Firebase and Apple Developer configurations.";
-      }
-      console.error(`Apple sign-in error:`, authError.code, authError.message);
-      toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
-      setIsLoadingApple(false);
+      setLoading(false);
     }
   };
 
   return (
     <div className="space-y-2">
-      <Button variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoadingGoogle || isLoadingApple}>
+      <Button variant="outline" className="w-full gap-2" onClick={() => handleRedirectSignIn(googleProvider, setIsLoadingGoogle)} disabled={isLoadingGoogle || isLoadingApple}>
         {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
          Sign in with Google
       </Button>
-      <Button variant="outline" className="w-full gap-2" onClick={handleAppleSignIn} disabled={isLoadingApple || isLoadingGoogle}>
+      <Button variant="outline" className="w-full gap-2" onClick={() => handleRedirectSignIn(appleProvider, setIsLoadingApple)} disabled={isLoadingApple || isLoadingGoogle}>
         {isLoadingApple ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AppleIcon className="h-5 w-5" />}
         Sign in with Apple
       </Button>
