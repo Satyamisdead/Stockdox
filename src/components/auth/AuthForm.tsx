@@ -85,6 +85,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
         errorMessage = 'Invalid email or password.';
       } else if (authError.code === 'auth/email-already-in-use') {
         errorMessage = 'This email address is already in use.';
+      } else if (authError.code === 'auth/network-request-failed') {
+          errorMessage = "A network error occurred. Please ensure you are online and check if your domain is authorized in Firebase Authentication settings.";
       } else if (authError.code === 'auth/unauthorized-domain') {
           errorMessage = "This domain is not authorized for sign-in. Please add it to your Firebase project's settings.";
       }
