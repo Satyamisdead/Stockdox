@@ -30,51 +30,50 @@ const REDIRECT_PENDING_KEY = 'firebase-redirect-pending';
 
 export default function SocialSignInButtons() {
   const { toast } = useToast();
-  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
-  const [isLoadingApple, setIsLoadingApple] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   
-  const handleRedirectSignIn = async (provider: any, setLoading: (loading: boolean) => void) => {
-    setLoading(true);
+  const handleRedirectSignIn = async (provider: any) => {
+    setIsSigningIn(true);
+    const providerName = provider === googleProvider ? "Google" : "Apple";
 
     if (!auth || !provider) {
-      const providerName = provider === googleProvider ? "Google" : "Apple";
       toast({
         title: "Firebase Not Configured",
         description: `${providerName} sign-in is not available. Please check your developer console.`,
         variant: "destructive",
         duration: 10000,
       });
-      setLoading(false);
+      setIsSigningIn(false);
       return;
     }
 
     try {
+      // This key helps the FirebaseProvider know a redirect was initiated.
       sessionStorage.setItem(REDIRECT_PENDING_KEY, 'true');
       await signInWithRedirect(auth, provider);
-      // Note: The user is redirected away, so code after this point might not execute immediately.
-      // Loading state will persist until the user returns and the page reloads.
+      // The user is redirected away. The loading indicator will persist until the page unloads.
     } catch (error) {
+      // This catch block will typically handle immediate errors, like misconfiguration.
       sessionStorage.removeItem(REDIRECT_PENDING_KEY);
       const authError = error as AuthError;
-      const providerName = provider === googleProvider ? "Google" : "Apple";
-      let errorMessage = authError.message || `Failed to sign in with ${providerName}.`;
+      let errorMessage = authError.message || `Failed to start sign in with ${providerName}.`;
       if (authError.code === 'auth/unauthorized-domain') {
           errorMessage = "This domain is not authorized for sign-in. Please add it to your Firebase project's settings.";
       }
       console.error(`${providerName} sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
-      setLoading(false);
+      setIsSigningIn(false);
     }
   };
 
   return (
     <div className="space-y-2">
-      <Button variant="outline" className="w-full gap-2" onClick={() => handleRedirectSignIn(googleProvider, setIsLoadingGoogle)} disabled={isLoadingGoogle || isLoadingApple}>
-        {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
+      <Button variant="outline" className="w-full gap-2" onClick={() => handleRedirectSignIn(googleProvider)} disabled={isSigningIn}>
+        {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
          Sign in with Google
       </Button>
-      <Button variant="outline" className="w-full gap-2" onClick={() => handleRedirectSignIn(appleProvider, setIsLoadingApple)} disabled={isLoadingApple || isLoadingGoogle}>
-        {isLoadingApple ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AppleIcon className="h-5 w-5" />}
+      <Button variant="outline" className="w-full gap-2" onClick={() => handleRedirectSignIn(appleProvider)} disabled={isSigningIn}>
+        {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AppleIcon className="h-5 w-5" />}
         Sign in with Apple
       </Button>
     </div>
