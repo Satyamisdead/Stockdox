@@ -74,22 +74,6 @@ export default function SocialSignInButtons() {
 
   return (
     <div className="space-y-2">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="w-full">
-               <Button variant="outline" className="w-full gap-2" disabled={true}>
-                <GoogleIcon className="h-5 w-5" />
-                Sign in with Google
-              </Button>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Google Sign-In is temporarily disabled.</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
       <Button variant="outline" className="w-full gap-2" onClick={() => handleRedirectSignIn(appleProvider)} disabled={isSigningIn}>
         {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AppleIcon className="h-5 w-5" />}
         Sign in with Apple
