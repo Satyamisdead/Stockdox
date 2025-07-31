@@ -7,6 +7,12 @@ import { signInWithRedirect, type AuthError } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // Inline SVG for Google Icon
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -68,10 +74,22 @@ export default function SocialSignInButtons() {
 
   return (
     <div className="space-y-2">
-      <Button variant="outline" className="w-full gap-2" onClick={() => handleRedirectSignIn(googleProvider)} disabled={isSigningIn}>
-        {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="h-5 w-5" />}
-         Sign in with Google
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="w-full">
+               <Button variant="outline" className="w-full gap-2" disabled={true}>
+                <GoogleIcon className="h-5 w-5" />
+                Sign in with Google
+              </Button>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Google Sign-In is temporarily disabled.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
       <Button variant="outline" className="w-full gap-2" onClick={() => handleRedirectSignIn(appleProvider)} disabled={isSigningIn}>
         {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AppleIcon className="h-5 w-5" />}
         Sign in with Apple
