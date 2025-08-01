@@ -7,13 +7,11 @@ import { Home, User, Eye, LogIn, Gamepad2, Newspaper } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
 
 export default function MobileBottomNav() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const { user, loading } = useAuth();
-  const { toast } = useToast();
 
   if (!isMobile) {
     return null;
