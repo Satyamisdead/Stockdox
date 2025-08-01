@@ -1,7 +1,7 @@
 
 import type { Metadata } from 'next';
 import './globals.css';
-import { FirebaseProvider } from '@/contexts/FirebaseProvider';
+import { Providers } from '@/contexts/Providers';
 import { Toaster } from '@/components/ui/toaster';
 import SiteHeader from '@/components/core/SiteHeader';
 import SiteFooter from '@/components/core/SiteFooter';
@@ -73,7 +73,7 @@ export default function RootLayout({
 
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col bg-background text-foreground">
-        <FirebaseProvider>
+        <Providers>
           <SiteHeader />
           <main className="flex-grow container mx-auto px-4 pt-6 md:pt-8 pb-20 md:pb-8">
             {children}
@@ -83,7 +83,7 @@ export default function RootLayout({
           <InstallPWAHandler />
           <ChatbotLauncher />
           <Toaster />
-        </FirebaseProvider>
+        </Providers>
       </body>
     </html>
   );
