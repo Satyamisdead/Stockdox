@@ -36,10 +36,12 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       .then((result) => {
         sessionStorage.removeItem(REDIRECT_PENDING_KEY);
         if (result) {
+          // This is the success case. A user object is available.
           console.log("FirebaseProvider: Handled redirect result for user:", result.user.uid);
           toast({ title: "Signed In", description: "You have been successfully signed in." });
         } else if (redirectPending) {
-          // If a redirect was pending but we got no result, the user likely navigated back.
+          // This case now only runs if a redirect was expected, but no user was returned.
+          // This indicates the user cancelled the process on the provider's page (e.g., Apple's login).
           toast({
             title: "Sign In Cancelled",
             description: "You did not complete the sign-in process.",
@@ -57,7 +59,8 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
         });
       })
       .finally(() => {
-        // Auth state will be set by onAuthStateChanged
+        // The onAuthStateChanged listener will handle the final state update.
+        // It's the ultimate source of truth.
       });
 
     const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
