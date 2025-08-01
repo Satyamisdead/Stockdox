@@ -22,14 +22,11 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  // State to specifically track if we are waiting for a redirect result.
-  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
 
   useEffect(() => {
     if (!firebaseAuthInstance) {
       console.warn("FirebaseProvider: Firebase Auth instance is not available.");
       setLoading(false);
-      setIsProcessingRedirect(false);
       return;
     }
 
@@ -38,12 +35,10 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
         const result = await getRedirectResult(firebaseAuthInstance);
         if (result) {
           // A successful login via redirect has occurred.
-          // onAuthStateChanged will soon fire with the new user.
           console.log("FirebaseProvider: Handled redirect result for user:", result.user.uid);
           toast({ title: "Signed In", description: "You have been successfully signed in." });
+          // onAuthStateChanged will handle setting the user and loading state.
         }
-        // If result is null, it means no redirect was in progress or it was cancelled.
-        // We don't need to do anything here, as onAuthStateChanged will provide the correct user state (or null).
       } catch (error: any) {
         console.error("FirebaseProvider: Error getting redirect result", error);
         toast({
@@ -52,29 +47,26 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
           variant: "destructive"
         });
       } finally {
-        // Crucially, we mark the redirect processing as complete.
-        setIsProcessingRedirect(false);
+        // Clear the pending key regardless of outcome.
+        sessionStorage.removeItem(REDIRECT_PENDING_KEY);
       }
     };
     
-    processRedirect();
+    // Check if a redirect was initiated from our app.
+    if (sessionStorage.getItem(REDIRECT_PENDING_KEY)) {
+        processRedirect();
+    }
     
     const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
-      // Only set loading to false AFTER the redirect has been processed.
-      if (!isProcessingRedirect) {
-        setLoading(false);
-      }
+      setLoading(false); // This is the single source of truth for when auth is ready.
     });
     
     return () => unsubscribe();
-  }, [toast, isProcessingRedirect]); // Depend on isProcessingRedirect
-
-  // Keep the app in a loading state until both the redirect is processed AND the auth state is known.
-  const finalLoadingState = loading || isProcessingRedirect;
+  }, [toast]);
 
   return (
-    <FirebaseContext.Provider value={{ auth: firebaseAuthInstance, user, loading: finalLoadingState }}>
+    <FirebaseContext.Provider value={{ auth: firebaseAuthInstance, user, loading }}>
       {children}
     </FirebaseContext.Provider>
   );

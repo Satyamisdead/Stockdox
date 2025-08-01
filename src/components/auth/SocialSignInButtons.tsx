@@ -22,6 +22,7 @@ const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const REDIRECT_PENDING_KEY = 'firebase-redirect-pending';
 
 export default function SocialSignInButtons() {
   const { toast } = useToast();
@@ -43,14 +44,19 @@ export default function SocialSignInButtons() {
     }
 
     try {
+      // Set a flag in session storage to indicate a redirect is about to happen.
+      sessionStorage.setItem(REDIRECT_PENDING_KEY, 'true');
       await signInWithRedirect(auth, provider);
       // The user is redirected away. The loading indicator will persist until the page unloads.
     } catch (error) {
       // This catch block will typically handle immediate errors, like misconfiguration.
+      sessionStorage.removeItem(REDIRECT_PENDING_KEY); // Clean up on immediate error
       const authError = error as AuthError;
       let errorMessage = authError.message || `Failed to start sign in with ${providerName}.`;
       if (authError.code === 'auth/unauthorized-domain') {
           errorMessage = "This domain is not authorized for sign-in. Please add it to your Firebase project's settings.";
+      } else if (authError.code === 'auth/network-request-failed') {
+          errorMessage = "A network error occurred. Please ensure you are online.";
       }
       console.error(`${providerName} sign-in error:`, authError.code, authError.message);
       toast({ title: "Sign In Error", description: errorMessage, variant: "destructive" });
