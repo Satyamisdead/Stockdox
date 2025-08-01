@@ -30,33 +30,39 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const redirectPending = sessionStorage.getItem(REDIRECT_PENDING_KEY) === 'true';
-
-    // This block handles the result of the redirect.
-    if (redirectPending) {
-        getRedirectResult(firebaseAuthInstance)
-        .then((result) => {
-            sessionStorage.removeItem(REDIRECT_PENDING_KEY);
-            if (result) {
-                console.log("FirebaseProvider: Handled redirect result for user:", result.user.uid);
-                toast({ title: "Signed In", description: "You have been successfully signed in." });
-            }
-            // If result is null, it means the user came back without signing in.
-            // Per the request, we no longer show a "cancelled" toast here.
-            // onAuthStateChanged will simply reflect the user's non-logged-in state.
-        })
-        .catch((error: AuthError) => {
-            sessionStorage.removeItem(REDIRECT_PENDING_KEY);
-            console.error("FirebaseProvider: Error getting redirect result", error);
-            toast({
+    const processRedirect = async () => {
+      // Check if a redirect was initiated from our app
+      if (sessionStorage.getItem(REDIRECT_PENDING_KEY) === 'true') {
+        try {
+          const result = await getRedirectResult(firebaseAuthInstance);
+          // Clear the flag immediately after processing
+          sessionStorage.removeItem(REDIRECT_PENDING_KEY);
+          if (result) {
+            // A successful login via redirect has occurred.
+            // onAuthStateChanged will handle setting the user.
+            console.log("FirebaseProvider: Handled redirect result for user:", result.user.uid);
+            toast({ title: "Signed In", description: "You have been successfully signed in." });
+          } 
+          // If result is null, it means the user came back without signing in.
+          // onAuthStateChanged will correctly report a null user, so no explicit action or toast is needed here.
+          // This prevents the "cancelled" toast on a normal page load.
+        } catch (error: any) {
+          sessionStorage.removeItem(REDIRECT_PENDING_KEY);
+          console.error("FirebaseProvider: Error getting redirect result", error);
+          toast({
             title: "Sign In Failed",
             description: error.message || "An unexpected error occurred during sign-in.",
             variant: "destructive"
-            });
-        });
-    }
-
-    // This listener is the source of truth for the user's auth state.
+          });
+        }
+      }
+    };
+    
+    // Process the redirect as soon as the provider mounts
+    processRedirect();
+    
+    // This listener is the ultimate source of truth for the user's auth state.
+    // It will fire after getRedirectResult completes and sets the session.
     const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       setLoading(false); // Auth state is now definitive
