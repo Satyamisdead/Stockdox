@@ -22,7 +22,6 @@ const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const REDIRECT_PENDING_KEY = 'firebase-redirect-pending';
 
 export default function SocialSignInButtons() {
   const { toast } = useToast();
@@ -44,13 +43,10 @@ export default function SocialSignInButtons() {
     }
 
     try {
-      // This key helps the FirebaseProvider know a redirect was initiated.
-      sessionStorage.setItem(REDIRECT_PENDING_KEY, 'true');
       await signInWithRedirect(auth, provider);
       // The user is redirected away. The loading indicator will persist until the page unloads.
     } catch (error) {
       // This catch block will typically handle immediate errors, like misconfiguration.
-      sessionStorage.removeItem(REDIRECT_PENDING_KEY);
       const authError = error as AuthError;
       let errorMessage = authError.message || `Failed to start sign in with ${providerName}.`;
       if (authError.code === 'auth/unauthorized-domain') {
