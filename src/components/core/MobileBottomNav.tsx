@@ -19,11 +19,6 @@ export default function MobileBottomNav() {
     return null;
   }
 
-  // Do not show bottom nav on profile page for better UX
-  if (pathname === "/profile") {
-    return null;
-  }
-
   const navItemsBase = [
     { id: 'home', href: "/", label: "Home", icon: Home, requiresAuth: false },
     { id: 'take-a-break', href: "/games", label: "Take a Break", icon: Gamepad2, requiresAuth: false },

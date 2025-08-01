@@ -11,13 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import Loading from "@/app/loading";
-import { LogOut, User, Trash2, Loader2 } from "lucide-react";
+import { LogOut, User, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -70,6 +72,12 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
+        {isMobile && (
+             <Button variant="ghost" onClick={() => router.back()} className="mb-2 -ml-2 self-start">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+            </Button>
+        )}
         <div className="flex items-center gap-3">
             <User className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold text-primary font-headline">My Profile</h1>
