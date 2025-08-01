@@ -19,20 +19,22 @@ export default function SignInPage() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // This effect now only handles redirecting an already-logged-in user.
-    // The complex logic of handling a new redirect-login is inside AuthForm.
+    // This effect redirects a user who is ALREADY logged in.
+    // It will run after the auth state is confirmed by the provider.
     if (!authLoading && user) {
       const redirectPath = searchParams.get('redirect') || '/';
       router.push(redirectPath);
     }
   }, [user, authLoading, router, searchParams]);
 
-  // We show a loader if auth state is loading, or if a user object exists
-  // (which means we are about to redirect).
+  // The loading gate:
+  // Show a loader if the auth state is still loading, OR if a user object
+  // exists (which means we are about to redirect).
   if (authLoading || user) {
     return <Loading />;
   }
 
+  // Only if auth is done loading and there is no user, we show the form.
   return (
     <div className="flex flex-grow items-center justify-center py-8 sm:py-12">
       <div className="w-full max-w-md p-6 sm:p-8 rounded-lg shadow-xl bg-card animate-auth-card-in">

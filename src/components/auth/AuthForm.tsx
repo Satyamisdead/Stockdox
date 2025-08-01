@@ -18,17 +18,12 @@ import { auth } from "@/lib/firebase"; // Direct import
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  getRedirectResult,
   type AuthError
 } from "firebase/auth";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import SocialSignInButtons from "./SocialSignInButtons";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import Loading from "@/app/loading";
-import { useAuth } from "@/hooks/useAuth";
-
 
 // Define the form schema using Zod
 const formSchema = z.object({
@@ -41,13 +36,8 @@ type AuthFormProps = {
 };
 
 export default function AuthForm({ mode }: AuthFormProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -56,52 +46,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       password: "",
     },
   });
-
-  useEffect(() => {
-    // This is the core of the fix. It runs once when the form loads.
-    const checkRedirect = async () => {
-      // Guard against running this before Firebase auth is initialized.
-      if (!auth) {
-        // This might happen on a hard refresh. We wait for the auth object.
-        // The effect will re-run when auth becomes available via the useAuth hook.
-        return;
-      }
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          // A user has successfully signed in via redirect.
-          // The FirebaseProvider's onAuthStateChanged will handle the user state.
-          // We just need to wait and not show the form.
-          // The parent page's useEffect will handle redirecting to dashboard.
-          toast({ title: "Signed In", description: "Login successful! Redirecting..." });
-          // We keep `isCheckingRedirect` as true to show the loader until redirection happens.
-        } else {
-          // No redirect result, it's safe to show the form.
-          setIsCheckingRedirect(false);
-        }
-      } catch (error) {
-        console.error("Error checking redirect result", error);
-        const authError = error as AuthError;
-        let description = "An error occurred during sign in.";
-        if (authError.code === 'auth/account-exists-with-different-credential') {
-          description = "An account already exists with the same email address but different sign-in credentials. Try signing in with the original method."
-        }
-        // Do not show a "cancelled" toast here as it's unreliable.
-        setIsCheckingRedirect(false); // Show form even on error
-      }
-    };
-
-    checkRedirect();
-  }, [toast, auth]); // Depend on the auth object to ensure it's initialized
-
-  useEffect(() => {
-    // Redirect if user is already logged in (and we are not in the middle of a check)
-    if (!authLoading && user && !isCheckingRedirect) {
-      const redirectPath = searchParams.get('redirect') || '/';
-      router.push(redirectPath);
-    }
-  }, [user, authLoading, isCheckingRedirect, router, searchParams]);
-
+  
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     if (!auth) { 
@@ -122,11 +67,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
         await signInWithEmailAndPassword(auth, values.email, values.password);
         toast({ title: "Success", description: "Signed in successfully! Redirecting..." });
       }
-      // The parent page's useEffect will handle the redirect.
+      // The parent page's useEffect will handle the redirect once the user state is updated by the provider.
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = authError.message || `Failed to ${mode}. Please try again.`;
-      if (authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password') {
+      if (authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password' || authError.code === 'auth/invalid-credential') {
         errorMessage = 'Invalid email or password.';
       } else if (authError.code === 'auth/email-already-in-use') {
         errorMessage = 'This email address is already in use.';
@@ -142,11 +87,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
-  // Show a full-page loader while checking auth state or redirect result
-  if (isCheckingRedirect || authLoading) {
-    return <Loading />;
-  }
-
+  // This form no longer needs to manage redirect state.
+  // It only renders when the parent page has determined it's safe to do so.
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div className="space-y-2 text-center">
