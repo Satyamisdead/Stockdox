@@ -60,8 +60,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
   useEffect(() => {
     // This is the core of the fix. It runs once when the form loads.
     const checkRedirect = async () => {
+      // Guard against running this before Firebase auth is initialized.
       if (!auth) {
-        setIsCheckingRedirect(false);
+        // This might happen on a hard refresh. We wait for the auth object.
+        // The effect will re-run when auth becomes available via the useAuth hook.
         return;
       }
       try {
@@ -79,13 +81,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
         }
       } catch (error) {
         console.error("Error checking redirect result", error);
-        toast({ title: "Sign In Error", description: "An error occurred during sign in.", variant: "destructive" });
+        const authError = error as AuthError;
+        let description = "An error occurred during sign in.";
+        if (authError.code === 'auth/account-exists-with-different-credential') {
+          description = "An account already exists with the same email address but different sign-in credentials. Try signing in with the original method."
+        }
+        toast({ title: "Sign In Error", description: description, variant: "destructive" });
         setIsCheckingRedirect(false); // Show form even on error
       }
     };
 
     checkRedirect();
-  }, [toast]);
+  }, [toast, auth]); // Depend on the auth object to ensure it's initialized
 
   useEffect(() => {
     // Redirect if user is already logged in (and we are not in the middle of a check)
@@ -136,7 +143,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   }
 
   // Show a full-page loader while checking auth state or redirect result
-  if (isCheckingRedirect) {
+  if (isCheckingRedirect || authLoading) {
     return <Loading />;
   }
 
