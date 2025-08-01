@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import Loading from "@/app/loading";
 
@@ -16,15 +16,21 @@ export default function SignInPage() {
   const isMobile = useIsMobile();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    // This effect now only handles redirecting an already-logged-in user.
+    // The complex logic of handling a new redirect-login is inside AuthForm.
     if (!authLoading && user) {
-      router.push("/"); // Redirect to dashboard if already logged in
+      const redirectPath = searchParams.get('redirect') || '/';
+      router.push(redirectPath);
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, searchParams]);
 
-  if (authLoading || (!authLoading && user)) {
-    return <Loading />; // Show loader while checking auth or redirecting
+  // We show a loader if auth state is loading, or if a user object exists
+  // (which means we are about to redirect).
+  if (authLoading || user) {
+    return <Loading />;
   }
 
   return (

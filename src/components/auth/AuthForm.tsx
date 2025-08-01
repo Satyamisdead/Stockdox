@@ -18,13 +18,17 @@ import { auth } from "@/lib/firebase"; // Direct import
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
+  getRedirectResult,
   type AuthError
 } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import SocialSignInButtons from "./SocialSignInButtons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import Loading from "@/app/loading";
+import { useAuth } from "@/hooks/useAuth";
+
 
 // Define the form schema using Zod
 const formSchema = z.object({
@@ -39,9 +43,11 @@ type AuthFormProps = {
 export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Hook for showing toasts (notifications)
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,17 +57,54 @@ export default function AuthForm({ mode }: AuthFormProps) {
     },
   });
 
-  // Handler for form submission (email/password sign-in/sign-up)
+  useEffect(() => {
+    // This is the core of the fix. It runs once when the form loads.
+    const checkRedirect = async () => {
+      if (!auth) {
+        setIsCheckingRedirect(false);
+        return;
+      }
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          // A user has successfully signed in via redirect.
+          // The FirebaseProvider's onAuthStateChanged will handle the user state.
+          // We just need to wait and not show the form.
+          // The parent page's useEffect will handle redirecting to dashboard.
+          toast({ title: "Signed In", description: "Login successful! Redirecting..." });
+          // We keep `isCheckingRedirect` as true to show the loader until redirection happens.
+        } else {
+          // No redirect result, it's safe to show the form.
+          setIsCheckingRedirect(false);
+        }
+      } catch (error) {
+        console.error("Error checking redirect result", error);
+        toast({ title: "Sign In Error", description: "An error occurred during sign in.", variant: "destructive" });
+        setIsCheckingRedirect(false); // Show form even on error
+      }
+    };
+
+    checkRedirect();
+  }, [auth, toast]);
+
+  useEffect(() => {
+    // Redirect if user is already logged in (and we are not in the middle of a check)
+    if (!authLoading && user && !isCheckingRedirect) {
+      const redirectPath = searchParams.get('redirect') || '/';
+      router.push(redirectPath);
+    }
+  }, [user, authLoading, isCheckingRedirect, router, searchParams]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
+    setIsSubmitting(true);
     if (!auth) { 
       toast({ 
         title: "Firebase Not Configured", 
-        description: "The app is not connected to Firebase. Please see the developer console (F12) for instructions on how to set up your .env.local file.", 
+        description: "The app is not connected to Firebase.", 
         variant: "destructive",
         duration: 10000,
       });
-      setIsLoading(false);
+      setIsSubmitting(false);
       return;
     }
     try {
@@ -72,37 +115,40 @@ export default function AuthForm({ mode }: AuthFormProps) {
         await signInWithEmailAndPassword(auth, values.email, values.password);
         toast({ title: "Success", description: "Signed in successfully! Redirecting..." });
       }
-      const redirectPath = searchParams.get('redirect');
-      const targetPath = redirectPath && redirectPath.startsWith('/') ? redirectPath : '/';
-      // Redirect to the target path or home page on success
-      router.push(targetPath);
-      router.refresh(); // Refresh to ensure layout updates with new auth state
+      // The parent page's useEffect will handle the redirect.
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = authError.message || `Failed to ${mode}. Please try again.`;
-      // Customize messages for common errors
       if (authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password') {
         errorMessage = 'Invalid email or password.';
       } else if (authError.code === 'auth/email-already-in-use') {
         errorMessage = 'This email address is already in use.';
       } else if (authError.code === 'auth/network-request-failed') {
-          errorMessage = "A network error occurred. Please ensure you are online and check if your domain is authorized in Firebase Authentication settings.";
+          errorMessage = "A network error occurred. Please check your connection.";
       } else if (authError.code === 'auth/unauthorized-domain') {
-          errorMessage = "This domain is not authorized for sign-in. Please add it to your Firebase project's settings.";
+          errorMessage = "This domain is not authorized for sign-in.";
       }
       console.error(`${mode} error:`, authError.code, authError.message);
       toast({ title: `${mode === "signup" ? "Sign Up" : "Sign In"} Error`, description: errorMessage, variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   }
 
-  // Render the authentication form
+  // Show a full-page loader while checking auth state or redirect result
+  if (authLoading || isCheckingRedirect) {
+    return <Loading />;
+  }
+
+  // Do not render the form if the user is already logged in
+  if (user) {
+    return <Loading />;
+  }
+
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold font-headline">{mode === "signin" ? "Welcome Back" : "Create an Account"}</h1>
-        {/* Conditional subtitle based on mode */}
         <p className="text-muted-foreground">
           {mode === "signin" ? "Sign in to access your Stockdox dashboard." : "Enter your email and password to sign up."}
         </p>
@@ -114,7 +160,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                {/* Label and input for email */}
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input placeholder="you@example.com" {...field} type="email" autoComplete="email" />
@@ -128,7 +173,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem>
-                {/* Label and input for password */}
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input placeholder="••••••••" {...field} type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} />
@@ -137,12 +181,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
               </FormItem>
             )}
           />
-          {/* Submit button with loading indicator */}
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {mode === "signin" ? "Sign In" : "Sign Up"}
           </Button>
-          {/* Divider or "Or continue with" section */}
         </form>
       </Form>
       <div className="relative my-6">
@@ -155,7 +197,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
           </span>
         </div>
       </div>
-      {/* Social sign-in buttons component */}
       <SocialSignInButtons />
     </div>
   );
