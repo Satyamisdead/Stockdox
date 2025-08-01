@@ -41,7 +41,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
           toast({ title: "Signed In", description: "You have been successfully signed in." });
         } else if (redirectPending) {
           // This case now only runs if a redirect was expected, but no user was returned.
-          // This indicates the user cancelled the process on the provider's page (e.g., Apple's login).
+          // This indicates the user cancelled the process on the provider's page.
           toast({
             title: "Sign In Cancelled",
             description: "You did not complete the sign-in process.",
@@ -60,7 +60,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       })
       .finally(() => {
         // The onAuthStateChanged listener will handle the final state update.
-        // It's the ultimate source of truth.
+        // It's the ultimate source of truth, so we let it control the `loading` state.
       });
 
     const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
