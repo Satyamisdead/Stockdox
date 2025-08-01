@@ -86,7 +86,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (authError.code === 'auth/account-exists-with-different-credential') {
           description = "An account already exists with the same email address but different sign-in credentials. Try signing in with the original method."
         }
-        toast({ title: "Sign In Error", description: description, variant: "destructive" });
+        // Do not show a "cancelled" toast here as it's unreliable.
         setIsCheckingRedirect(false); // Show form even on error
       }
     };
