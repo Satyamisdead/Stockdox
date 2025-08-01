@@ -85,7 +85,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     };
 
     checkRedirect();
-  }, [auth, toast]);
+  }, [toast]);
 
   useEffect(() => {
     // Redirect if user is already logged in (and we are not in the middle of a check)
@@ -136,12 +136,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   }
 
   // Show a full-page loader while checking auth state or redirect result
-  if (authLoading || isCheckingRedirect) {
-    return <Loading />;
-  }
-
-  // Do not render the form if the user is already logged in
-  if (user) {
+  if (isCheckingRedirect) {
     return <Loading />;
   }
 
