@@ -4,7 +4,7 @@
 import { useMemo, useEffect, useState } from "react";
 import { useParams, notFound, useRouter } from "next/navigation"; 
 import type { Asset, NewsArticle } from "@/types";
-import { getAssetById as getPlaceholderAssetById, placeholderNews } from "@/lib/placeholder-data";
+import { getPlaceholderAssetById, placeholderNews } from "@/lib/placeholder-data";
 import Image from "next/image";
 import Link from "next/link";
 import PriceDisplay from "@/components/market/PriceDisplay";
@@ -108,8 +108,8 @@ export default function AssetDetailPage() {
       (article.summary && (article.summary.toLowerCase().includes(searchTerm) || article.summary.toLowerCase().includes(symbolTerm)))
     );
     
-    if (filtered.length > 0) return filtered.slice(0,3);
-    return placeholderNews.slice(0, 3);
+    if (filtered.length > 0) return filtered.slice(0,8);
+    return placeholderNews.slice(0, 8);
   }, [asset]);
 
 
@@ -252,7 +252,7 @@ export default function AssetDetailPage() {
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold font-headline">Related News for {asset.name}</h2>
         {relatedNews.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {relatedNews.map((article) => (
               <NewsItem key={article.id} article={article} assetId={asset.id} />
             ))}
@@ -264,5 +264,7 @@ export default function AssetDetailPage() {
     </div>
   );
 }
+
+    
 
     
