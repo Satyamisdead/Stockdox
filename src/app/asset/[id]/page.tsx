@@ -18,10 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService";
 import Loading from "@/app/loading"; 
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function AssetDetailPage() {
-  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const routeParams = useParams<{ id?: string }>();
 
@@ -29,13 +27,6 @@ export default function AssetDetailPage() {
 
   const [asset, setAsset] = useState<Asset | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push(`/signin?redirect=/asset/${assetId}`);
-    }
-  }, [user, authLoading, router, assetId]);
-
 
   useEffect(() => {
     if (routeParams && typeof routeParams.id === 'undefined' && Object.keys(routeParams).length > 0) {
@@ -113,10 +104,8 @@ export default function AssetDetailPage() {
       }
     };
 
-    if (user) {
-      fetchData();
-    }
-  }, [assetId, routeParams, user]);
+    fetchData();
+  }, [assetId, routeParams]);
 
 
   const relatedNews = useMemo(() => {
@@ -135,7 +124,7 @@ export default function AssetDetailPage() {
   }, [asset]);
 
 
-  if (isLoading || authLoading || !user) {
+  if (isLoading) {
     return <Loading />;
   }
 
@@ -290,3 +279,5 @@ export default function AssetDetailPage() {
     </div>
   );
 }
+
+    
