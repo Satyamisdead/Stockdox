@@ -41,6 +41,12 @@ const nextConfig: NextConfig = {
         hostname: 'api.marketaux.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.seekingalpha.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
