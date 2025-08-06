@@ -66,8 +66,11 @@ export default function AssetDetailPage() {
       }
 
       try {
-        const profile = await fetchProfileBySymbol(placeholderAsset.symbol, placeholderAsset.type);
-        const quote = await fetchQuoteBySymbol(placeholderAsset.symbol);
+        // --- OPTIMIZATION: Fetch profile and quote in parallel ---
+        const [profile, quote] = await Promise.all([
+          fetchProfileBySymbol(placeholderAsset.symbol, placeholderAsset.type),
+          fetchQuoteBySymbol(placeholderAsset.symbol)
+        ]);
 
         if (profile && quote && quote.c !== undefined) {
           const fetchedAssetData: Asset = {
@@ -287,5 +290,3 @@ export default function AssetDetailPage() {
     </div>
   );
 }
-
-    
