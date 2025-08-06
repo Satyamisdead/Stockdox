@@ -19,9 +19,10 @@ import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubServ
 import Loading from "@/app/loading"; 
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function AssetDetailPage({ params }: { params: { id: string }}) {
+export default function AssetDetailPage() {
   const router = useRouter();
-  const assetId = params.id;
+  const params = useParams();
+  const assetId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [asset, setAsset] = useState<Asset | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
