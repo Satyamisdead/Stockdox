@@ -35,8 +35,19 @@ export default function SignUpPage() {
 
   // Only if auth is done loading and there is no user, we show the form.
   return (
-    <div className="flex flex-grow items-center justify-center py-8 sm:py-12 [perspective:800px]">
-       <div className="w-full max-w-md p-6 sm:p-8 rounded-lg shadow-xl bg-card animate-auth-card-in">
+    <div className="relative flex flex-grow items-center justify-center py-8 sm:py-12 overflow-hidden">
+        {/* Background Video */}
+        <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute top-0 left-0 w-full h-full object-cover -z-10"
+            src="https://cdn.pixelbin.io/v2/throbbing-poetry-5e04c1/original/abstract_particle_background_V_Jloop_4k.mp4"
+        />
+        <div className="absolute top-0 left-0 w-full h-full bg-black/60 -z-10" />
+
+       <div className="w-full max-w-md p-6 sm:p-8 rounded-lg shadow-xl bg-card/80 backdrop-blur-lg animate-auth-card-in [perspective:800px]">
         {isMobile && (
           <Button variant="ghost" asChild className="mb-6 -ml-2 self-start">
             <Link href="/">
