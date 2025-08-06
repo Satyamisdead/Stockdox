@@ -36,7 +36,7 @@ async function fetchWithTimeout(url: string, timeout: number): Promise<Response>
   try {
     const response = await fetch(url, { 
         signal: controller.signal,
-        next: { revalidate: 3600 } // Cache for 1 hour
+        next: { revalidate: 172800 } // Cache for 2 days (48 hours)
     });
     clearTimeout(id);
     return response;
@@ -59,13 +59,12 @@ export async function fetchLatestNews(): Promise<NewsArticle[]> {
     throw new Error("API key for news service is not configured.");
   }
   
-  // Get today's date and format it for the API
   const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const publishedAfter = yesterday.toISOString().split('T')[0]; // YYYY-MM-DD
+  const twoDaysAgo = new Date(today);
+  twoDaysAgo.setDate(today.getDate() - 2);
+  const publishedAfter = twoDaysAgo.toISOString().split('T')[0];
 
-  const url = `${MARKETAUX_API_BASE_URL}?countries=us&filter_entities=true&limit=30&published_after=${publishedAfter}&api_token=${apiKey}`;
+  const url = `${MARKETAUX_API_BASE_URL}?countries=us&filter_entities=true&limit=8&published_after=${publishedAfter}&api_token=${apiKey}`;
 
   try {
     const response = await fetchWithTimeout(url, API_REQUEST_TIMEOUT);
