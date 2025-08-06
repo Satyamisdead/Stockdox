@@ -40,7 +40,7 @@ export default function Loading() {
   return (
     <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
       <StockdoxLoader />
-      <p className="text-sm text-muted-foreground mt-2 animate-pulse">Loading Data...</p>
+      <p className="text-lg font-bold font-headline text-primary mt-4 animate-pulse">Stockdox</p>
     </div>
   );
 }
