@@ -113,7 +113,7 @@ export default function AssetDetailPage() {
     if (user) {
       fetchData();
     }
-  }, [assetId, routeParams, notFound, user]);
+  }, [assetId, routeParams, user]);
 
 
   const relatedNews = useMemo(() => {
@@ -287,3 +287,5 @@ export default function AssetDetailPage() {
     </div>
   );
 }
+
+    
