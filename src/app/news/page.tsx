@@ -7,10 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Newspaper } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Loading from "../loading";
 
 // Simple News Item Renderer for this page
 function GlobalNewsItem({ article }: { article: NewsArticle }) {
@@ -41,21 +37,8 @@ function GlobalNewsItem({ article }: { article: NewsArticle }) {
 }
 
 export default function GlobalNewsPage() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/signin?redirect=/news');
-    }
-  }, [user, authLoading, router]);
-
   const newsArticles: NewsArticle[] = globalNewsData;
   
-  if (authLoading || !user) {
-    return <Loading />;
-  }
-
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-3 mb-6">

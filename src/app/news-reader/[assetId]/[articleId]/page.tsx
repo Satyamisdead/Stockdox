@@ -11,10 +11,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import Loading from '@/app/loading';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function NewsReaderPage() {
-  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   
@@ -24,15 +22,9 @@ export default function NewsReaderPage() {
   const [asset, setAsset] = useState<Asset | null | undefined>(undefined);
   const [article, setArticle] = useState<NewsArticle | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push(`/signin?redirect=/news-reader/${assetId}/${articleId}`);
-    }
-  }, [user, authLoading, router, assetId, articleId]);
 
   useEffect(() => {
-    if (user && assetId && articleId) {
+    if (assetId && articleId) {
       const decodedArticleId = decodeURIComponent(articleId);
       const foundAsset = getAssetById(assetId);
       const foundArticle = getNewsArticleById(decodedArticleId);
@@ -41,35 +33,22 @@ export default function NewsReaderPage() {
       setArticle(foundArticle);
       setIsLoading(false);
 
-      if (!foundArticle) { // If article not found, redirect to notFound
-        setIsLoading(false); // Ensure loading stops
+      if (!foundArticle) {
         notFound();
-        return;
       }
-      // Asset is useful for context (like button text), but not strictly required for the page to function if article exists.
-      // If asset is not found but article is, we can still show the article.
-      // However, if assetId is crucial for back navigation, we might reconsider this.
-      // For now, if article exists, we proceed. If asset also doesn't exist, button text will fallback.
-
-    } else if (!authLoading && !user) {
-      // If not logged in, we are about to redirect, so stop loading for this page
+    } else {
       setIsLoading(false);
-    } else if (!assetId || !articleId) {
-      setIsLoading(false); // Mark loading as false if params are missing
-      notFound(); // If IDs are missing, it's a notFound scenario
+      notFound();
     }
-  }, [assetId, articleId, user, authLoading]);
+  }, [assetId, articleId]);
 
-  if (isLoading || authLoading || !user) {
+  if (isLoading) {
     return <Loading />;
   }
 
-  // If article is not found after attempting to load, trigger notFound
-  // This check is now more robust due to the useEffect update
   if (!article) { 
-    // notFound() should have been called in useEffect if article was not found
-    // This is a fallback, or if isLoading was prematurely set to false.
-    return <Loading />; // Or show a specific "Article not found" message before redirecting
+    notFound();
+    return null;
   }
 
   return (
@@ -78,7 +57,7 @@ export default function NewsReaderPage() {
         variant="outline" 
         onClick={() => router.push(`/asset/${assetId}`)} 
         className="mb-4"
-        disabled={!assetId} // Disable if assetId somehow isn't available
+        disabled={!assetId}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to {asset?.name || 'Asset'} Details

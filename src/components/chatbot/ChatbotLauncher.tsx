@@ -6,13 +6,9 @@ import { Button } from '@/components/ui/button';
 import ChatRoomWindow from './ChatRoomWindow';
 import { Bot } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 
 export default function ChatbotLauncher() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-  const { toast } = useToast();
+  const { user } = useAuth();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -21,22 +17,13 @@ export default function ChatbotLauncher() {
   }, []);
 
   const handleLauncherClick = () => {
-    if (!user) {
-      toast({
-        title: 'Login Required',
-        description: 'Please sign in to use the AI chatbot.',
-        action: (
-          <Button variant="outline" size="sm" onClick={() => router.push('/signin?redirect=/')}>
-            Sign In
-          </Button>
-        ),
-      });
-      return;
-    }
+    // With the vault-style login, we know `user` will exist if this component is rendered.
+    // The check becomes simpler.
     setIsChatOpen(true);
   };
 
-  if (!isMounted || loading) {
+  if (!isMounted || !user) {
+    // Don't render the button if not mounted or if somehow rendered without a user.
     return null;
   }
 
@@ -51,7 +38,7 @@ export default function ChatbotLauncher() {
       >
         <Bot className="h-8 w-8" />
       </Button>
-      {user && <ChatRoomWindow isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />}
+      <ChatRoomWindow isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </>
   );
 }

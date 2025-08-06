@@ -20,7 +20,6 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   type AuthError,
-  type User
 } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import SocialSignInButtons from "./SocialSignInButtons";
@@ -78,13 +77,13 @@ export default function AuthForm({ mode }: AuthFormProps) {
         await updateProfile(userCredential.user, {
           displayName: signUpValues.fullName
         });
-        toast({ title: "Success", description: "Account created successfully! Redirecting..." });
+        toast({ title: "Success", description: "Account created successfully! Welcome." });
       } else {
         const signInValues = values as z.infer<typeof signInSchema>;
         await signInWithEmailAndPassword(auth, signInValues.email, signInValues.password);
-        toast({ title: "Success", description: "Signed in successfully! Redirecting..." });
+        toast({ title: "Success", description: "Signed in successfully! Welcome back." });
       }
-      // The parent page's useEffect will handle the redirect once the user state is updated by the provider.
+      // The root layout's effect will handle showing the main app content.
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = authError.message || `Failed to ${mode}. Please try again.`;
@@ -104,8 +103,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
-  // This form no longer needs to manage redirect state.
-  // It only renders when the parent page has determined it's safe to do so.
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div className="space-y-2 text-center">

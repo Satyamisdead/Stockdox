@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, User, Eye, LogIn, Gamepad2, Newspaper } from "lucide-react"; 
+import { Home, User, Eye, Gamepad2, Newspaper } from "lucide-react"; 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -11,27 +11,20 @@ import { cn } from "@/lib/utils";
 export default function MobileBottomNav() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
-  if (!isMobile) {
+  // If not mobile or if no user is logged in, don't render the nav bar.
+  if (!isMobile || !user) {
     return null;
   }
 
-  const navItemsBase = [
-    { id: 'home', href: "/", label: "Home", icon: Home, requiresAuth: false },
-    { id: 'take-a-break', href: "/games", label: "Take a Break", icon: Gamepad2, requiresAuth: false },
-    { id: 'news', href: "/news", label: "News", icon: Newspaper, requiresAuth: false },
+  const navItems = [
+    { id: 'home', href: "/", label: "Home", icon: Home },
+    { id: 'take-a-break', href: "/games", label: "Take a Break", icon: Gamepad2 },
+    { id: 'news', href: "/news", label: "News", icon: Newspaper },
+    { id: 'watchlist', href: "/watchlist", label: "Watchlist", icon: Eye },
+    { id: 'profile', href: "/profile", label: "Profile", icon: User },
   ];
-
-  let dynamicItems = [];
-  if (user && !loading) {
-    dynamicItems.push({ id: 'watchlist', href: "/watchlist", label: "Watchlist", icon: Eye, requiresAuth: true });
-    dynamicItems.push({ id: 'profile', href: "/profile", label: "Profile", icon: User, requiresAuth: true });
-  } else if (!loading && !user) {
-    dynamicItems.push({ id: 'signin', href: "/signin", label: "Sign In", icon: LogIn, requiresAuth: false });
-  }
-  
-  const navItems = [...navItemsBase, ...dynamicItems];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border shadow-lg md:hidden z-50">
