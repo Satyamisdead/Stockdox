@@ -25,21 +25,26 @@ export default function AssetCard({ asset }: AssetCardProps) {
   const { user, loading: authLoading } = useAuth();
 
   const [isAlertActive, setIsAlertActive] = useState(false);
-  const [isAlertLoading, setIsAlertLoading] = useState(false);
+  const [isAlertLoading, setIsAlertLoading] = useState(true); // Start as true
 
   useEffect(() => {
+    // Ensure this effect runs only on the client side and after auth is resolved.
+    if (typeof window === 'undefined' || authLoading) {
+      return;
+    }
+
     const fetchAlertStatus = async () => {
-      if (user && !authLoading) {
-        setIsAlertLoading(true);
+      if (user) {
         try {
           const alertedIds = await getAlertedAssetIds(user.uid);
           setIsAlertActive(alertedIds.includes(asset.id));
         } catch (error) {
-          // Error already logged in service
+          // Error already logged in service, do nothing here.
         } finally {
           setIsAlertLoading(false);
         }
-      } else if (!authLoading) {
+      } else {
+        // Not logged in, so no alerts are active.
         setIsAlertActive(false);
         setIsAlertLoading(false);
       }
@@ -131,8 +136,8 @@ export default function AssetCard({ asset }: AssetCardProps) {
             <Button variant="outline" size="sm" asChild>
               <Link href={`/asset/${asset.id}`}>View Details</Link>
             </Button>
-            <Button variant="ghost" size="icon" title="Set Alert" onClick={handleSetAlert} disabled={isAlertLoading || authLoading}>
-              {isAlertLoading || (authLoading && !user) ? ( 
+            <Button variant="ghost" size="icon" title="Set Alert" onClick={handleSetAlert} disabled={isAlertLoading}>
+              {isAlertLoading ? ( 
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <BellRing className={cn("h-4 w-4", isAlertActive ? "text-primary fill-primary/20" : "text-muted-foreground hover:text-primary")} />
