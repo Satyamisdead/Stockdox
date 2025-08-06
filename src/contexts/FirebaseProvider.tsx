@@ -27,33 +27,25 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // This function will be called once to process any pending redirect
-    const processRedirectResult = async () => {
+    const processRedirect = async () => {
       try {
         const result = await getRedirectResult(firebaseAuthInstance);
         if (result) {
-          // User successfully signed in via redirect.
-          // onAuthStateChanged will handle setting the user state.
-          toast({ title: "Signed In", description: "Login successful! Redirecting..." });
+          toast({ title: "Signed In", description: "Login successful!" });
         }
       } catch (error) {
         console.error("Error processing redirect result", error);
-        // Handle specific errors if necessary, e.g., account-exists-with-different-credential
+        toast({ title: "Sign In Error", description: "Could not complete sign-in via redirect.", variant: "destructive" });
       }
     };
 
-    // First, process the redirect.
-    processRedirectResult();
+    processRedirect();
 
-    // Then, set up the state listener. This is the source of truth.
-    // It will fire after getRedirectResult completes and sets the user,
-    // and also on initial page load if the user was already signed in.
     const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
-      setLoading(false); // Set loading to false only AFTER the first auth state has been determined.
+      setLoading(false);
     });
     
-    // Clean up the subscription on component unmount
     return () => unsubscribe();
   }, [toast]);
 
