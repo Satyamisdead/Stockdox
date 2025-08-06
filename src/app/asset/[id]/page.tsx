@@ -19,31 +19,20 @@ import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubServ
 import Loading from "@/app/loading"; 
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function AssetDetailPage() {
+export default function AssetDetailPage({ params }: { params: { id: string }}) {
   const router = useRouter();
-  const routeParams = useParams<{ id?: string }>();
-
-  const assetId = routeParams?.id;
+  const assetId = params.id;
 
   const [asset, setAsset] = useState<Asset | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (routeParams && typeof routeParams.id === 'undefined' && Object.keys(routeParams).length > 0) {
-      setIsLoading(false);
-      notFound();
-      return;
-    }
-
     if (!assetId) {
-      if (routeParams && Object.keys(routeParams).length === 0) {
-         setIsLoading(false);
-         notFound();
-      }
-      return; 
+        setIsLoading(false);
+        notFound();
+        return;
     }
 
-    setAsset(undefined); 
     setIsLoading(true);
 
     const fetchData = async () => {
@@ -57,7 +46,6 @@ export default function AssetDetailPage() {
       }
 
       try {
-        // --- OPTIMIZATION: Fetch profile and quote in parallel ---
         const [profile, quote] = await Promise.all([
           fetchProfileBySymbol(placeholderAsset.symbol, placeholderAsset.type),
           fetchQuoteBySymbol(placeholderAsset.symbol)
@@ -98,14 +86,14 @@ export default function AssetDetailPage() {
         }
       } catch (error) {
         console.error(`Error fetching data for ${assetId}:`, error);
-        setAsset(placeholderAsset); // Fallback to placeholder on error
+        setAsset(placeholderAsset);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [assetId, routeParams]);
+  }, [assetId]);
 
 
   const relatedNews = useMemo(() => {
@@ -126,10 +114,6 @@ export default function AssetDetailPage() {
 
   if (isLoading) {
     return <Loading />;
-  }
-
-  if (asset === null) { 
-    return null; 
   }
   
   if (!asset) { 
