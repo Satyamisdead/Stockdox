@@ -11,8 +11,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import Loading from '@/app/loading';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function NewsReaderPage() {
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   
@@ -22,9 +24,15 @@ export default function NewsReaderPage() {
   const [asset, setAsset] = useState<Asset | null | undefined>(undefined);
   const [article, setArticle] = useState<NewsArticle | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push(`/signin?redirect=/news-reader/${assetId}/${articleId}`);
+    }
+  }, [user, authLoading, router, assetId, articleId]);
 
   useEffect(() => {
-    if (assetId && articleId) {
+    if (user && assetId && articleId) {
       const decodedArticleId = decodeURIComponent(articleId);
       const foundAsset = getAssetById(assetId);
       const foundArticle = getNewsArticleById(decodedArticleId);
@@ -43,13 +51,16 @@ export default function NewsReaderPage() {
       // However, if assetId is crucial for back navigation, we might reconsider this.
       // For now, if article exists, we proceed. If asset also doesn't exist, button text will fallback.
 
-    } else {
+    } else if (!authLoading && !user) {
+      // If not logged in, we are about to redirect, so stop loading for this page
+      setIsLoading(false);
+    } else if (!assetId || !articleId) {
       setIsLoading(false); // Mark loading as false if params are missing
       notFound(); // If IDs are missing, it's a notFound scenario
     }
-  }, [assetId, articleId]);
+  }, [assetId, articleId, user, authLoading]);
 
-  if (isLoading) {
+  if (isLoading || authLoading || !user) {
     return <Loading />;
   }
 

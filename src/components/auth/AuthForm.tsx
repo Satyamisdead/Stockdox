@@ -18,17 +18,26 @@ import { auth } from "@/lib/firebase"; // Direct import
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  type AuthError
+  updateProfile,
+  type AuthError,
+  type User
 } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import SocialSignInButtons from "./SocialSignInButtons";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-// Define the form schema using Zod
-const formSchema = z.object({
+// Define form schemas using Zod
+const baseSchema = {
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+};
+
+const signInSchema = z.object(baseSchema);
+
+const signUpSchema = z.object({
+  ...baseSchema,
+  fullName: z.string().min(2, { message: "Name must be at least 2 characters." }),
 });
 
 type AuthFormProps = {
@@ -39,11 +48,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const formSchema = mode === 'signup' ? signUpSchema : signInSchema;
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
+      ...(mode === 'signup' && { fullName: "" }),
     },
   });
   
@@ -61,10 +73,15 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
     try {
       if (mode === "signup") {
-        await createUserWithEmailAndPassword(auth, values.email, values.password);
+        const signUpValues = values as z.infer<typeof signUpSchema>;
+        const userCredential = await createUserWithEmailAndPassword(auth, signUpValues.email, signUpValues.password);
+        await updateProfile(userCredential.user, {
+          displayName: signUpValues.fullName
+        });
         toast({ title: "Success", description: "Account created successfully! Redirecting..." });
       } else {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
+        const signInValues = values as z.infer<typeof signInSchema>;
+        await signInWithEmailAndPassword(auth, signInValues.email, signInValues.password);
         toast({ title: "Success", description: "Signed in successfully! Redirecting..." });
       }
       // The parent page's useEffect will handle the redirect once the user state is updated by the provider.
@@ -94,11 +111,26 @@ export default function AuthForm({ mode }: AuthFormProps) {
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold font-headline">{mode === "signin" ? "Welcome Back" : "Create an Account"}</h1>
         <p className="text-muted-foreground">
-          {mode === "signin" ? "Sign in to access your Stockdox dashboard." : "Enter your email and password to sign up."}
+          {mode === "signin" ? "Sign in to access your Stockdox dashboard." : "Enter your details to create an account."}
         </p>
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+           {mode === "signup" && (
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Doe" {...field} autoComplete="name" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           <FormField
             control={form.control}
             name="email"

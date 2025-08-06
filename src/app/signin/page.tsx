@@ -36,7 +36,7 @@ export default function SignInPage() {
 
   // Only if auth is done loading and there is no user, we show the form.
   return (
-    <div className="flex flex-grow items-center justify-center py-8 sm:py-12">
+    <div className="flex flex-grow items-center justify-center py-8 sm:py-12 [perspective:800px]">
       <div className="w-full max-w-md p-6 sm:p-8 rounded-lg shadow-xl bg-card animate-auth-card-in">
         {isMobile && (
           <Button variant="ghost" asChild className="mb-6 -ml-2 self-start">

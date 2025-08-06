@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, OAuthProvider, EmailAuthProvider, type Auth, getRedirectResult } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, OAuthProvider, EmailAuthProvider, type Auth, getRedirectResult, updateProfile } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfigValues = {
@@ -106,4 +106,4 @@ Firebase will not be initialized until this is fixed.
   console.log("Firebase Service: Not on client-side, skipping Firebase initialization.");
 }
 
-export { app, auth, db, googleProvider, appleProvider, emailProvider, getRedirectResult };
+export { app, auth, db, googleProvider, appleProvider, emailProvider, getRedirectResult, updateProfile };

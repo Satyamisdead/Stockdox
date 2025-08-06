@@ -89,8 +89,8 @@ export default {
           },
         },
         'auth-card-in': {
-          '0%': { opacity: '0', transform: 'scale(0.95) translateY(10px)' },
-          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+          '0%': { opacity: '0', transform: 'scale(0.95) translateY(20px) rotateX(-20deg)' },
+          '100%': { opacity: '1', transform: 'scale(1) translateY(0) rotateX(0deg)' },
         },
         'fade-in': {
             '0%': { opacity: '0' },
@@ -100,12 +100,10 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'auth-card-in': 'auth-card-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+        'auth-card-in': 'auth-card-in 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
         'fade-in': 'fade-in 0.5s ease-in-out forwards',
       },
     },
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
-
-    

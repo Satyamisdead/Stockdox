@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Gem, Heart, ShieldAlert, Trophy, Play, Pause, ChevronsUp } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
+import Loading from '../loading';
 
 const GAME_WIDTH = 600;
 const GAME_HEIGHT = 450;
@@ -92,6 +95,9 @@ const playSound = (type: 'brick' | 'paddle' | 'wall' | 'loseLife') => {
 
 
 export default function GamesPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [paddleX, setPaddleX] = useState((GAME_WIDTH - PADDLE_WIDTH) / 2);
   const [ball, setBall] = useState({
     x: GAME_WIDTH / 2,
@@ -111,6 +117,12 @@ export default function GamesPage() {
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const gameWrapperRef = useRef<HTMLDivElement>(null);
   const animationFrameId = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/signin?redirect=/games');
+    }
+  }, [user, authLoading, router]);
 
   const initializeBricks = useCallback(() => {
     const newBricks: Brick[] = [];
@@ -345,6 +357,10 @@ export default function GamesPage() {
     if (gameState === "PLAYING") return <Pause className="w-5 h-5 sm:w-6 sm:h-6 mr-0 sm:mr-2"/>;
     return <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-0 sm:mr-2"/>;
   };
+  
+  if (authLoading || !user) {
+    return <Loading />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center py-6 sm:py-10 space-y-4">
@@ -483,5 +499,3 @@ export default function GamesPage() {
     </div>
   );
 }
-
-    
