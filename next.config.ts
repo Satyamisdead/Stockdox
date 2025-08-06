@@ -47,6 +47,12 @@ const nextConfig: NextConfig = {
         hostname: 'static.seekingalpha.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'wolfstreet.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
