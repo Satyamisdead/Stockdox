@@ -71,4 +71,5 @@ export interface NewsArticle {
   publishedAt: string;
   url: string;
   summary?: string;
+  imageUrl?: string;
 }
