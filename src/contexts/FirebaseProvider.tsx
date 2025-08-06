@@ -27,26 +27,32 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const processRedirect = async () => {
-      try {
-        const result = await getRedirectResult(firebaseAuthInstance);
-        if (result) {
-          toast({ title: "Signed In", description: "Login successful!" });
+    const processAuth = async () => {
+        try {
+            // First, process any redirect result that might be pending.
+            const result = await getRedirectResult(firebaseAuthInstance);
+            if (result) {
+                // This means a user just signed in via redirect.
+                // onAuthStateChanged will handle setting the user.
+                toast({ title: "Signed In", description: "Login successful!" });
+            }
+        } catch (error) {
+            console.error("Error processing redirect result", error);
+            toast({ title: "Sign In Error", description: "Could not complete sign-in via redirect.", variant: "destructive" });
+        } finally {
+             // Now that any redirect is handled, set up the real-time auth state listener.
+            const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
+                setUser(currentUser);
+                setLoading(false); // Set loading to false only after the initial user state is determined.
+            });
+            
+            // The function returned here will be called on unmount.
+            return () => unsubscribe();
         }
-      } catch (error) {
-        console.error("Error processing redirect result", error);
-        toast({ title: "Sign In Error", description: "Could not complete sign-in via redirect.", variant: "destructive" });
-      }
     };
 
-    processRedirect();
-
-    const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
+    processAuth();
     
-    return () => unsubscribe();
   }, [toast]);
 
   return (
