@@ -28,16 +28,12 @@ interface MarketAuxResponse {
     data: MarketAuxArticle[];
 }
 
-
-async function fetchWithTimeout(url: string, timeout: number): Promise<Response> {
+async function fetchWithTimeout(url: string, timeout: number, options: RequestInit): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const response = await fetch(url, { 
-        signal: controller.signal,
-        next: { revalidate: 172800 } // Cache for 2 days (48 hours)
-    });
+    const response = await fetch(url, { ...options, signal: controller.signal });
     clearTimeout(id);
     return response;
   } catch (error) {
@@ -51,7 +47,7 @@ async function fetchWithTimeout(url: string, timeout: number): Promise<Response>
   }
 }
 
-export async function fetchLatestNews(): Promise<NewsArticle[]> {
+export async function fetchLatestNews(forceRefresh = false): Promise<NewsArticle[]> {
   const apiKey = process.env.NEXT_PUBLIC_MARKETAUX_API_KEY;
 
   if (!apiKey) {
@@ -60,14 +56,19 @@ export async function fetchLatestNews(): Promise<NewsArticle[]> {
   }
   
   const today = new Date();
-  const twoDaysAgo = new Date(today);
-  twoDaysAgo.setDate(today.getDate() - 2);
-  const publishedAfter = twoDaysAgo.toISOString().split('T')[0];
+  const threeDaysAgo = new Date(today);
+  threeDaysAgo.setDate(today.getDate() - 3);
+  const publishedAfter = threeDaysAgo.toISOString().split('T')[0];
 
   const url = `${MARKETAUX_API_BASE_URL}?countries=us&filter_entities=true&limit=8&published_after=${publishedAfter}&api_token=${apiKey}`;
 
+  const fetchOptions: RequestInit = {
+    // Revalidate: 2 days (172800s) if not forcing refresh, otherwise no cache.
+    next: { revalidate: forceRefresh ? 0 : 172800 } 
+  };
+
   try {
-    const response = await fetchWithTimeout(url, API_REQUEST_TIMEOUT);
+    const response = await fetchWithTimeout(url, API_REQUEST_TIMEOUT, fetchOptions);
 
     if (!response.ok) {
       const errorBody = await response.json();

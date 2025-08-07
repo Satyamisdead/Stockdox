@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { NewsArticle } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Newspaper, WifiOff } from "lucide-react";
+import { ExternalLink, Newspaper, WifiOff, RefreshCw, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { fetchLatestNews } from "@/services/marketauxService";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,30 +71,47 @@ function NewsSkeleton() {
 export default function GlobalNewsPage() {
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const getNews = async () => {
+  const getNews = useCallback(async (forceRefresh = false) => {
+    if (forceRefresh) {
+        setIsRefreshing(true);
+    } else {
         setIsLoading(true);
-        setError(null);
-        try {
-            const articles = await fetchLatestNews();
-            setNewsArticles(articles);
-        } catch (err) {
-            setError("Failed to fetch news. Please check your connection and API key.");
-            console.error(err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    getNews();
+    }
+    setError(null);
+    try {
+        const articles = await fetchLatestNews(forceRefresh);
+        setNewsArticles(articles);
+    } catch (err) {
+        setError("Failed to fetch news. Please check your connection and API key.");
+        console.error(err);
+    } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    getNews(false);
+  }, [getNews]);
   
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-3 mb-6">
-        <Newspaper className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold text-primary font-headline">Market News</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <Newspaper className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold text-primary font-headline">Market News</h1>
+        </div>
+        <Button onClick={() => getNews(true)} disabled={isRefreshing || isLoading}>
+            {isRefreshing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            {isRefreshing ? "Refreshing..." : "Refresh News"}
+        </Button>
       </div>
       
       {isLoading && (

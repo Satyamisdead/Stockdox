@@ -4,7 +4,7 @@
 import { useMemo, useEffect, useState } from "react";
 import { useParams, notFound, useRouter } from "next/navigation"; 
 import type { Asset, NewsArticle } from "@/types";
-import { getPlaceholderAssetById, placeholderNews } from "@/lib/placeholder-data";
+import { getAssetById, placeholderNews } from "@/lib/placeholder-data";
 import Image from "next/image";
 import Link from "next/link";
 import PriceDisplay from "@/components/market/PriceDisplay";
@@ -15,7 +15,6 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Info, DollarSign, Bitcoin, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService";
 import Loading from "@/app/loading"; 
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -29,73 +28,28 @@ export default function AssetDetailPage() {
 
   useEffect(() => {
     if (!assetId) {
-        setIsLoading(false);
-        notFound();
-        return;
+      setIsLoading(false);
+      notFound();
+      return;
     }
-
+  
     setIsLoading(true);
+    // Use local placeholder data for speed, as requested.
+    const fetchedAsset = getAssetById(assetId);
+    
+    if (fetchedAsset) {
+      setAsset(fetchedAsset);
+    } else {
+      setAsset(null);
+      notFound();
+    }
+    
+    // Simulate a very brief load time to prevent jarring content flash
+    const timer = setTimeout(() => setIsLoading(false), 250); 
+    
+    return () => clearTimeout(timer);
 
-    const fetchData = async () => {
-      const placeholderAsset = getPlaceholderAssetById(assetId); 
-      
-      if (!placeholderAsset) {
-        setAsset(null); 
-        setIsLoading(false);
-        notFound(); 
-        return;
-      }
-
-      try {
-        const [profile, quote] = await Promise.all([
-          fetchProfileBySymbol(placeholderAsset.symbol, placeholderAsset.type),
-          fetchQuoteBySymbol(placeholderAsset.symbol)
-        ]);
-
-        if (profile && quote && quote.c !== undefined) {
-          const fetchedAssetData: Asset = {
-            id: placeholderAsset.id,
-            symbol: placeholderAsset.symbol.toUpperCase(),
-            name: profile.name || placeholderAsset.name,
-            type: placeholderAsset.type,
-            price: quote.c,
-            change24h: quote.dp,
-            dailyChange: quote.d,
-            dailyHigh: quote.h,
-            dailyLow: quote.l,
-            dailyOpen: quote.o,
-            previousClose: quote.pc,
-            marketCap: profile.marketCapitalization,
-            logoUrl: profile.logo || placeholderAsset.logoUrl,
-            sector: profile.finnhubIndustry || placeholderAsset.sector,
-            exchange: profile.exchange,
-            volume24h: placeholderAsset.volume24h,
-            peRatio: placeholderAsset.peRatio,
-            epsDilutedTTM: placeholderAsset.epsDilutedTTM,
-            epsDilutedGrowthTTMYoY: placeholderAsset.epsDilutedGrowthTTMYoY,
-            dividendYieldTTM: placeholderAsset.dividendYieldTTM,
-            circulatingSupply: placeholderAsset.circulatingSupply,
-            allTimeHigh: placeholderAsset.allTimeHigh,
-            relativeVolume: placeholderAsset.relativeVolume,
-            icon: placeholderAsset.icon,
-            dataAiHint: profile.logo ? undefined : placeholderAsset.dataAiHint,
-          };
-          setAsset(fetchedAssetData);
-        } else {
-          console.warn(`Could not fetch full Finnhub data for ${placeholderAsset.symbol}. Using placeholder data including its price/change.`);
-          setAsset(placeholderAsset); 
-        }
-      } catch (error) {
-        console.error(`Error fetching data for ${assetId}:`, error);
-        setAsset(placeholderAsset);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
   }, [assetId]);
-
 
   const relatedNews = useMemo(() => {
     if (!asset) return [];
@@ -108,7 +62,7 @@ export default function AssetDetailPage() {
       (article.summary && (article.summary.toLowerCase().includes(searchTerm) || article.summary.toLowerCase().includes(symbolTerm)))
     );
     
-    if (filtered.length > 0) return filtered.slice(0,8);
+    if (filtered.length > 0) return filtered.slice(0, 8);
     return placeholderNews.slice(0, 8);
   }, [asset]);
 
@@ -121,7 +75,6 @@ export default function AssetDetailPage() {
     notFound();
     return null;
   }
-
 
   const FallbackIcon = asset.type === 'stock' ? Briefcase : asset.type === 'crypto' ? Bitcoin : DollarSign;
   let IconComponent;
@@ -239,7 +192,7 @@ export default function AssetDetailPage() {
               ))}
                <div className="pt-2 text-xs text-muted-foreground/70 flex items-start gap-1.5">
                 <Info size={14} className="mt-0.5 shrink-0"/> 
-                <span>Financial data is sourced from Finnhub & placeholders. Values may not be fully comprehensive. Chart by TradingView.</span>
+                <span>Financial data is sourced from placeholders. Live data from Finnhub. Chart by TradingView.</span>
               </div>
             </CardContent>
           </Card>
@@ -264,7 +217,3 @@ export default function AssetDetailPage() {
     </div>
   );
 }
-
-    
-
-    
