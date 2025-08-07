@@ -7,106 +7,50 @@ import SearchBar from "@/components/market/SearchBar";
 import FilterControls from "@/components/market/FilterControls";
 import { placeholderAssets } from "@/lib/placeholder-data";
 import type { Asset } from "@/types";
-// Finnhub service import is removed as we are not fetching live data for the dashboard here.
-// import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService"; 
+import { fetchQuoteBySymbol } from "@/services/finnhubService"; 
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
 import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget";
-import Logo from "@/components/core/Logo";
-import { cn } from "@/lib/utils";
-
-// Simulation interval for price fluctuations
-const SIMULATION_INTERVAL = 5000; // e.g., update every 5 seconds
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
-  // Initialize assets directly with placeholder data
-  const [assets, setAssets] = useState<Asset[]>(() => 
-    placeholderAssets.map(pAsset => ({
-      ...pAsset,
-      // Ensure price and change24h are taken from placeholder if they exist
-      price: pAsset.price, 
-      change24h: pAsset.change24h,
-      // Other fields that might have been undefined for Finnhub fetching, ensure they use placeholder values
-      dailyChange: pAsset.dailyChange,
-      dailyHigh: pAsset.dailyHigh,
-      dailyLow: pAsset.dailyLow,
-      dailyOpen: pAsset.dailyOpen,
-      previousClose: pAsset.previousClose,
-    }))
-  );
+  const [assets, setAssets] = useState<Asset[]>(placeholderAssets);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<{ type: "all" | "stock" | "crypto" }>({ type: "all" });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isMobileHeaderVisible, setIsMobileHeaderVisible] = useState(true);
-  const lastScrollY = useRef(0);
-
-  // Effect for scroll detection
+  // Effect for fetching live data after initial load
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      // Hide header when scrolling down past a certain threshold, show when scrolling up
-      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
-        setIsMobileHeaderVisible(false);
-      } else {
-        setIsMobileHeaderVisible(true);
-      }
-      lastScrollY.current = currentScrollY <= 0 ? 0 : currentScrollY; // For Mobile or negative scrolling
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Effect for simulating price fluctuations
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setAssets(currentAssets =>
-        currentAssets.map(asset => {
-          let newPrice = asset.price;
-          let newChange24h = asset.change24h;
-          let newDailyHigh = asset.dailyHigh;
-          let newDailyLow = asset.dailyLow;
-
-          if (typeof asset.price === 'number') {
-            // Simulate price fluctuation: +/- up to 0.25% of current price
-            const priceFluctuationFactor = (Math.random() - 0.5) * 0.005; 
-            newPrice = asset.price * (1 + priceFluctuationFactor);
-            
-            // Adjust precision for display
-            if (asset.type === 'crypto') {
-                if (newPrice < 0.0001 && newPrice !== 0) newPrice = parseFloat(newPrice.toFixed(8));
-                else if (newPrice < 0.01 && newPrice !== 0) newPrice = parseFloat(newPrice.toFixed(6));
-                else if (newPrice < 1 && newPrice !== 0) newPrice = parseFloat(newPrice.toFixed(4));
-                else newPrice = parseFloat(newPrice.toFixed(2));
-            } else { // stocks
-                 newPrice = parseFloat(newPrice.toFixed(2));
+    const fetchAllAssetsData = async () => {
+      setIsLoading(true);
+      const updatedAssets = await Promise.all(
+        placeholderAssets.map(async (asset) => {
+          try {
+            const quote = await fetchQuoteBySymbol(asset.symbol);
+            if (quote) {
+              return {
+                ...asset,
+                price: quote.c,
+                change24h: quote.dp,
+                dailyChange: quote.d,
+                dailyHigh: quote.h,
+                dailyLow: quote.l,
+                dailyOpen: quote.o,
+                previousClose: quote.pc,
+              };
             }
+          } catch (error) {
+            console.error(`Failed to fetch data for ${asset.symbol}:`, error);
           }
-
-          if (typeof asset.change24h === 'number') {
-            // Simulate change % fluctuation: +/- up to 0.1 percentage points
-            const changeFluctuation = (Math.random() - 0.5) * 0.2; 
-            newChange24h = parseFloat((asset.change24h + changeFluctuation).toFixed(2));
-          }
-          
-          if (typeof newPrice === 'number') {
-            newDailyHigh = Math.max(asset.dailyHigh ?? newPrice, newPrice);
-            newDailyLow = Math.min(asset.dailyLow ?? newPrice, newPrice);
-          }
-
-          return {
-            ...asset,
-            price: newPrice,
-            change24h: newChange24h,
-            dailyHigh: newDailyHigh,
-            dailyLow: newDailyLow,
-          };
+          // Return original asset if fetch fails
+          return asset;
         })
       );
-    }, SIMULATION_INTERVAL);
+      setAssets(updatedAssets);
+      setIsLoading(false);
+    };
 
-    return () => clearInterval(intervalId);
+    fetchAllAssetsData();
   }, []); // Run once on mount
-
 
   const filteredAssets = useMemo(() => {
     let tempAssets = [...assets];
@@ -161,8 +105,33 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* No global preloader, AssetCards handle their own state based on props */}
-          {filteredAssets.length > 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                     <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div>
+                          <Skeleton className="h-5 w-24 mb-1" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                     </div>
+                  </CardHeader>
+                  <CardContent>
+                     <div className="space-y-1 mt-1 mb-2">
+                        <Skeleton className="h-7 w-2/3" />
+                        <Skeleton className="h-4 w-1/3" />
+                     </div>
+                     <div className="mt-4 flex justify-between items-center">
+                        <Skeleton className="h-9 w-24" />
+                        <Skeleton className="h-9 w-9" />
+                     </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : filteredAssets.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
               {filteredAssets.map((asset) => (
                 <AssetCard key={asset.id} asset={asset} />
@@ -181,3 +150,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    

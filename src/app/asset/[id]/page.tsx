@@ -1,10 +1,11 @@
 
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState }from "react";
 import { useParams, notFound, useRouter } from "next/navigation"; 
 import type { Asset, NewsArticle } from "@/types";
 import { getAssetById, placeholderNews } from "@/lib/placeholder-data";
+import { fetchQuoteBySymbol, fetchProfileBySymbol } from "@/services/finnhubService";
 import Image from "next/image";
 import Link from "next/link";
 import PriceDisplay from "@/components/market/PriceDisplay";
@@ -23,31 +24,56 @@ export default function AssetDetailPage() {
   const params = useParams();
   const assetId = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const [asset, setAsset] = useState<Asset | null | undefined>(undefined);
+  const [asset, setAsset] = useState<Asset | null | undefined>(() => getAssetById(assetId));
   const [isLoading, setIsLoading] = useState(true);
 
+  // Effect to handle initial load and live data fetching
   useEffect(() => {
     if (!assetId) {
       setIsLoading(false);
       notFound();
       return;
     }
-  
-    setIsLoading(true);
-    // Use local placeholder data for speed, as requested.
-    const fetchedAsset = getAssetById(assetId);
-    
-    if (fetchedAsset) {
-      setAsset(fetchedAsset);
-    } else {
-      setAsset(null);
-      notFound();
+
+    // Initial state is set from placeholder data for speed.
+    const initialAsset = getAssetById(assetId);
+    if (!initialAsset) {
+        setIsLoading(false);
+        notFound();
+        return;
     }
+    setAsset(initialAsset);
+    setIsLoading(false); // Stop initial loading, page is now interactive
+
+    // Fetch live data in the background
+    const fetchLiveData = async () => {
+      try {
+        const [quoteData, profileData] = await Promise.all([
+          fetchQuoteBySymbol(initialAsset.symbol),
+          fetchProfileBySymbol(initialAsset.symbol, initialAsset.type)
+        ]);
+
+        if (quoteData) {
+          setAsset(prevAsset => ({
+            ...(prevAsset || initialAsset), // Use previous state or initial as base
+            price: quoteData.c,
+            change24h: quoteData.dp,
+            dailyChange: quoteData.d,
+            dailyHigh: quoteData.h,
+            dailyLow: quoteData.l,
+            dailyOpen: quoteData.o,
+            previousClose: quoteData.pc,
+            marketCap: profileData?.marketCapitalization ? profileData.marketCapitalization * 1e6 : prevAsset?.marketCap,
+            sector: profileData?.finnhubIndustry || prevAsset?.sector,
+          }));
+        }
+      } catch (error) {
+        console.error(`Failed to fetch live data for ${initialAsset.symbol}`, error);
+        // Silently fail, leaving placeholder data in place.
+      }
+    };
     
-    // Simulate a very brief load time to prevent jarring content flash
-    const timer = setTimeout(() => setIsLoading(false), 250); 
-    
-    return () => clearTimeout(timer);
+    fetchLiveData();
 
   }, [assetId]);
 
@@ -192,7 +218,7 @@ export default function AssetDetailPage() {
               ))}
                <div className="pt-2 text-xs text-muted-foreground/70 flex items-start gap-1.5">
                 <Info size={14} className="mt-0.5 shrink-0"/> 
-                <span>Financial data is sourced from placeholders. Live data from Finnhub. Chart by TradingView.</span>
+                <span>Financial data is sourced from placeholders & Finnhub. Chart by TradingView.</span>
               </div>
             </CardContent>
           </Card>
@@ -217,3 +243,5 @@ export default function AssetDetailPage() {
     </div>
   );
 }
+
+    
