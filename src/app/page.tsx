@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import AssetCard from "@/components/market/AssetCard";
 import SearchBar from "@/components/market/SearchBar";
 import FilterControls from "@/components/market/FilterControls";
@@ -11,6 +11,8 @@ import { fetchQuoteBySymbol } from "@/services/finnhubService";
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
 import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
 
 export default function DashboardPage() {
   const [assets, setAssets] = useState<Asset[]>(placeholderAssets);
@@ -150,5 +152,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
