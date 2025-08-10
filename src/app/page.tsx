@@ -18,41 +18,6 @@ export default function DashboardPage() {
   const [assets, setAssets] = useState<Asset[]>(placeholderAssets);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<{ type: "all" | "stock" | "crypto" }>({ type: "all" });
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Effect for fetching live data after initial load
-  useEffect(() => {
-    const fetchAllAssetsData = async () => {
-      setIsLoading(true);
-      const updatedAssets = await Promise.all(
-        placeholderAssets.map(async (asset) => {
-          try {
-            const quote = await fetchQuoteBySymbol(asset.symbol);
-            if (quote) {
-              return {
-                ...asset,
-                price: quote.c,
-                change24h: quote.dp,
-                dailyChange: quote.d,
-                dailyHigh: quote.h,
-                dailyLow: quote.l,
-                dailyOpen: quote.o,
-                previousClose: quote.pc,
-              };
-            }
-          } catch (error) {
-            console.error(`Failed to fetch data for ${asset.symbol}:`, error);
-          }
-          // Return original asset if fetch fails
-          return asset;
-        })
-      );
-      setAssets(updatedAssets);
-      setIsLoading(false);
-    };
-
-    fetchAllAssetsData();
-  }, []); // Run once on mount
 
   const filteredAssets = useMemo(() => {
     let tempAssets = [...assets];
@@ -107,33 +72,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <Card key={i}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                     <div className="flex items-center gap-3">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div>
-                          <Skeleton className="h-5 w-24 mb-1" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                     </div>
-                  </CardHeader>
-                  <CardContent>
-                     <div className="space-y-1 mt-1 mb-2">
-                        <Skeleton className="h-7 w-2/3" />
-                        <Skeleton className="h-4 w-1/3" />
-                     </div>
-                     <div className="mt-4 flex justify-between items-center">
-                        <Skeleton className="h-9 w-24" />
-                        <Skeleton className="h-9 w-9" />
-                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : filteredAssets.length > 0 ? (
+          {filteredAssets.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-6">
               {filteredAssets.map((asset) => (
                 <AssetCard key={asset.id} asset={asset} />
