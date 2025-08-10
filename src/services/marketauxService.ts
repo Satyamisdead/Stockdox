@@ -48,7 +48,7 @@ async function fetchWithTimeout(url: string, timeout: number, options: RequestIn
 }
 
 export async function fetchLatestNews(forceRefresh = false): Promise<NewsArticle[]> {
-  const apiKey = process.env.NEXT_PUBLIC_MARKETAUX_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_MARKETAUX_API_KEY || "nUU3UGhMmTS8TcDzv6FTyTjegKhRP0X03YFFFYRS";
 
   if (!apiKey) {
     console.error("MarketAux API key is missing. Please set NEXT_PUBLIC_MARKETAUX_API_KEY in your .env.local file.");
@@ -63,7 +63,7 @@ export async function fetchLatestNews(forceRefresh = false): Promise<NewsArticle
   const url = `${MARKETAUX_API_BASE_URL}?countries=us&filter_entities=true&limit=8&published_after=${publishedAfter}&api_token=${apiKey}`;
 
   const fetchOptions: RequestInit = {
-    // Revalidate: 2 days (172800s) if not forcing refresh, otherwise no cache.
+    // Revalidate every 2 days (172800s) if not forcing refresh, otherwise no cache.
     next: { revalidate: forceRefresh ? 0 : 172800 } 
   };
 

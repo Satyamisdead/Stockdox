@@ -6,7 +6,7 @@ import type { FinnhubQuote, FinnhubProfile } from '@/types';
 const FINNHUB_API_BASE_URL = 'https://finnhub.io/api/v1';
 const API_REQUEST_TIMEOUT = 10000; // 10 seconds
 
-let API_KEY: string | undefined = process.env.NEXT_PUBLIC_FINNHUB_API_KEY;
+let API_KEY: string | undefined = process.env.NEXT_PUBLIC_FINNHUB_API_KEY || "cn21b0pr01qj8h2b5vmgcn21b0pr01qj8h2b5vn0";
 
 if (typeof window !== 'undefined' && !API_KEY) {
   console.error(
@@ -17,7 +17,7 @@ if (typeof window !== 'undefined' && !API_KEY) {
 // This function is for client-side use to ensure API_KEY is available after initial render.
 const getApiKey = (): string | undefined => {
   if (typeof window !== 'undefined') {
-    API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY; // Re-check in case it was set late
+    API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY || "cn21b0pr01qj8h2b5vmgcn21b0pr01qj8h2b5vn0";
     if (!API_KEY) {
       console.error("Finnhub API Key is missing. Ensure NEXT_PUBLIC_FINNHUB_API_KEY is set.");
     }
