@@ -64,7 +64,7 @@ export default function AssetDetailContent({ initialAsset }: AssetDetailContentP
           />
         </div>
         <div className="space-y-4">
-            {/* The live stats will now be inside AssetLiveDataProvider, so this card is removed from here to avoid duplication. */}
+            {/* The live stats are now inside AssetLiveDataProvider, but we render the provider at the top level. The provider itself will have the stats card. So we leave this div empty or for other content.*/}
         </div>
       </section>
 

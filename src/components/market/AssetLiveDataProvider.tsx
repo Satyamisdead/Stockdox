@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bitcoin, Briefcase, DollarSign, RefreshCw, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import AssetChart from "./AssetChart";
 
 interface AssetLiveDataProviderProps {
   initialAsset: Asset;
@@ -123,41 +124,47 @@ export default function AssetLiveDataProvider({ initialAsset }: AssetLiveDataPro
           <PriceDisplay price={liveAsset.price!} change={liveAsset.change24h!} symbol={liveAsset.symbol} />
         )}
       </section>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 order-2 lg:order-1">
-          {/* Chart stays here */}
+      
+      {/* We add the Key Statistics card here, to be part of the live-updating component */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8">
+        <div className="lg:col-span-2">
+            <AssetChart 
+                symbol={liveAsset.symbol} 
+                assetType={liveAsset.type} 
+                exchange={liveAsset.exchange} 
+                name={liveAsset.name}
+            />
         </div>
-        <div className="space-y-4 order-1 lg:order-2 lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">Key Statistics</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {isFetching ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="flex justify-between items-center text-sm">
-                    <Skeleton className="h-4 w-1/3" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ))
-              ) : (
-                financialMetrics.map((metric) => (
-                  metric.value !== "N/A" && metric.value !== undefined && metric.value !== null ? (
-                    <div key={metric.label} className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">{metric.label}:</span>
-                      <span className="font-medium text-foreground">{String(metric.value)}</span>
+        <div className="space-y-4">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-xl">Key Statistics</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                {isFetching ? (
+                    Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="flex justify-between items-center text-sm">
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-4 w-1/2" />
                     </div>
-                  ) : null
-                ))
-              )}
-               <div className="pt-2 text-xs text-muted-foreground/70 flex items-start gap-1.5">
-                <Info size={14} className="mt-0.5 shrink-0"/> 
-                <span>Financial data is sourced from Finnhub. Chart by TradingView.</span>
-              </div>
-            </CardContent>
-          </Card>
-           <Badge variant="outline">{liveAsset.type === 'stock' ? 'Stock Market' : 'Cryptocurrency Market'}</Badge>
+                    ))
+                ) : (
+                    financialMetrics.map((metric) => (
+                    metric.value !== "N/A" && metric.value !== undefined && metric.value !== null ? (
+                        <div key={metric.label} className="flex justify-between items-center text-sm">
+                        <span className="text-muted-foreground">{metric.label}:</span>
+                        <span className="font-medium text-foreground">{String(metric.value)}</span>
+                        </div>
+                    ) : null
+                    ))
+                )}
+                <div className="pt-2 text-xs text-muted-foreground/70 flex items-start gap-1.5">
+                    <Info size={14} className="mt-0.5 shrink-0"/> 
+                    <span>Financial data is sourced from Finnhub. Chart by TradingView.</span>
+                </div>
+                </CardContent>
+            </Card>
+            <Badge variant="outline">{liveAsset.type === 'stock' ? 'Stock Market' : 'Cryptocurrency Market'}</Badge>
         </div>
       </div>
     </>
