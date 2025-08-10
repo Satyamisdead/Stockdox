@@ -157,7 +157,15 @@ export default function AssetDetailContent({ initialAsset }: AssetDetailContentP
             <IconComponent className="h-16 w-16 text-primary" />
           )}
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-primary font-headline">{asset.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl md:text-4xl font-bold text-primary font-headline">{asset.name}</h1>
+              {isFetchingLiveData && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse mt-1">
+                  <RefreshCw size={16} className="animate-spin" />
+                  <span>Syncing live data...</span>
+                </div>
+              )}
+            </div>
             <p className="text-lg text-muted-foreground">{asset.symbol}</p>
           </div>
         </div>
@@ -182,12 +190,6 @@ export default function AssetDetailContent({ initialAsset }: AssetDetailContentP
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle className="text-xl">Key Statistics</CardTitle>
-                 {isFetchingLiveData && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
-                    <RefreshCw size={14} className="animate-spin" />
-                    <span>Syncing live data...</span>
-                  </div>
-                )}
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
