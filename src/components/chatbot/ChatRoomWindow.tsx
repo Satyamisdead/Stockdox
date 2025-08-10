@@ -108,7 +108,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
       <SheetContent 
         side="right" 
         className="w-full sm:max-w-md flex flex-col p-0 outline-none ring-0 focus:ring-0 focus:outline-none" 
-        style={{ height: isKeyboardOpen ? `calc(100% - ${keyboardHeight}px)` : '100dvh' }}
+        style={{ height: `calc(100% - ${keyboardHeight}px)` }}
         aria-describedby={undefined}
         onPointerDownOutside={(e) => {
           // Prevent closing when clicking on a toast (often appears above the sheet)

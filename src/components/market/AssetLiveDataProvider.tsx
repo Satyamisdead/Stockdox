@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bitcoin, Briefcase, DollarSign, RefreshCw, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import AssetChart from "./AssetChart";
 
 interface AssetLiveDataProviderProps {
   initialAsset: Asset;
@@ -125,17 +124,7 @@ export default function AssetLiveDataProvider({ initialAsset }: AssetLiveDataPro
         )}
       </section>
       
-      {/* We add the Key Statistics card here, to be part of the live-updating component */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8">
-        <div className="lg:col-span-2">
-            <AssetChart 
-                symbol={liveAsset.symbol} 
-                assetType={liveAsset.type} 
-                exchange={liveAsset.exchange} 
-                name={liveAsset.name}
-            />
-        </div>
-        <div className="space-y-4">
+      <div className="space-y-4">
             <Card>
                 <CardHeader>
                     <CardTitle className="text-xl">Key Statistics</CardTitle>
@@ -165,7 +154,6 @@ export default function AssetLiveDataProvider({ initialAsset }: AssetLiveDataPro
                 </CardContent>
             </Card>
             <Badge variant="outline">{liveAsset.type === 'stock' ? 'Stock Market' : 'Cryptocurrency Market'}</Badge>
-        </div>
       </div>
     </>
   );

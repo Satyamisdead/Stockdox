@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { Asset } from "@/types";
 import { placeholderNews } from "@/lib/placeholder-data";
-import Image from "next/image";
 import AssetChart from "@/components/market/AssetChart";
 import NewsItem from "@/components/market/NewsItem";
 import { Separator } from "@/components/ui/separator";
@@ -49,13 +48,8 @@ export default function AssetDetailContent({ initialAsset }: AssetDetailContentP
         Back to Dashboard
       </Button>
 
-      {/* This component will now handle all live data fetching and display */}
-      <AssetLiveDataProvider initialAsset={initialAsset} />
-
-      <Separator />
-
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-8">
            <AssetChart 
             symbol={initialAsset.symbol} 
             assetType={initialAsset.type} 
@@ -64,7 +58,8 @@ export default function AssetDetailContent({ initialAsset }: AssetDetailContentP
           />
         </div>
         <div className="space-y-4">
-            {/* The live stats are now inside AssetLiveDataProvider, but we render the provider at the top level. The provider itself will have the stats card. So we leave this div empty or for other content.*/}
+           {/* This component will now handle all live data fetching and display */}
+            <AssetLiveDataProvider initialAsset={initialAsset} />
         </div>
       </section>
 
