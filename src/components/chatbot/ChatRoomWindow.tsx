@@ -42,7 +42,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
       };
       setMessages([initialAiMessage]);
     }
-  }, [isOpen]); // Removed messages.length from dependency to avoid re-triggering on new messages
+  }, [isOpen, messages.length]);
 
   const handleSendMessage = async () => {
     if (currentMessage.trim() === '' || isLoadingAI) return;
@@ -124,7 +124,6 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
               </Avatar>
               <SheetTitle className="text-primary font-headline">Stockdox AI</SheetTitle>
             </div>
-            {/* The default SheetContent close button will be used. No need for a custom one here. */}
           </div>
         </SheetHeader>
 
