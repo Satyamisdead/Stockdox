@@ -10,6 +10,7 @@ import { Send, Loader2, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stockdoxChat, type StockdoxChatInput } from '@/ai/flows/stockdox-chat-flow';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useVirtualKeyboard } from '@/hooks/use-virtual-keyboard';
 
 
 interface Message {
@@ -30,6 +31,8 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { keyboardHeight, isKeyboardOpen } = useVirtualKeyboard();
+
 
   // Add initial welcome message from AI when chat opens and messages are empty
   useEffect(() => {
@@ -92,7 +95,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
         }, 0);
       }
     }
-  }, [messages]);
+  }, [messages, isKeyboardOpen]);
   
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -104,7 +107,8 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent 
         side="right" 
-        className="w-full sm:max-w-md flex flex-col p-0 outline-none ring-0 focus:ring-0 focus:outline-none h-[100dvh]" 
+        className="w-full sm:max-w-md flex flex-col p-0 outline-none ring-0 focus:ring-0 focus:outline-none" 
+        style={{ height: isKeyboardOpen ? `calc(100% - ${keyboardHeight}px)` : '100dvh' }}
         aria-describedby={undefined}
         onPointerDownOutside={(e) => {
           // Prevent closing when clicking on a toast (often appears above the sheet)
