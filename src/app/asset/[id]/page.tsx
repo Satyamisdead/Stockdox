@@ -14,7 +14,7 @@ import NewsItem from "@/components/market/NewsItem";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Info, DollarSign, Bitcoin, Briefcase } from "lucide-react";
+import { ArrowLeft, Info, DollarSign, Bitcoin, Briefcase, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Loading from "@/app/loading"; 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +26,7 @@ export default function AssetDetailPage() {
 
   const [asset, setAsset] = useState<Asset | null | undefined>(() => getAssetById(assetId));
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingLiveData, setIsFetchingLiveData] = useState(false);
 
   // Effect to handle initial load and live data fetching
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function AssetDetailPage() {
 
     // Fetch live data in the background
     const fetchLiveData = async () => {
+      setIsFetchingLiveData(true);
       try {
         const [quoteData, profileData] = await Promise.all([
           fetchQuoteBySymbol(initialAsset.symbol),
@@ -70,6 +72,8 @@ export default function AssetDetailPage() {
       } catch (error) {
         console.error(`Failed to fetch live data for ${initialAsset.symbol}`, error);
         // Silently fail, leaving placeholder data in place.
+      } finally {
+        setIsFetchingLiveData(false);
       }
     };
     
@@ -205,7 +209,15 @@ export default function AssetDetailPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Key Statistics</CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-xl">Key Statistics</CardTitle>
+                 {isFetchingLiveData && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
+                    <RefreshCw size={14} className="animate-spin" />
+                    <span>Syncing live data...</span>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {financialMetrics.map((metric) => (
