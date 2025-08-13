@@ -25,12 +25,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 's3-symbol-logo.tradingview.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'static2.finnhub.io',
         port: '',
         pathname: '/**',
@@ -59,12 +53,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'coin-images.coingecko.com',
-        port: '',
-        pathname: '/**',
-      }
     ],
   },
 };
