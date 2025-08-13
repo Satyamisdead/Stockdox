@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, type DocumentSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, type DocumentSnapshot, runTransaction } from 'firebase/firestore';
 
 export type AlertCondition = 'increase' | 'decrease' | 'any' | 'none';
 
@@ -43,29 +43,39 @@ export async function toggleWatchlistAsset(userId: string, assetId: string): Pro
     console.error("Firestore is not initialized.");
     throw new Error("Firestore not available");
   }
-  const docRef = doc(db, PREFERENCES_COLLECTION, userId);
   
-  try {
-    const docSnap = await getDoc(docRef);
-    const isOnWatchlist = docSnap.exists() && (docSnap.data() as UserPreferencesDoc).watchlistAssetIds?.includes(assetId);
+  const docRef = doc(db, PREFERENCES_COLLECTION, userId);
 
-    if (isOnWatchlist) {
-      // Asset is on watchlist, so remove it
-      await updateDoc(docRef, {
-        watchlistAssetIds: arrayRemove(assetId)
-      });
-      return false; // The asset is now OFF the watchlist
-    } else {
-      // Asset is not on watchlist, so add it.
-      // Use setDoc with merge: true to create the document if it doesn't exist,
-      // or update it if it does, without overwriting other fields.
-      await setDoc(docRef, { 
-        watchlistAssetIds: arrayUnion(assetId) 
-      }, { merge: true });
-      return true; // The asset is now ON the watchlist
-    }
+  try {
+    return await runTransaction(db, async (transaction) => {
+      const docSnap = await transaction.get(docRef);
+
+      if (!docSnap.exists()) {
+        // Document doesn't exist, so create it with the new asset.
+        transaction.set(docRef, { watchlistAssetIds: [assetId] });
+        return true; // The asset is now ON the watchlist
+      }
+
+      const currentData = docSnap.data() as UserPreferencesDoc;
+      const watchlist = currentData.watchlistAssetIds || [];
+      const isOnWatchlist = watchlist.includes(assetId);
+
+      if (isOnWatchlist) {
+        // Asset is on watchlist, so remove it
+        transaction.update(docRef, {
+          watchlistAssetIds: arrayRemove(assetId)
+        });
+        return false; // The asset is now OFF the watchlist
+      } else {
+        // Asset is not on watchlist, so add it
+        transaction.update(docRef, {
+          watchlistAssetIds: arrayUnion(assetId)
+        });
+        return true; // The asset is now ON the watchlist
+      }
+    });
   } catch (error) {
-    console.error("Error toggling asset in watchlist:", error);
+    console.error("Error toggling asset in watchlist (transaction failed):", error);
     throw error;
   }
 }
