@@ -52,6 +52,12 @@ const nextConfig: NextConfig = {
         hostname: 'wolfstreet.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.coingecko.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
