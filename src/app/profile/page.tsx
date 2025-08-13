@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { auth } from "@/lib/firebase";
@@ -11,8 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import Loading from "@/app/loading";
-import { LogOut, User, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { LogOut, User, Trash2, Loader2, ArrowLeft, Bell, BellRing } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { getAlertPreferences, saveAlertPreferences, type AlertCondition } from "@/services/userPreferenceService";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
@@ -20,12 +25,34 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const isMobile = useIsMobile();
+  const [alertPref, setAlertPref] = useState<AlertCondition>('none');
+  const [isSavingPref, setIsSavingPref] = useState(false);
+  const [isLoadingPref, setIsLoadingPref] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/signin?redirect=/profile");
     }
   }, [user, authLoading, router]);
+
+  const fetchPrefs = useCallback(async () => {
+    if (user) {
+      setIsLoadingPref(true);
+      try {
+        const prefs = await getAlertPreferences(user.uid);
+        setAlertPref(prefs.condition);
+      } catch (error) {
+        console.error("Failed to fetch alert preferences", error);
+        toast({ title: "Error", description: "Could not load alert preferences.", variant: "destructive" });
+      } finally {
+        setIsLoadingPref(false);
+      }
+    }
+  }, [user, toast]);
+
+  useEffect(() => {
+    fetchPrefs();
+  }, [fetchPrefs]);
 
   const handleSignOut = async () => {
     if (auth) {
@@ -66,6 +93,19 @@ export default function ProfilePage() {
     }
   };
 
+  const handleSavePreferences = async () => {
+    if (!user) return;
+    setIsSavingPref(true);
+    try {
+        await saveAlertPreferences(user.uid, { condition: alertPref });
+        toast({ title: "Preferences Saved", description: "Your alert settings have been updated." });
+    } catch (error) {
+        toast({ title: "Save Failed", description: "Could not save your preferences. Please try again.", variant: "destructive" });
+    } finally {
+        setIsSavingPref(false);
+    }
+  };
+
   if (authLoading || !user) {
     return <Loading />;
   }
@@ -102,6 +142,56 @@ export default function ProfilePage() {
                  <Button onClick={handleSignOut} variant="outline">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
+                </Button>
+            </CardFooter>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Set Alert Preferences</CardTitle>
+                <CardDescription>Choose when to be notified about assets in your watchlist.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {isLoadingPref ? (
+                    <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                           <Skeleton className="h-4 w-4 rounded-full" />
+                           <Skeleton className="h-4 w-48" />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                           <Skeleton className="h-4 w-4 rounded-full" />
+                           <Skeleton className="h-4 w-32" />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                           <Skeleton className="h-4 w-4 rounded-full" />
+                           <Skeleton className="h-4 w-40" />
+                        </div>
+                    </div>
+                ) : (
+                    <RadioGroup value={alertPref} onValueChange={(val) => setAlertPref(val as AlertCondition)}>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="increase" id="increase" />
+                            <Label htmlFor="increase" className="cursor-pointer">On Price Increase</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="decrease" id="decrease" />
+                            <Label htmlFor="decrease" className="cursor-pointer">On Price Decrease</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="any" id="any" />
+                            <Label htmlFor="any" className="cursor-pointer">On Any Change</Label>
+                        </div>
+                         <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="none" id="none" />
+                            <Label htmlFor="none" className="cursor-pointer text-muted-foreground">Turn off all alerts</Label>
+                        </div>
+                    </RadioGroup>
+                )}
+            </CardContent>
+             <CardFooter>
+                 <Button onClick={handleSavePreferences} disabled={isSavingPref}>
+                    {isSavingPref && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save Preferences
                 </Button>
             </CardFooter>
         </Card>

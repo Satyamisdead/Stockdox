@@ -3,21 +3,21 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { Asset } from "@/types";
 import AssetCard from "@/components/market/AssetCard";
-import { placeholderAssets } from "@/lib/placeholder-data"; 
-import { Loader2, EyeOff } from "lucide-react";
+import { EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Loading from "@/app/loading";
-
+import { getWatchlistAssetIds } from "@/services/userPreferenceService";
+import { placeholderAssets } from "@/lib/placeholder-data";
 
 export default function WatchlistPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [watchlistAssets, setWatchlistAssets] = useState<Asset[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true); // Separate loading state for data fetching
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -25,30 +25,31 @@ export default function WatchlistPage() {
     }
   }, [user, authLoading, router]);
 
-  useEffect(() => {
+  const fetchWatchlist = useCallback(async () => {
     if (user) {
-      // In a real app, fetch user's watchlist from Firebase Firestore
-      // For now, mock by taking first 2 assets if user is logged in
-      // Simulate a delay for data fetching
-      const timer = setTimeout(() => {
-        // For demonstration, let's assume the first 3 assets are on the watchlist
-        const userSpecificWatchlist = placeholderAssets.filter(asset => ['aapl', 'bitcoin', 'msft'].includes(asset.id));
-        setWatchlistAssets(userSpecificWatchlist);
+      try {
+        const watchlistIds = await getWatchlistAssetIds(user.uid);
+        const assets = placeholderAssets.filter(asset => watchlistIds.includes(asset.id));
+        setWatchlistAssets(assets);
+      } catch (error) {
+        console.error("Error fetching watchlist:", error);
+      } finally {
         setIsLoadingData(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (!authLoading && !user) {
-      // If not logged in and auth check is complete, stop data loading indication
+      }
+    } else if (!authLoading) {
       setIsLoadingData(false);
     }
   }, [user, authLoading]);
+
+  useEffect(() => {
+    fetchWatchlist();
+  }, [fetchWatchlist]);
 
   if (authLoading || isLoadingData) {
      return <Loading />;
   }
 
   if (!user) {
-    // This case should ideally be handled by the redirect, but as a fallback:
     return (
       <div className="text-center py-12">
         <h1 className="text-3xl font-bold mb-4">Access Denied</h1>

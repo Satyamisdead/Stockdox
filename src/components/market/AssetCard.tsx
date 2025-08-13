@@ -7,12 +7,12 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import PriceDisplay from "./PriceDisplay";
 import { Button } from "@/components/ui/button";
-import { BellRing, Loader2, DollarSign, Bitcoin, Briefcase } from "lucide-react"; 
+import { BellRing, Loader2, DollarSign, Bitcoin, Briefcase, BellOff } from "lucide-react"; 
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { getAlertedAssetIds, toggleAlertForAsset } from "@/services/userPreferenceService";
+import { getWatchlistAssetIds, toggleWatchlistAsset } from "@/services/userPreferenceService";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type AssetCardProps = {
@@ -24,61 +24,56 @@ export default function AssetCard({ asset }: AssetCardProps) {
   const { toast } = useToast(); 
   const { user, loading: authLoading } = useAuth();
 
-  const [isAlertActive, setIsAlertActive] = useState(false);
-  const [isAlertLoading, setIsAlertLoading] = useState(true); // Start as true
+  const [isOnWatchlist, setIsOnWatchlist] = useState(false);
+  const [isWatchlistLoading, setIsWatchlistLoading] = useState(true);
 
-  useEffect(() => {
-    // Ensure this effect runs only on the client side and after auth is resolved.
-    if (typeof window === 'undefined' || authLoading) {
-      return;
-    }
-
-    const fetchAlertStatus = async () => {
-      if (user) {
-        try {
-          const alertedIds = await getAlertedAssetIds(user.uid);
-          setIsAlertActive(alertedIds.includes(asset.id));
-        } catch (error) {
-          // Error already logged in service, do nothing here.
-        } finally {
-          setIsAlertLoading(false);
-        }
-      } else {
-        // Not logged in, so no alerts are active.
-        setIsAlertActive(false);
-        setIsAlertLoading(false);
+  const checkWatchlistStatus = useCallback(async () => {
+    if (typeof window === 'undefined' || authLoading) return;
+    if (user) {
+      try {
+        const watchlistIds = await getWatchlistAssetIds(user.uid);
+        setIsOnWatchlist(watchlistIds.includes(asset.id));
+      } catch (error) {
+        // Error already logged in service
+      } finally {
+        setIsWatchlistLoading(false);
       }
-    };
-
-    fetchAlertStatus();
+    } else {
+      setIsOnWatchlist(false);
+      setIsWatchlistLoading(false);
+    }
   }, [user, authLoading, asset.id]);
 
-  const handleSetAlert = async () => {
+  useEffect(() => {
+    checkWatchlistStatus();
+  }, [checkWatchlistStatus]);
+
+  const handleToggleWatchlist = async () => {
     if (!user) {
       toast({
         title: "Authentication Required",
-        description: "Please sign in to save your alert preferences.",
+        description: "Please sign in to manage your watchlist.",
         variant: "default",
       });
       return;
     }
 
-    setIsAlertLoading(true);
+    setIsWatchlistLoading(true);
     try {
-      const newAlertStatus = await toggleAlertForAsset(user.uid, asset.id);
-      setIsAlertActive(newAlertStatus);
+      const newStatus = await toggleWatchlistAsset(user.uid, asset.id);
+      setIsOnWatchlist(newStatus);
       toast({
-        title: `Alert ${newAlertStatus ? 'Set' : 'Removed'}`,
-        description: `Price alert for ${asset.name} ${newAlertStatus ? 'activated' : 'deactivated'}.`,
+        title: newStatus ? "Added to Watchlist" : "Removed from Watchlist",
+        description: `${asset.name} has been ${newStatus ? 'added to' : 'removed from'} your watchlist.`,
       });
     } catch (error) {
       toast({
-        title: "Error Updating Alert",
-        description: "Could not update your alert preference. Please try again.",
+        title: "Error Updating Watchlist",
+        description: "Could not update your watchlist. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsAlertLoading(false);
+      setIsWatchlistLoading(false);
     }
   };
 
@@ -88,7 +83,6 @@ export default function AssetCard({ asset }: AssetCardProps) {
   } else {
     IconComponent = FallbackIcon;
   }
-
 
   return (
     <Card className="hover:shadow-primary/20 hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
@@ -104,7 +98,7 @@ export default function AssetCard({ asset }: AssetCardProps) {
               data-ai-hint={asset.dataAiHint || asset.name.toLowerCase().split(" ")[0]}
               onError={(e) => { 
                 const target = e.target as HTMLImageElement;
-                target.onerror = null; // Prevent infinite loop if fallback also fails
+                target.onerror = null;
                 target.src = 'https://placehold.co/40x40.png'; 
                 target.dataset.aiHint = 'default logo';
               }}
@@ -136,11 +130,11 @@ export default function AssetCard({ asset }: AssetCardProps) {
             <Button variant="outline" size="sm" asChild>
               <Link href={`/asset/${asset.id}`}>View Details</Link>
             </Button>
-            <Button variant="ghost" size="icon" title="Set Alert" onClick={handleSetAlert} disabled={isAlertLoading}>
-              {isAlertLoading ? ( 
+            <Button variant="ghost" size="icon" title={isOnWatchlist ? "Remove from Watchlist" : "Add to Watchlist"} onClick={handleToggleWatchlist} disabled={isWatchlistLoading}>
+              {isWatchlistLoading ? ( 
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <BellRing className={cn("h-4 w-4", isAlertActive ? "text-primary fill-primary/20" : "text-muted-foreground hover:text-primary")} />
+                <BellRing className={cn("h-4 w-4", isOnWatchlist ? "text-primary fill-primary/20" : "text-muted-foreground hover:text-primary")} />
               )}
             </Button>
           </div>

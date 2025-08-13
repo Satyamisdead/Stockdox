@@ -1,22 +1,25 @@
 
-'use server'; // For potential future use if called from server actions, though primarily client-side for now.
+'use server';
 
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, type DocumentSnapshot } from 'firebase/firestore';
 
-const PREFERENCES_COLLECTION = 'userPreferences';
-const ALERTS_FIELD = 'alertedAssetIds';
+export type AlertCondition = 'increase' | 'decrease' | 'any' | 'none';
 
-interface UserPreferencesDoc {
-  [ALERTS_FIELD]?: string[];
+export interface UserPreferences {
+  condition: AlertCondition;
 }
 
-/**
- * Fetches the asset IDs for which the user has enabled alerts.
- * @param userId The ID of the user.
- * @returns A promise that resolves to an array of asset IDs.
- */
-export async function getAlertedAssetIds(userId: string): Promise<string[]> {
+interface UserPreferencesDoc {
+  watchlistAssetIds?: string[];
+  alertPreferences?: UserPreferences;
+}
+
+const PREFERENCES_COLLECTION = 'userPreferences';
+
+// --- Watchlist Functions ---
+
+export async function getWatchlistAssetIds(userId: string): Promise<string[]> {
   if (!db) {
     console.error("Firestore is not initialized.");
     return [];
@@ -26,22 +29,16 @@ export async function getAlertedAssetIds(userId: string): Promise<string[]> {
     const docSnap: DocumentSnapshot<UserPreferencesDoc> = await getDoc(docRef) as DocumentSnapshot<UserPreferencesDoc>;
 
     if (docSnap.exists()) {
-      return docSnap.data()?.[ALERTS_FIELD] || [];
+      return docSnap.data()?.watchlistAssetIds || [];
     }
     return [];
   } catch (error) {
-    console.error("Error fetching user alert preferences:", error);
+    console.error("Error fetching user watchlist:", error);
     return [];
   }
 }
 
-/**
- * Toggles the alert preference for a specific asset for a user.
- * @param userId The ID of the user.
- * @param assetId The ID of the asset.
- * @returns A promise that resolves to true if the alert is now active, false otherwise.
- */
-export async function toggleAlertForAsset(userId: string, assetId: string): Promise<boolean> {
+export async function toggleWatchlistAsset(userId: string, assetId: string): Promise<boolean> {
   if (!db) {
     console.error("Firestore is not initialized.");
     throw new Error("Firestore not available");
@@ -50,35 +47,67 @@ export async function toggleAlertForAsset(userId: string, assetId: string): Prom
   
   try {
     const docSnap = await getDoc(docRef);
-    let currentlyAlerted = false;
+    let isOnWatchlist = false;
 
     if (docSnap.exists()) {
       const data = docSnap.data() as UserPreferencesDoc;
-      currentlyAlerted = data[ALERTS_FIELD]?.includes(assetId) || false;
+      isOnWatchlist = data.watchlistAssetIds?.includes(assetId) || false;
     }
 
-    if (currentlyAlerted) {
-      // Remove assetId from alerts
+    if (isOnWatchlist) {
       await updateDoc(docRef, {
-        [ALERTS_FIELD]: arrayRemove(assetId)
+        watchlistAssetIds: arrayRemove(assetId)
       });
-      return false; // Alert is now off
+      return false; 
     } else {
-      // Add assetId to alerts
       if (docSnap.exists()) {
         await updateDoc(docRef, {
-          [ALERTS_FIELD]: arrayUnion(assetId)
+          watchlistAssetIds: arrayUnion(assetId)
         });
       } else {
-        // Document doesn't exist, create it
         await setDoc(docRef, {
-          [ALERTS_FIELD]: [assetId]
+          watchlistAssetIds: [assetId]
         });
       }
-      return true; // Alert is now on
+      return true;
     }
   } catch (error) {
-    console.error("Error toggling asset alert preference:", error);
-    throw error; // Re-throw to be caught by caller
+    console.error("Error toggling asset in watchlist:", error);
+    throw error;
+  }
+}
+
+// --- Alert Preference Functions ---
+
+export async function getAlertPreferences(userId: string): Promise<UserPreferences> {
+  if (!db) {
+    console.error("Firestore is not initialized.");
+    return { condition: 'none' };
+  }
+  try {
+    const docRef = doc(db, PREFERENCES_COLLECTION, userId);
+    const docSnap = await getDoc(docRef) as DocumentSnapshot<UserPreferencesDoc>;
+    if (docSnap.exists() && docSnap.data()?.alertPreferences) {
+      return docSnap.data()?.alertPreferences as UserPreferences;
+    }
+    // Return default preferences if not set
+    return { condition: 'none' };
+  } catch (error) {
+    console.error("Error fetching alert preferences:", error);
+    return { condition: 'none' };
+  }
+}
+
+export async function saveAlertPreferences(userId: string, preferences: UserPreferences): Promise<void> {
+  if (!db) {
+    console.error("Firestore is not initialized.");
+    throw new Error("Firestore not available");
+  }
+  const docRef = doc(db, PREFERENCES_COLLECTION, userId);
+  try {
+    await setDoc(docRef, { alertPreferences: preferences }, { merge: true });
+  } catch (error) {
+    console.error("Error saving alert preferences:", error);
+    throw error;
   }
 }
