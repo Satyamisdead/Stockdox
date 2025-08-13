@@ -100,6 +100,7 @@ export async function saveAlertPreferences(userId: string, preferences: UserPref
   }
   const docRef = doc(db, PREFERENCES_COLLECTION, userId);
   try {
+    // Use setDoc with merge:true to create the doc if it doesn't exist, or update it if it does.
     await setDoc(docRef, { alertPreferences: preferences }, { merge: true });
   } catch (error) {
     console.error("Error saving alert preferences:", error);
