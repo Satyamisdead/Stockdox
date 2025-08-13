@@ -2,7 +2,7 @@
 import type { NewsArticle } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, BookOpen } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import Link from "next/link";
 
@@ -37,4 +37,3 @@ export default function NewsItem({ article, assetId }: NewsItemProps) {
     </Card>
   );
 }
-
