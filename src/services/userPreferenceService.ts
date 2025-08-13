@@ -47,24 +47,22 @@ export async function toggleWatchlistAsset(userId: string, assetId: string): Pro
   
   try {
     const docSnap = await getDoc(docRef);
-    let isOnWatchlist = false;
-
-    if (docSnap.exists()) {
-      const data = docSnap.data() as UserPreferencesDoc;
-      isOnWatchlist = data.watchlistAssetIds?.includes(assetId) || false;
-    }
+    const isOnWatchlist = docSnap.exists() && (docSnap.data() as UserPreferencesDoc).watchlistAssetIds?.includes(assetId);
 
     if (isOnWatchlist) {
+      // Asset is on watchlist, so remove it
       await updateDoc(docRef, {
         watchlistAssetIds: arrayRemove(assetId)
       });
-      return false; 
+      return false; // The asset is now OFF the watchlist
     } else {
-      // If the document exists, update it. If not, create it.
-      await setDoc(docRef, {
-        watchlistAssetIds: arrayUnion(assetId)
+      // Asset is not on watchlist, so add it.
+      // Use setDoc with merge: true to create the document if it doesn't exist,
+      // or update it if it does, without overwriting other fields.
+      await setDoc(docRef, { 
+        watchlistAssetIds: arrayUnion(assetId) 
       }, { merge: true });
-      return true;
+      return true; // The asset is now ON the watchlist
     }
   } catch (error) {
     console.error("Error toggling asset in watchlist:", error);
