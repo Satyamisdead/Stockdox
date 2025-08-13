@@ -4,7 +4,6 @@
 import SiteHeader from '@/components/core/SiteHeader';
 import SiteFooter from '@/components/core/SiteFooter';
 import MobileBottomNav from '@/components/core/MobileBottomNav';
-import InstallPWAHandler from '@/components/core/InstallPWAHandler';
 import ChatbotLauncher from '@/components/chatbot/ChatbotLauncher';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from './loading';
@@ -34,7 +33,6 @@ export default function AppBody({
       </main>
       <SiteFooter />
       <MobileBottomNav />
-      <InstallPWAHandler />
       <ChatbotLauncher />
       <WatchlistMonitor />
     </>
