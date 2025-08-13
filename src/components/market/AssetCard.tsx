@@ -28,19 +28,19 @@ export default function AssetCard({ asset }: AssetCardProps) {
   const [isWatchlistLoading, setIsWatchlistLoading] = useState(true);
 
   const checkWatchlistStatus = useCallback(async () => {
-    if (typeof window === 'undefined' || authLoading) return;
-    if (user) {
-      try {
+    if (typeof window === 'undefined' || authLoading || !user) {
+        setIsWatchlistLoading(false);
+        return;
+    };
+    
+    setIsWatchlistLoading(true);
+    try {
         const watchlistIds = await getWatchlistAssetIds(user.uid);
         setIsOnWatchlist(watchlistIds.includes(asset.id));
-      } catch (error) {
-        // Error already logged in service
-      } finally {
+    } catch (error) {
+        console.error(`Failed to check watchlist status for ${asset.id}`, error);
+    } finally {
         setIsWatchlistLoading(false);
-      }
-    } else {
-      setIsOnWatchlist(false);
-      setIsWatchlistLoading(false);
     }
   }, [user, authLoading, asset.id]);
 
@@ -130,7 +130,7 @@ export default function AssetCard({ asset }: AssetCardProps) {
             <Button variant="outline" size="sm" asChild>
               <Link href={`/asset/${asset.id}`}>View Details</Link>
             </Button>
-            <Button variant="ghost" size="icon" title={isOnWatchlist ? "Remove from Watchlist" : "Add to Watchlist"} onClick={handleToggleWatchlist} disabled={isWatchlistLoading}>
+            <Button variant="ghost" size="icon" title={isOnWatchlist ? "Remove from Watchlist" : "Add to Watchlist"} onClick={handleToggleWatchlist} disabled={isWatchlistLoading || authLoading || !user}>
               {isWatchlistLoading ? ( 
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (

@@ -60,15 +60,10 @@ export async function toggleWatchlistAsset(userId: string, assetId: string): Pro
       });
       return false; 
     } else {
-      if (docSnap.exists()) {
-        await updateDoc(docRef, {
-          watchlistAssetIds: arrayUnion(assetId)
-        });
-      } else {
-        await setDoc(docRef, {
-          watchlistAssetIds: [assetId]
-        });
-      }
+      // If the document exists, update it. If not, create it.
+      await setDoc(docRef, {
+        watchlistAssetIds: arrayUnion(assetId)
+      }, { merge: true });
       return true;
     }
   } catch (error) {

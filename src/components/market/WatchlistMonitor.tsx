@@ -21,7 +21,7 @@ export default function WatchlistMonitor() {
   // Preload audio element on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('/alert.mp3');
+      audioRef.current = new Audio('/audio/alert.mp3');
       Notification.requestPermission(); // Request notification permission early
     }
   }, []);
@@ -129,6 +129,8 @@ export default function WatchlistMonitor() {
 
   useEffect(() => {
     if (user) {
+      // Run once immediately on load
+      runMonitor();
       const intervalId = setInterval(runMonitor, MONITOR_INTERVAL);
       return () => clearInterval(intervalId);
     }
