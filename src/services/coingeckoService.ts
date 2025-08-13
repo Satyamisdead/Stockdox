@@ -5,7 +5,8 @@ import type { CoinGeckoMarketData, Asset } from '@/types';
 
 const COINGECKO_API_BASE_URL = 'https://api.coingecko.com/api/v3';
 const API_REQUEST_TIMEOUT = 10000; // 10 seconds
-const API_KEY = "CG-wGKXyitz7bf4Cj6rb3WESLUV";
+const API_KEY = process.env.NEXT_PUBLIC_COINGECKO_API_KEY || "CG-wGKXyitz7bf4Cj6rb3WESLUV";
+
 
 async function fetchWithTimeout(url: string, options?: RequestInit): Promise<Response> {
   const controller = new AbortController();
