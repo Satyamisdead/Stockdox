@@ -8,7 +8,6 @@ import ChatbotLauncher from '@/components/chatbot/ChatbotLauncher';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from './loading';
 import AuthOverlay from '@/components/auth/AuthOverlay';
-import WatchlistMonitor from '@/components/market/WatchlistMonitor';
 
 export default function AppBody({
   children,
@@ -34,7 +33,6 @@ export default function AppBody({
       <SiteFooter />
       <MobileBottomNav />
       <ChatbotLauncher />
-      <WatchlistMonitor />
     </>
   );
 }

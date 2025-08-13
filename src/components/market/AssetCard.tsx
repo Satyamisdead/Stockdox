@@ -7,12 +7,7 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import PriceDisplay from "./PriceDisplay";
 import { Button } from "@/components/ui/button";
-import { BellRing, Loader2, DollarSign, Bitcoin, Briefcase, BellOff } from "lucide-react"; 
-import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
-import { getWatchlistAssetIds, toggleWatchlistAsset } from "@/services/userPreferenceService";
+import { BellRing, DollarSign, Bitcoin, Briefcase } from "lucide-react"; 
 import { Skeleton } from "@/components/ui/skeleton";
 
 type AssetCardProps = {
@@ -21,61 +16,6 @@ type AssetCardProps = {
 
 export default function AssetCard({ asset }: AssetCardProps) {
   const FallbackIcon = asset.type === 'stock' ? Briefcase : asset.type === 'crypto' ? Bitcoin : DollarSign;
-  const { toast } = useToast(); 
-  const { user, loading: authLoading } = useAuth();
-
-  const [isOnWatchlist, setIsOnWatchlist] = useState(false);
-  const [isWatchlistLoading, setIsWatchlistLoading] = useState(true);
-
-  const checkWatchlistStatus = useCallback(async () => {
-    if (typeof window === 'undefined' || authLoading || !user) {
-        setIsWatchlistLoading(false);
-        return;
-    };
-    
-    setIsWatchlistLoading(true);
-    try {
-        const watchlistIds = await getWatchlistAssetIds(user.uid);
-        setIsOnWatchlist(watchlistIds.includes(asset.id));
-    } catch (error) {
-        console.error(`Failed to check watchlist status for ${asset.id}`, error);
-    } finally {
-        setIsWatchlistLoading(false);
-    }
-  }, [user, authLoading, asset.id]);
-
-  useEffect(() => {
-    checkWatchlistStatus();
-  }, [checkWatchlistStatus]);
-
-  const handleToggleWatchlist = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to manage your watchlist.",
-        variant: "default",
-      });
-      return;
-    }
-
-    setIsWatchlistLoading(true);
-    try {
-      const newStatus = await toggleWatchlistAsset(user.uid, asset.id);
-      setIsOnWatchlist(newStatus);
-      toast({
-        title: newStatus ? "Added to Watchlist" : "Removed from Watchlist",
-        description: `${asset.name} has been ${newStatus ? 'added to' : 'removed from'} your watchlist.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error Updating Watchlist",
-        description: "Could not update your watchlist. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsWatchlistLoading(false);
-    }
-  };
 
   let IconComponent;
   if (asset.icon && typeof asset.icon !== 'string') {
@@ -88,7 +28,7 @@ export default function AssetCard({ asset }: AssetCardProps) {
     <Card className="hover:shadow-primary/20 hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-3">
-          {asset.logoUrl && asset.logoUrl !== 'https://placehold.co/40x40.png' ? (
+          {asset.logoUrl ? (
             <Image 
               src={asset.logoUrl} 
               alt={`${asset.name} logo`} 
@@ -130,12 +70,8 @@ export default function AssetCard({ asset }: AssetCardProps) {
             <Button variant="outline" size="sm" asChild>
               <Link href={`/asset/${asset.id}`}>View Details</Link>
             </Button>
-            <Button variant="ghost" size="icon" title={isOnWatchlist ? "Remove from Watchlist" : "Add to Watchlist"} onClick={handleToggleWatchlist} disabled={isWatchlistLoading || authLoading || !user}>
-              {isWatchlistLoading ? ( 
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <BellRing className={cn("h-4 w-4", isOnWatchlist ? "text-primary fill-primary/20" : "text-muted-foreground hover:text-primary")} />
-              )}
+            <Button variant="ghost" size="icon" title="Add to Watchlist">
+              <BellRing className="h-4 w-4 text-muted-foreground" />
             </Button>
           </div>
         </div>

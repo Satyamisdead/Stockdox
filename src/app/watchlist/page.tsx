@@ -3,14 +3,13 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import type { Asset } from "@/types";
 import AssetCard from "@/components/market/AssetCard";
 import { EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Loading from "@/app/loading";
-import { getWatchlistAssetIds } from "@/services/userPreferenceService";
 import { placeholderAssets } from "@/lib/placeholder-data";
 
 export default function WatchlistPage() {
@@ -22,28 +21,15 @@ export default function WatchlistPage() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/signin?redirect=/watchlist");
-    }
-  }, [user, authLoading, router]);
-
-  const fetchWatchlist = useCallback(async () => {
-    if (user) {
-      try {
-        const watchlistIds = await getWatchlistAssetIds(user.uid);
-        const assets = placeholderAssets.filter(asset => watchlistIds.includes(asset.id));
-        setWatchlistAssets(assets);
-      } catch (error) {
-        console.error("Error fetching watchlist:", error);
-      } finally {
-        setIsLoadingData(false);
+    } else {
+      // For now, just show some placeholder assets if logged in
+      // This will be replaced with actual user watchlist fetching
+      if (user) {
+        setWatchlistAssets(placeholderAssets.slice(0, 4)); 
       }
-    } else if (!authLoading) {
       setIsLoadingData(false);
     }
-  }, [user, authLoading]);
-
-  useEffect(() => {
-    fetchWatchlist();
-  }, [fetchWatchlist]);
+  }, [user, authLoading, router]);
 
   if (authLoading || isLoadingData) {
      return <Loading />;
