@@ -3,7 +3,7 @@
 
 import type { NewsArticle } from '@/types';
 
-const MARKETAUX_API_BASE_URL = 'https://api.marketaux.com/v1/news/all';
+const MARKETAUX_API_BASE_URL = 'https://api.marketaux.com/v1/news';
 const API_REQUEST_TIMEOUT = 15000; // 15 seconds
 
 interface MarketAuxArticle {
@@ -16,6 +16,7 @@ interface MarketAuxArticle {
     language: string;
     published_at: string;
     source: string;
+    entities: { symbol: string }[];
 }
 
 interface MarketAuxResponse {
@@ -27,6 +28,8 @@ interface MarketAuxResponse {
     };
     data: MarketAuxArticle[];
 }
+
+const API_KEY = process.env.NEXT_PUBLIC_MARKETAUX_API_KEY || "nUU3UGhMmTS8TcDzv6FTyTjegKhRP0X03YFFFYRS";
 
 async function fetchWithTimeout(url: string, timeout: number, options: RequestInit): Promise<Response> {
   const controller = new AbortController();
@@ -47,10 +50,18 @@ async function fetchWithTimeout(url: string, timeout: number, options: RequestIn
   }
 }
 
-export async function fetchLatestNews(forceRefresh = false): Promise<NewsArticle[]> {
-  const apiKey = process.env.NEXT_PUBLIC_MARKETAUX_API_KEY || "nUU3UGhMmTS8TcDzv6FTyTjegKhRP0X03YFFFYRS";
+const mapArticle = (article: MarketAuxArticle): NewsArticle => ({
+    id: article.uuid,
+    title: article.title,
+    source: article.source,
+    publishedAt: article.published_at,
+    url: article.url,
+    summary: article.snippet,
+    imageUrl: article.image_url,
+});
 
-  if (!apiKey) {
+export async function fetchLatestNews(forceRefresh = false): Promise<NewsArticle[]> {
+  if (!API_KEY) {
     console.error("MarketAux API key is missing. Please set NEXT_PUBLIC_MARKETAUX_API_KEY in your .env.local file.");
     throw new Error("API key for news service is not configured.");
   }
@@ -60,10 +71,9 @@ export async function fetchLatestNews(forceRefresh = false): Promise<NewsArticle
   threeDaysAgo.setDate(today.getDate() - 3);
   const publishedAfter = threeDaysAgo.toISOString().split('T')[0];
 
-  const url = `${MARKETAUX_API_BASE_URL}?countries=us&filter_entities=true&limit=8&published_after=${publishedAfter}&api_token=${apiKey}`;
+  const url = `${MARKETAUX_API_BASE_URL}/all?countries=us&filter_entities=true&limit=8&published_after=${publishedAfter}&api_token=${API_KEY}`;
 
   const fetchOptions: RequestInit = {
-    // Revalidate every 2 days (172800s) if not forcing refresh, otherwise no cache.
     next: { revalidate: forceRefresh ? 0 : 172800 } 
   };
 
@@ -77,18 +87,41 @@ export async function fetchLatestNews(forceRefresh = false): Promise<NewsArticle
     }
 
     const data: MarketAuxResponse = await response.json();
-
-    return data.data.map((article: MarketAuxArticle) => ({
-      id: article.uuid,
-      title: article.title,
-      source: article.source,
-      publishedAt: article.published_at,
-      url: article.url,
-      summary: article.snippet,
-      imageUrl: article.image_url,
-    }));
+    return data.data.map(mapArticle);
   } catch (error) {
     console.error("An error occurred in fetchLatestNews:", error);
-    throw error; // Re-throw to be handled by the calling component
+    throw error;
+  }
+}
+
+export async function fetchNewsForAsset(symbol: string): Promise<NewsArticle[]> {
+  if (!API_KEY) {
+    console.error("MarketAux API key is missing.");
+    throw new Error("API key for news service is not configured.");
+  }
+
+  // Fetch news from the last 7 days for a specific symbol
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const publishedOn = sevenDaysAgo.toISOString().split('T')[0];
+
+  const url = `${MARKETAUX_API_BASE_URL}/all?symbols=${symbol.toUpperCase()}&filter_entities=true&language=en&limit=4&published_on=${publishedOn}&api_token=${API_KEY}`;
+  
+  const fetchOptions: RequestInit = {
+    next: { revalidate: 3600 } // Cache for 1 hour
+  };
+
+  try {
+    const response = await fetchWithTimeout(url, API_REQUEST_TIMEOUT, fetchOptions);
+    if (!response.ok) {
+      const errorBody = await response.json();
+      console.error(`Error fetching news for ${symbol}: ${response.status}`, errorBody);
+      throw new Error(`Failed to fetch news for ${symbol}. Status: ${response.status}`);
+    }
+    const data: MarketAuxResponse = await response.json();
+    return data.data.map(mapArticle);
+  } catch (error) {
+    console.error(`An error occurred in fetchNewsForAsset for symbol ${symbol}:`, error);
+    throw error;
   }
 }
