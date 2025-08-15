@@ -9,12 +9,16 @@ import PriceDisplay from "./PriceDisplay";
 import { Button } from "@/components/ui/button";
 import { BellRing, DollarSign, Bitcoin, Briefcase } from "lucide-react"; 
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 type AssetCardProps = {
   asset: Asset;
 };
 
 export default function AssetCard({ asset }: AssetCardProps) {
+  const [isWatched, setIsWatched] = useState(false);
+
   const FallbackIcon = asset.type === 'stock' ? Briefcase : asset.type === 'crypto' ? Bitcoin : DollarSign;
 
   let IconComponent;
@@ -22,6 +26,11 @@ export default function AssetCard({ asset }: AssetCardProps) {
     IconComponent = asset.icon;
   } else {
     IconComponent = FallbackIcon;
+  }
+
+  const handleWatchlistToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsWatched(prev => !prev);
   }
 
   return (
@@ -70,8 +79,8 @@ export default function AssetCard({ asset }: AssetCardProps) {
             <Button variant="outline" size="sm" asChild>
               <Link href={`/asset/${asset.id}`}>View Details</Link>
             </Button>
-            <Button variant="ghost" size="icon" title="Add to Watchlist">
-              <BellRing className="h-4 w-4 text-muted-foreground" />
+            <Button variant="ghost" size="icon" title="Add to Watchlist" onClick={handleWatchlistToggle}>
+              <BellRing className={cn("h-4 w-4 text-muted-foreground", isWatched && "text-primary fill-primary/20")} />
             </Button>
           </div>
         </div>
