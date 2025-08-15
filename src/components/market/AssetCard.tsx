@@ -11,6 +11,7 @@ import { BellRing, DollarSign, Bitcoin, Briefcase } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 type AssetCardProps = {
   asset: Asset;
@@ -18,6 +19,7 @@ type AssetCardProps = {
 
 export default function AssetCard({ asset }: AssetCardProps) {
   const [isWatched, setIsWatched] = useState(false);
+  const { toast } = useToast();
 
   const FallbackIcon = asset.type === 'stock' ? Briefcase : asset.type === 'crypto' ? Bitcoin : DollarSign;
 
@@ -30,7 +32,15 @@ export default function AssetCard({ asset }: AssetCardProps) {
 
   const handleWatchlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
-    setIsWatched(prev => !prev);
+    const newWatchState = !isWatched;
+    setIsWatched(newWatchState);
+    toast({
+      title: newWatchState ? "Alerts Set" : "Alerts Removed",
+      description: newWatchState 
+        ? `You will be notified about price changes for ${asset.name}.`
+        : `You will no longer be notified about ${asset.name}.`,
+      duration: 3000,
+    });
   }
 
   return (
