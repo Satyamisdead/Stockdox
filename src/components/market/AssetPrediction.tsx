@@ -146,7 +146,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                                         </AlertDescription>
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
-                                                 <Button variant="link" size="sm" className="text-destructive/80 hover:text-destructive h-auto p-0 mt-1 text-xs">Read More</Button>
+                                                 <Button variant="link" size="sm" className="text-primary hover:text-primary/80 h-auto p-0 mt-1 text-xs font-bold">Read More</Button>
                                             </AlertDialogTrigger>
                                             <AlertDialogContent>
                                                 <AlertDialogHeader>
