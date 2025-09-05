@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -99,6 +100,10 @@ export default {
         'bar-loader': {
           '0%, 100%': { height: '1.5rem' }, /* 24px */
           '50%': { height: '3rem' }, /* 48px */
+        },
+        'scan-line': {
+            '0%': { top: '-10%' },
+            '100%': { top: '110%' },
         }
       },
       animation: {
@@ -107,6 +112,7 @@ export default {
         'auth-card-in': 'auth-card-in 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
         'fade-in': 'fade-in 0.5s ease-in-out forwards',
         'bar-loader': 'bar-loader 1.2s infinite ease-in-out',
+        'scan-line': 'scan-line 2.5s ease-in-out infinite',
       },
     },
   },

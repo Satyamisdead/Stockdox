@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import type { Asset } from "@/types";
 import AssetChart from "@/components/market/AssetChart";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bitcoin, Briefcase, DollarSign } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import AssetLiveDataProvider from "./AssetLiveDataProvider";
+import AssetPrediction from "./AssetPrediction";
 
 
 interface AssetDetailContentProps {
@@ -15,14 +16,6 @@ interface AssetDetailContentProps {
 
 export default function AssetDetailContent({ initialAsset }: AssetDetailContentProps) {
   const router = useRouter();
-
-  const FallbackIcon = initialAsset.type === 'stock' ? Briefcase : initialAsset.type === 'crypto' ? Bitcoin : DollarSign;
-  let IconComponent;
-  if (initialAsset.icon && typeof initialAsset.icon !== 'string') {
-    IconComponent = initialAsset.icon;
-  } else {
-    IconComponent = FallbackIcon;
-  }
 
   return (
     <div className="space-y-8">
@@ -33,12 +26,15 @@ export default function AssetDetailContent({ initialAsset }: AssetDetailContentP
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-           <AssetChart 
-            symbol={initialAsset.symbol} 
-            assetType={initialAsset.type} 
-            exchange={initialAsset.exchange} 
-            name={initialAsset.name} 
-          />
+          <div className="relative">
+             <AssetChart 
+              symbol={initialAsset.symbol} 
+              assetType={initialAsset.type} 
+              exchange={initialAsset.exchange} 
+              name={initialAsset.name} 
+            />
+             <AssetPrediction asset={initialAsset} />
+          </div>
         </div>
         <div className="space-y-4">
             <AssetLiveDataProvider initialAsset={initialAsset} />

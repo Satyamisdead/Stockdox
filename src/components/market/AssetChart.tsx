@@ -114,12 +114,12 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
   }, [symbol, assetType, exchange, name]); 
 
   return (
-    <Card className="h-[350px] md:h-[450px] w-full flex flex-col shadow-lg">
-      <CardHeader className="shrink-0">
+    <Card className="h-[350px] md:h-[450px] w-full flex flex-col shadow-lg overflow-hidden">
+      <CardHeader className="shrink-0 z-10">
         <CardTitle className="font-headline">{name} ({symbol.toUpperCase()}) Chart</CardTitle>
         <CardDescription>Realtime chart Powered By TradingView</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow pb-4 pr-2 flex"> 
+      <CardContent className="flex-grow pb-4 pr-2 flex z-0"> 
         <div 
           id={`tradingview_chart_widget_${symbol.replace(/[^a-zA-Z0-9]/g, '')}_${assetType}`} 
           ref={chartContainerRef} 
