@@ -65,10 +65,18 @@ const stockdoxChatFlow = ai.defineFlow(
     outputSchema: StockdoxChatOutputSchema,
   },
   async (input) => {
-    const {output} = await stockdoxChatPrompt(input);
-    if (!output) {
-        return { reply: "I'm sorry, I encountered an issue and couldn't generate a response. Please try again." };
+    try {
+      const { output } = await stockdoxChatPrompt(input);
+
+      // Defensive check: Ensure output and the reply property exist and are valid.
+      if (output && typeof output.reply === 'string' && output.reply.trim() !== '') {
+        return output;
+      }
+    } catch (e) {
+      console.error("[stockdoxChatFlow] An error occurred during prompt execution:", e);
     }
-    return output;
+    
+    // Fallback response if anything goes wrong (null output, invalid format, or exception).
+    return { reply: "I'm sorry, I encountered an issue and couldn't generate a response. Please try again." };
   }
 );
