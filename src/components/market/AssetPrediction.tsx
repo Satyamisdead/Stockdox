@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bot, Loader2, AlertTriangle, TrendingUp, TrendingDown, Minus, X } from 'lucide-react';
 import { getAssetPrediction, type GetAssetPredictionInput, type GetAssetPredictionOutput } from '@/ai/flows/get-asset-prediction-flow';
@@ -12,6 +12,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface AssetPredictionProps {
     asset: Asset;
 }
+
+const loadingTexts = [
+    "Scanning market data...",
+    "Analyzing historical trends...",
+    "Reviewing company records...",
+    "Correlating news sentiment...",
+    "Compiling analysis...",
+    "Finalizing prediction..."
+];
 
 const PredictionIcon = ({ prediction }: { prediction: GetAssetPredictionOutput['prediction'] }) => {
     switch (prediction) {
@@ -26,13 +35,26 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [prediction, setPrediction] = useState<GetAssetPredictionOutput | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [showCard, setShowCard] = useState(true);
+    const [showCard, setShowCard] = useState(false);
+    const [loadingText, setLoadingText] = useState(loadingTexts[0]);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isLoading && !prediction) {
+            let i = 0;
+            interval = setInterval(() => {
+                i = (i + 1) % loadingTexts.length;
+                setLoadingText(loadingTexts[i]);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isLoading, prediction]);
 
     const handleGetPrediction = async () => {
         setIsLoading(true);
         setError(null);
         setPrediction(null);
-        setShowCard(true); // Always show card when a new prediction is requested
+        setShowCard(true);
         
         try {
             const input: GetAssetPredictionInput = {
@@ -41,11 +63,16 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                 assetType: asset.type,
             };
             const result = await getAssetPrediction(input);
-            setPrediction(result);
+            
+            // Simulate additional processing time for dramatic effect
+            setTimeout(() => {
+                setPrediction(result);
+                setIsLoading(false);
+            }, 1500);
+
         } catch (e) {
             console.error("Failed to get AI prediction:", e);
             setError("An unexpected error occurred while generating the prediction. Please try again.");
-        } finally {
             setIsLoading(false);
         }
     };
@@ -54,85 +81,82 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
         setShowCard(false);
         setPrediction(null);
         setError(null);
+        setIsLoading(false);
     }
-
-    if (!showCard) {
-        return (
-            <div className="flex justify-center">
-                <Button onClick={handleGetPrediction} disabled={isLoading}>
-                    <Bot className="mr-2 h-4 w-4" />
-                    Get Stockdox AI Prediction
-                </Button>
-            </div>
-        )
-    }
-
 
     return (
-        <div className="relative">
-             {isLoading && (
-                <div className="absolute inset-0 top-[-25rem] h-[25rem] overflow-hidden pointer-events-none">
-                    <div className="absolute top-0 h-[2px] w-full bg-primary/50 animate-scan-line" />
+        <div className="mt-8">
+            {!showCard && (
+                 <div className="flex justify-center">
+                    <Button onClick={handleGetPrediction} disabled={isLoading}>
+                        <Bot className="mr-2 h-4 w-4" />
+                        Get Stockdox AI Prediction
+                    </Button>
                 </div>
             )}
-            <Card className="bg-card/80 backdrop-blur-sm shadow-2xl border border-border/50 relative">
-                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={handleClose}>
-                    <X className="h-4 w-4" />
-                    <span className="sr-only">Close prediction</span>
-                </Button>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Bot className="h-6 w-6 text-primary" />
-                        Stockdox AI Prediction
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {!prediction && !isLoading && !error && (
-                        <Button onClick={handleGetPrediction} disabled={isLoading} className="w-full">
-                            <Bot className="mr-2 h-4 w-4" />
-                            Get Stockdox AI Prediction
+            
+            {showCard && (
+                <div className="relative">
+                    {isLoading && !prediction && (
+                        <div className="absolute bottom-full mb-2 left-0 right-0 h-[25rem] overflow-hidden pointer-events-none">
+                            <div className="absolute top-0 h-[2px] w-full bg-primary/50 animate-scan-line" />
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center w-full">
+                               <p className="text-sm font-medium text-primary animate-pulse">{loadingText}</p>
+                            </div>
+                        </div>
+                    )}
+                    <Card className="bg-card/80 backdrop-blur-sm shadow-2xl border border-border/50 relative">
+                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={handleClose}>
+                            <X className="h-4 w-4" />
+                            <span className="sr-only">Close prediction</span>
                         </Button>
-                    )}
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Bot className="h-6 w-6 text-primary" />
+                                Stockdox AI Prediction
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="min-h-[150px] flex items-center justify-center">
+                           {isLoading && !prediction && !error && (
+                                <div className="flex items-center justify-center space-x-2 animate-pulse">
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                    <span className="font-medium text-muted-foreground">{loadingText}</span>
+                                </div>
+                            )}
+                            
+                            {prediction && !isLoading && (
+                                <div className="space-y-3 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                        <PredictionIcon prediction={prediction.prediction} />
+                                        <h3 className="text-xl font-bold font-headline text-primary">AI Prediction: {prediction.prediction}</h3>
+                                </div>
+                                    <Alert variant="destructive" className="text-left mt-3">
+                                        <AlertTriangle className="h-4 w-4" />
+                                        <AlertTitle className="font-semibold text-destructive">Disclaimer</AlertTitle>
+                                        <AlertDescription className="text-xs text-destructive/80">
+                                        {prediction.disclaimer}
+                                        </AlertDescription>
+                                    </Alert>
+                                    <Button onClick={handleGetPrediction} variant="outline" size="sm" className="mt-2">
+                                        <Loader2 className="mr-2 h-4 w-4" />
+                                        Re-analyze
+                                    </Button>
+                                </div>
+                            )}
 
-                    {isLoading && (
-                        <div className="flex items-center justify-center space-x-2 animate-pulse min-h-[150px]">
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            <span className="font-medium text-muted-foreground">Analyzing market patterns...</span>
-                        </div>
-                    )}
-                    
-                    {prediction && !isLoading && (
-                        <div className="space-y-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                                <PredictionIcon prediction={prediction.prediction} />
-                                <h3 className="text-xl font-bold font-headline text-primary">AI Prediction: {prediction.prediction}</h3>
-                        </div>
-                            <p className="text-sm text-foreground">{prediction.justification}</p>
-                            <Alert variant="destructive" className="text-left mt-3">
-                                <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle className="font-semibold text-destructive">Disclaimer</AlertTitle>
-                                <AlertDescription className="text-xs text-destructive/80">
-                                {prediction.disclaimer}
-                                </AlertDescription>
-                            </Alert>
-                            <Button onClick={handleGetPrediction} variant="outline" size="sm" className="mt-2">
-                                <Loader2 className="mr-2 h-4 w-4" />
-                                Re-analyze
-                            </Button>
-                        </div>
-                    )}
-
-                    {error && !isLoading && (
-                        <div className="text-center text-red-500 min-h-[150px] flex flex-col justify-center items-center">
-                            <AlertTriangle className="mx-auto mb-2 h-6 w-6" />
-                            <p className="text-sm font-medium">{error}</p>
-                            <Button onClick={handleGetPrediction} variant="destructive" size="sm" className="mt-3">
-                                Try Again
-                            </Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                            {error && !isLoading && (
+                                <div className="text-center text-red-500 flex flex-col justify-center items-center">
+                                    <AlertTriangle className="mx-auto mb-2 h-6 w-6" />
+                                    <p className="text-sm font-medium">{error}</p>
+                                    <Button onClick={handleGetPrediction} variant="destructive" size="sm" className="mt-3">
+                                        Try Again
+                                    </Button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }

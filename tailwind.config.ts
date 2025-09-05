@@ -102,8 +102,8 @@ export default {
           '50%': { height: '3rem' }, /* 48px */
         },
         'scan-line': {
-            '0%': { top: '-10%' },
-            '100%': { top: '110%' },
+            '0%': { transform: 'translateY(-10%)' },
+            '100%': { transform: 'translateY(110%)' },
         }
       },
       animation: {

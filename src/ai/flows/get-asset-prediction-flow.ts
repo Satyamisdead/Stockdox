@@ -20,7 +20,6 @@ export type GetAssetPredictionInput = z.infer<typeof GetAssetPredictionInputSche
 
 const GetAssetPredictionOutputSchema = z.object({
   prediction: z.enum(['Buy', 'Sell', 'Hold']).describe('The recommended action: Buy, Sell, or Hold.'),
-  justification: z.string().describe('A brief, 1-2 sentence justification for the prediction based on general market principles.'),
   disclaimer: z.string().describe('A standard disclaimer about the nature of AI predictions.'),
 });
 export type GetAssetPredictionOutput = z.infer<typeof GetAssetPredictionOutputSchema>;
@@ -41,13 +40,12 @@ Your task is to provide a speculative prediction for a given asset.
 Asset Name: {{{assetName}}} ({{{assetSymbol}}})
 Asset Type: {{{assetType}}}
 
-Based on general market analysis principles and the asset type, provide a "Buy", "Sell", or "Hold" recommendation.
-Your justification should be brief and based on common analysis patterns (e.g., "strong recent performance and positive sector trends suggest potential for growth," or "high volatility and recent downturns suggest caution"). Do not use real-time data or claim to have inside information. This is a purely speculative analysis based on general knowledge.
+Based on general market analysis principles and the asset type, provide a "Buy", "Sell", or "Hold" recommendation. Do not provide any justification or reasoning, only the prediction itself.
 
 Finally, you MUST provide the following standard disclaimer, verbatim:
 "This is an AI-generated prediction and not financial advice. It is for informational purposes only. Always do your own research and consult with a qualified financial advisor before making any investment decisions."
 
-Generate a prediction, a short justification, and the disclaimer.
+Generate a prediction and the disclaimer.
 `,
 });
 
@@ -68,7 +66,6 @@ const getAssetPredictionFlow = ai.defineFlow(
         console.error("[getAssetPredictionFlow] Error:", e);
         return {
             prediction: 'Hold',
-            justification: 'Could not generate a specific prediction at this time due to a technical issue. Please consider general market conditions.',
             disclaimer: "This is an AI-generated prediction and not financial advice. It is for informational purposes only. Always do your own research and consult with a qualified financial advisor before making any investment decisions.",
         }
     }

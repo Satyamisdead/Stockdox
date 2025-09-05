@@ -33,8 +33,8 @@ export default function AssetDetailContent({ initialAsset }: AssetDetailContentP
               exchange={initialAsset.exchange} 
               name={initialAsset.name} 
             />
+             <AssetPrediction asset={initialAsset} />
           </div>
-          <AssetPrediction asset={initialAsset} />
         </div>
         <div className="space-y-4">
             <AssetLiveDataProvider initialAsset={initialAsset} />
