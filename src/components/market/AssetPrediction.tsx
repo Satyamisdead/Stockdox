@@ -61,7 +61,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
             <div className="flex justify-center">
                 <Button onClick={handleGetPrediction} disabled={isLoading}>
                     <Bot className="mr-2 h-4 w-4" />
-                    Get AI Stockdox Prediction
+                    Get Stockdox AI Prediction
                 </Button>
             </div>
         )
@@ -90,7 +90,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                     {!prediction && !isLoading && !error && (
                         <Button onClick={handleGetPrediction} disabled={isLoading} className="w-full">
                             <Bot className="mr-2 h-4 w-4" />
-                            Get AI Stockdox Prediction
+                            Get Stockdox AI Prediction
                         </Button>
                     )}
 
