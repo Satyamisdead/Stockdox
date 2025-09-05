@@ -106,7 +106,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
             {showCard && (
                 <div className="relative">
                     {isLoading && !prediction && (
-                        <div className="absolute bottom-full mb-2 left-0 right-0 h-[25rem] overflow-hidden pointer-events-none">
+                        <div className="absolute inset-0 z-20 overflow-hidden pointer-events-none">
                             <div className="absolute top-0 h-[2px] w-full bg-primary/50 animate-scan-line" />
                             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center w-full">
                                <p className="text-sm font-medium text-primary animate-pulse">{loadingText}</p>
