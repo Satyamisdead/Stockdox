@@ -20,7 +20,6 @@ export type GetAssetPredictionInput = z.infer<typeof GetAssetPredictionInputSche
 
 const GetAssetPredictionOutputSchema = z.object({
   prediction: z.enum(['Buy', 'Sell', 'Hold']).describe('The recommended action: Buy, Sell, or Hold.'),
-  disclaimer: z.string().describe('A standard disclaimer about the nature of AI predictions.'),
 });
 export type GetAssetPredictionOutput = z.infer<typeof GetAssetPredictionOutputSchema>;
 
@@ -41,11 +40,6 @@ Asset Name: {{{assetName}}} ({{{assetSymbol}}})
 Asset Type: {{{assetType}}}
 
 Based on general market analysis principles and the asset type, provide a "Buy", "Sell", or "Hold" recommendation. Do not provide any justification or reasoning, only the prediction itself.
-
-Finally, you MUST provide the following standard disclaimer, verbatim:
-"This is an AI-generated prediction and not financial advice. It is for informational purposes only. Always do your own research and consult with a qualified financial advisor before making any investment decisions."
-
-Generate a prediction and the disclaimer.
 `,
 });
 
@@ -66,7 +60,6 @@ const getAssetPredictionFlow = ai.defineFlow(
         console.error("[getAssetPredictionFlow] Error:", e);
         return {
             prediction: 'Hold',
-            disclaimer: "This is an AI-generated prediction and not financial advice. It is for informational purposes only. Always do your own research and consult with a qualified financial advisor before making any investment decisions.",
         }
     }
   }

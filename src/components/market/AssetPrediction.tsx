@@ -8,6 +8,8 @@ import { getAssetPrediction, type GetAssetPredictionInput, type GetAssetPredicti
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Asset } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ScrollArea } from '../ui/scroll-area';
 
 interface AssetPredictionProps {
     asset: Asset;
@@ -21,6 +23,12 @@ const loadingTexts = [
     "Compiling analysis...",
     "Finalizing prediction..."
 ];
+
+const FULL_DISCLAIMER = `StockDox provides AI-generated insights, including indications such as “buy,” “sell,” or “hold” for stocks and cryptocurrencies. These outputs are for informational and educational purposes only and do not constitute financial, investment, trading, or legal advice. StockDox, its owners, partners, and affiliates make no guarantees as to the accuracy, reliability, or completeness of any predictions or data provided.
+
+You are solely responsible for your own investment decisions. By using StockDox, you acknowledge and agree that all trading and investment activity involves risk, and StockDox shall not be held liable for any financial losses, damages, or consequences arising directly or indirectly from your reliance on our services.
+
+Always conduct your own research and, if necessary, consult with a licensed financial advisor before making investment decisions.`;
 
 const PredictionIcon = ({ prediction }: { prediction: GetAssetPredictionOutput['prediction'] }) => {
     switch (prediction) {
@@ -133,9 +141,29 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                                     <Alert variant="destructive" className="text-left mt-3">
                                         <AlertTriangle className="h-4 w-4" />
                                         <AlertTitle className="font-semibold text-destructive">Disclaimer</AlertTitle>
-                                        <AlertDescription className="text-xs text-destructive/80">
-                                        {prediction.disclaimer}
+                                        <AlertDescription className="text-xs text-destructive/80 line-clamp-3">
+                                            {FULL_DISCLAIMER}
                                         </AlertDescription>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                 <Button variant="link" size="sm" className="text-destructive/80 hover:text-destructive h-auto p-0 mt-1 text-xs">Read More</Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Disclaimer</AlertDialogTitle>
+                                                    <AlertDialogDescription asChild>
+                                                        <ScrollArea className="h-60 pr-4">
+                                                            <p className="whitespace-pre-line text-sm">
+                                                                {FULL_DISCLAIMER}
+                                                            </p>
+                                                        </ScrollArea>
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Close</AlertDialogCancel>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </Alert>
                                     <Button onClick={handleGetPrediction} variant="outline" size="sm" className="mt-2">
                                         <Loader2 className="mr-2 h-4 w-4" />
