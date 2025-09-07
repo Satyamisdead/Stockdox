@@ -3,15 +3,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bot, Loader2, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Bot, Loader2, AlertTriangle, TrendingUp, TrendingDown, Minus, RefreshCw } from 'lucide-react';
 import { getAssetPrediction, type GetAssetPredictionInput, type GetAssetPredictionOutput } from '@/ai/flows/get-asset-prediction-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Asset } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface AssetPredictionProps {
     asset: Asset;
@@ -48,10 +49,13 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
     const [loadingText, setLoadingText] = useState(loadingTexts[0]);
     const { toast } = useToast();
 
-    const handleGetPrediction = useCallback(async (isAutoRefresh = false) => {
-        if (!isAutoRefresh) {
-            setIsLoading(true);
-        }
+    const REFRESH_INTERVAL_SECONDS = asset.type === 'crypto' ? 30 : 60;
+    const [countdown, setCountdown] = useState(REFRESH_INTERVAL_SECONDS);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+
+    const handleGetPrediction = useCallback(async () => {
+        setIsLoading(true);
         setError(null);
         
         try {
@@ -62,6 +66,8 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
             };
             const result = await getAssetPrediction(input);
             setPrediction(result);
+            const now = new Date();
+            setLastUpdated(now);
             
             toast({
                 title: (
@@ -70,7 +76,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                         <span>AI Prediction for {asset.symbol.toUpperCase()}: {result.prediction}</span>
                     </div>
                 ),
-                description: "This is an AI-generated insight. Always do your own research.",
+                description: `Analysis as of ${format(now, "h:mm:ss a")}. This is an AI-generated insight. Always do your own research.`,
                 duration: 6000,
                 variant: result.prediction === 'Sell' ? 'destructive' : 'default',
             });
@@ -80,19 +86,33 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
             setError("An unexpected error occurred while generating the prediction. Please try again.");
         } finally {
             setIsLoading(false);
+            setCountdown(REFRESH_INTERVAL_SECONDS);
         }
-    }, [asset.name, asset.symbol, asset.type, toast]);
+    }, [asset.name, asset.symbol, asset.type, toast, REFRESH_INTERVAL_SECONDS]);
     
+    // Initial fetch
     useEffect(() => {
-        handleGetPrediction(false);
-
-        const refreshInterval = asset.type === 'crypto' ? 30000 : 60000; // 30s for crypto, 60s for stocks
-        const intervalId = setInterval(() => handleGetPrediction(true), refreshInterval);
-
-        return () => clearInterval(intervalId);
+        handleGetPrediction();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [asset.id]);
 
+    // Countdown timer effect
+    useEffect(() => {
+        if (isLoading || error) return;
+
+        if (countdown <= 0) {
+            handleGetPrediction();
+            return;
+        }
+
+        const timerId = setInterval(() => {
+            setCountdown(prev => prev - 1);
+        }, 1000);
+
+        return () => clearInterval(timerId);
+    }, [countdown, isLoading, error, handleGetPrediction]);
+
+    // Loading text animation effect
     useEffect(() => {
         let interval: NodeJS.Timeout;
         if (isLoading) {
@@ -107,18 +127,15 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
 
     return (
         <div className="relative mt-8">
-            {isLoading && (
-                 <div className="absolute inset-0 bg-card/50 backdrop-blur-[2px] rounded-lg z-10 flex flex-col items-center justify-center p-4 overflow-hidden">
-                    <div className="flex items-center justify-center space-x-2 animate-pulse text-foreground mb-4">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        <span className="font-medium">{loadingText}</span>
+             <Card className="bg-card/80 backdrop-blur-sm shadow-2xl border border-border/50 relative overflow-hidden">
+                 {isLoading && (
+                    <div className="absolute inset-0 bg-card/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4">
+                        <div className="flex items-center justify-center space-x-2 text-foreground mb-4">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <span className="font-medium">{loadingText}</span>
+                        </div>
                     </div>
-                    <div className="w-full h-1 bg-primary/20 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary animate-scan-line rounded-full"></div>
-                    </div>
-                </div>
-            )}
-            <Card className="bg-card/80 backdrop-blur-sm shadow-2xl border border-border/50 relative">
+                )}
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Bot className="h-6 w-6 text-primary" />
@@ -169,6 +186,20 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                         </div>
                     )}
                 </CardContent>
+
+                <CardFooter className="flex justify-between items-center bg-muted/50 py-2 px-4 border-t">
+                    {lastUpdated && !isLoading ? (
+                        <p className="text-xs text-muted-foreground">
+                            Last updated: {format(lastUpdated, "h:mm:ss a")}
+                        </p>
+                    ) : (
+                        <div className="h-4 w-32 bg-muted-foreground/20 rounded-md animate-pulse" />
+                    )}
+                    <Button onClick={() => handleGetPrediction()} variant="ghost" size="sm" disabled={isLoading} className="gap-2">
+                         <RefreshCw className={cn("h-4 w-4", isLoading ? "animate-spin" : "")} />
+                         {isLoading ? "Analyzing..." : `Refresh in ${countdown}s`}
+                    </Button>
+                </CardFooter>
             </Card>
         </div>
     );
