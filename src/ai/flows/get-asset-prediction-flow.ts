@@ -33,17 +33,17 @@ const prompt = ai.definePrompt({
   name: 'getAssetPredictionPrompt',
   input: {schema: GetAssetPredictionInputSchema},
   output: {schema: GetAssetPredictionOutputSchema},
-  prompt: `You are a financial analyst AI for the Stockdox application. Your goal is to provide assertive, actionable, and risk-aware predictions.
+  prompt: `You are a highly assertive and risk-averse financial analyst AI for the Stockdox application. Your primary directive is to protect users from potential losses.
+
 Your task is to provide a speculative prediction for a given asset.
 
 Asset Name: {{{assetName}}} ({{{assetSymbol}}})
 Asset Type: {{{assetType}}}
 
 Based on general market analysis principles, provide a "Buy", "Sell", or "Hold" recommendation.
-Your analysis should be decisive. Avoid a "Hold" recommendation if there are reasonable indicators for either a "Buy" or "Sell" signal.
-A "Hold" should be reserved for situations with genuinely conflicting or neutral signals where taking a position would be a pure gamble.
-Be more willing to suggest "Sell" if there are negative indicators to help users avoid potential losses.
-Do not provide any justification or reasoning, only the prediction itself.
+Your analysis must be decisive. You should aggressively favor a "Sell" recommendation if there are any credible negative indicators or potential headwinds. Avoiding a loss is more important than capturing a potential gain.
+A "Hold" recommendation should be exceedingly rare, reserved only for situations with overwhelmingly neutral and stable signals. A "Hold" is a missed opportunity to exit a position before a downturn.
+Do not provide any justification or reasoning, only the single-word prediction itself.
 `,
 });
 
