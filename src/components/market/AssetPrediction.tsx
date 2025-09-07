@@ -13,6 +13,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AssetPredictionProps {
     asset: Asset;
@@ -42,6 +43,7 @@ const PredictionIcon = ({ prediction, className }: { prediction: GetAssetPredict
 }
 
 export default function AssetPrediction({ asset }: AssetPredictionProps) {
+    const { user } = useAuth(); // Get the authenticated user
     const [isLoading, setIsLoading] = useState(true);
     const [prediction, setPrediction] = useState<GetAssetPredictionOutput | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -63,6 +65,8 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                 assetSymbol: asset.symbol,
                 assetType: asset.type,
                 timestamp: new Date().toISOString(),
+                assetId: asset.id,
+                userId: user?.uid, // Pass the user's ID
             };
             const result = await getAssetPrediction(input);
             setPrediction(result);
@@ -88,7 +92,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
             setIsLoading(false);
             setCountdown(REFRESH_INTERVAL_SECONDS);
         }
-    }, [asset.name, asset.symbol, asset.type, toast]);
+    }, [asset.name, asset.symbol, asset.type, asset.id, user?.uid, toast]);
     
     // Initial fetch
     useEffect(() => {

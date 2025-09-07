@@ -9,6 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import { savePrediction } from '@/services/predictionHistoryService';
 import {z} from 'genkit';
 
 const GetAssetPredictionInputSchema = z.object({
@@ -16,6 +17,8 @@ const GetAssetPredictionInputSchema = z.object({
   assetSymbol: z.string().describe('The symbol of the asset (e.g., "AAPL", "BTC").'),
   assetType: z.string().describe('The type of asset ("stock" or "crypto").'),
   timestamp: z.string().describe('The ISO 8601 timestamp of when the request was made.'),
+  assetId: z.string(), // Added assetId
+  userId: z.string().optional(), // Added optional userId
 });
 export type GetAssetPredictionInput = z.infer<typeof GetAssetPredictionInputSchema>;
 
@@ -53,18 +56,28 @@ const getAssetPredictionFlow = ai.defineFlow(
     outputSchema: GetAssetPredictionOutputSchema,
   },
   async (input) => {
+    let output: GetAssetPredictionOutput;
     try {
-      const { output } = await prompt(input);
-      if (output) {
-        return output;
+      const result = await prompt(input);
+      if (result.output) {
+        output = result.output;
+      } else {
+        throw new Error("Received null output from prompt.");
       }
-      throw new Error("Received null output from prompt.");
     } catch(e) {
         console.error("[getAssetPredictionFlow] Error:", e);
         // Default to a random action on error.
-        return {
+        output = {
             prediction: Math.random() > 0.5 ? 'Buy' : 'Sell',
         }
     }
+
+    if (input.userId) {
+        // Save the prediction to history, but don't block the response
+        savePrediction(input.userId, input.assetId, input.assetName, input.assetSymbol, output)
+            .catch(saveError => console.error("[getAssetPredictionFlow] Failed to save prediction history:", saveError));
+    }
+    
+    return output;
   }
 );

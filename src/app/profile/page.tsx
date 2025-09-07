@@ -11,19 +11,40 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import Loading from "@/app/loading";
-import { LogOut, User, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { LogOut, User, Trash2, Loader2, ArrowLeft, History, TrendingUp, TrendingDown } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getPredictionHistory, type PredictionRecord } from "@/services/predictionHistoryService";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { formatDistanceToNow } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+const PredictionIcon = ({ prediction, className }: { prediction: PredictionRecord['prediction'], className?: string }) => {
+    switch (prediction) {
+        case 'Buy': return <TrendingUp className={cn("h-4 w-4 text-green-500", className)} />;
+        case 'Sell': return <TrendingDown className={cn("h-4 w-4 text-red-500", className)} />;
+        default: return null;
+    }
+};
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [predictionHistory, setPredictionHistory] = useState<PredictionRecord[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/signin?redirect=/profile");
+    } else if (user) {
+        setIsLoadingHistory(true);
+        getPredictionHistory(user.uid)
+            .then(setPredictionHistory)
+            .finally(() => setIsLoadingHistory(false));
     }
   }, [user, authLoading, router]);
 
@@ -104,6 +125,64 @@ export default function ProfilePage() {
                     Sign Out
                 </Button>
             </CardFooter>
+        </Card>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <History className="h-5 w-5 text-primary" />
+                    Prediction History
+                </CardTitle>
+                <CardDescription>A log of your recent AI-generated predictions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ScrollArea className="h-72 w-full pr-4">
+                    {isLoadingHistory ? (
+                        <div className="space-y-3">
+                           {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                    <div className="flex items-center gap-3">
+                                        <Skeleton className="h-8 w-8 rounded-full" />
+                                        <div className="space-y-1">
+                                             <Skeleton className="h-4 w-24" />
+                                             <Skeleton className="h-3 w-32" />
+                                        </div>
+                                    </div>
+                                    <Skeleton className="h-5 w-16" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : predictionHistory.length > 0 ? (
+                        <ul className="space-y-2">
+                            {predictionHistory.map((item, index) => (
+                                <li key={index} className="flex items-center justify-between text-sm p-2 rounded-md hover:bg-muted/50">
+                                    <div className="flex items-center gap-3 font-medium">
+                                        <PredictionIcon prediction={item.prediction} />
+                                        <Link href={`/asset/${item.assetId}`} className="hover:underline">
+                                            <span>{item.assetName} ({item.assetSymbol})</span>
+                                        </Link>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className={cn(
+                                            "font-semibold",
+                                            item.prediction === "Buy" && "text-green-500",
+                                            item.prediction === "Sell" && "text-red-500"
+                                        )}>{item.prediction}</span>
+                                        <span className="text-xs text-muted-foreground w-24 text-right">
+                                            {formatDistanceToNow(item.timestamp, { addSuffix: true })}
+                                        </span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                         <div className="text-center py-10">
+                            <p className="text-muted-foreground">No prediction history found.</p>
+                            <p className="text-xs text-muted-foreground mt-1">View an asset to start generating predictions.</p>
+                        </div>
+                    )}
+                </ScrollArea>
+            </CardContent>
         </Card>
 
         <Card className="border-destructive">
