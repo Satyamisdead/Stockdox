@@ -49,7 +49,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
     const [loadingText, setLoadingText] = useState(loadingTexts[0]);
     const { toast } = useToast();
 
-    const REFRESH_INTERVAL_SECONDS = asset.type === 'crypto' ? 30 : 60;
+    const REFRESH_INTERVAL_SECONDS = 15;
     const [countdown, setCountdown] = useState(REFRESH_INTERVAL_SECONDS);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
