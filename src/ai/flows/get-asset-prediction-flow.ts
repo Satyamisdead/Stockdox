@@ -20,7 +20,7 @@ const GetAssetPredictionInputSchema = z.object({
 export type GetAssetPredictionInput = z.infer<typeof GetAssetPredictionInputSchema>;
 
 const GetAssetPredictionOutputSchema = z.object({
-  prediction: z.enum(['Buy', 'Sell', 'Hold']).describe('The recommended action: Buy, Sell, or Hold.'),
+  prediction: z.enum(['Buy', 'Sell']).describe('The recommended action: Buy or Sell.'),
 });
 export type GetAssetPredictionOutput = z.infer<typeof GetAssetPredictionOutputSchema>;
 
@@ -34,14 +34,14 @@ const prompt = ai.definePrompt({
   name: 'getAssetPredictionPrompt',
   input: {schema: GetAssetPredictionInputSchema},
   output: {schema: GetAssetPredictionOutputSchema},
-  prompt: `You are an advanced, unpredictable, and dynamic trading analysis AI for the Stockdox application. Your primary function is to generate a trading signal ("Buy", "Sell", or "Hold") that simulates a highly active and random trading pattern. The current time is {{{timestamp}}}; use this to ensure every prediction is unique and not static.
+  prompt: `You are an advanced, unpredictable, and dynamic trading analysis AI for the Stockdox application. Your primary function is to generate a trading signal ("Buy" or "Sell") that simulates a highly active and random trading pattern. The current time is {{{timestamp}}}; use this to ensure every prediction is unique and not static.
 
 Asset: {{{assetName}}} ({{{assetSymbol}}})
 
 Your instructions are:
 1.  **Embrace Randomness**: Do not follow a predictable pattern. Your goal is to produce a sequence of outputs that appears random and varied over time. You might suggest "Buy" twice, then "Sell", then "Buy" again.
-2.  **"Hold" is Rare**: The "Hold" recommendation should be used very sparingly. It is better to issue a "Buy" or "Sell" call than to remain passive. Only issue a "Hold" signal once in a while.
-3.  **Generate a Single Action**: Your final output must be one of three words: "Buy", "Sell", or "Hold".
+2.  **No "Hold"**: You must choose between "Buy" or "Sell". Do not hold.
+3.  **Generate a Single Action**: Your final output must be one of two words: "Buy" or "Sell".
 
 Based on these instructions, provide a single, decisive trading signal for the asset at this exact moment.`,
 });
@@ -61,9 +61,9 @@ const getAssetPredictionFlow = ai.defineFlow(
       throw new Error("Received null output from prompt.");
     } catch(e) {
         console.error("[getAssetPredictionFlow] Error:", e);
-        // Default to a conservative "Hold" on error.
+        // Default to a random action on error.
         return {
-            prediction: 'Hold',
+            prediction: Math.random() > 0.5 ? 'Buy' : 'Sell',
         }
     }
   }

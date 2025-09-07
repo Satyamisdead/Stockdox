@@ -37,7 +37,6 @@ const PredictionIcon = ({ prediction, className }: { prediction: GetAssetPredict
     switch (prediction) {
         case 'Buy': return <TrendingUp className={cn("h-5 w-5 text-green-500", className)} />;
         case 'Sell': return <TrendingDown className={cn("h-5 w-5 text-red-500", className)} />;
-        case 'Hold': return <Minus className={cn("h-5 w-5 text-muted-foreground", className)} />;
         default: return null;
     }
 }
