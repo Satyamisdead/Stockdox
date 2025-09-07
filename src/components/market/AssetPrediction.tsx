@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bot, Loader2, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { getAssetPrediction, type GetAssetPredictionInput, type GetAssetPredictionOutput } from '@/ai/flows/get-asset-prediction-flow';
@@ -48,10 +48,11 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
     const [loadingText, setLoadingText] = useState(loadingTexts[0]);
     const { toast } = useToast();
 
-    const handleGetPrediction = async () => {
-        setIsLoading(true);
+    const handleGetPrediction = useCallback(async (isAutoRefresh = false) => {
+        if (!isAutoRefresh) {
+            setIsLoading(true);
+        }
         setError(null);
-        setPrediction(null);
         
         try {
             const input: GetAssetPredictionInput = {
@@ -80,10 +81,15 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [asset.name, asset.symbol, asset.type, toast]);
     
     useEffect(() => {
-        handleGetPrediction();
+        handleGetPrediction(false);
+
+        const refreshInterval = asset.type === 'crypto' ? 30000 : 60000; // 30s for crypto, 60s for stocks
+        const intervalId = setInterval(() => handleGetPrediction(true), refreshInterval);
+
+        return () => clearInterval(intervalId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [asset.id]);
 
@@ -160,9 +166,6 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                         <div className="text-center text-red-500 flex flex-col justify-center items-center">
                             <AlertTriangle className="mx-auto mb-2 h-6 w-6" />
                             <p className="text-sm font-medium">{error}</p>
-                            <Button onClick={handleGetPrediction} variant="destructive" size="sm" className="mt-3">
-                                Try Again
-                            </Button>
                         </div>
                     )}
                 </CardContent>
