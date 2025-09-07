@@ -13,7 +13,7 @@ type AssetChartProps = {
 
 const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, name }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const scriptAddedRef = useRef(false); 
+  const isWidgetCreated = useRef(false); 
 
   useEffect(() => {
     // Ensure this code runs only on the client
@@ -28,13 +28,10 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
         if (upperExchange === 'NASDAQ' || upperExchange === 'NYSE') {
           tvSymbol = `${upperExchange}:${symbol.toUpperCase()}`;
         } else {
-          // For other exchanges or if no exchange is provided,
-          // just use the symbol. TradingView can often resolve major symbols.
           tvSymbol = symbol.toUpperCase();
         }
       } else if (assetType === 'crypto') {
         const cryptoExchange = exchange ? exchange.toUpperCase() : "BINANCE";
-        // Common pairs, otherwise assume <SYMBOL>USDT
         if (symbol.toUpperCase() === 'BTC') tvSymbol = `${cryptoExchange}:BTCUSDT`;
         else if (symbol.toUpperCase() === 'ETH') tvSymbol = `${cryptoExchange}:ETHUSDT`;
         else tvSymbol = `${cryptoExchange}:${symbol.toUpperCase()}USDT`; 
@@ -44,7 +41,7 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
     };
 
     const initializeWidget = () => {
-      if (chartContainerRef.current && typeof (window as any).TradingView !== 'undefined') {
+      if (chartContainerRef.current && typeof (window as any).TradingView !== 'undefined' && !isWidgetCreated.current) {
         // Clear previous widget if any
         chartContainerRef.current.innerHTML = ''; 
         
@@ -86,29 +83,20 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
         };
         
         new (window as any).TradingView.widget(widgetOptions);
-      } else if (chartContainerRef.current && !scriptAddedRef.current) {
-        console.warn("[AssetChart] TradingView script not loaded yet, widget initialization deferred.");
-      } else if (!chartContainerRef.current) {
-        console.warn("[AssetChart] Chart container ref is not available.");
+        isWidgetCreated.current = true;
       }
     };
-
-    if (!scriptAddedRef.current) {
-      const script = document.createElement('script');
-      script.id = 'tradingview-widget-script';
-      script.src = 'https://s3.tradingview.com/tv.js';
-      script.async = true;
-      script.onload = () => {
-        console.log("[AssetChart] TradingView script loaded successfully.");
-        scriptAddedRef.current = true;
+    
+    // Check if TradingView is already loaded. If not, wait for it.
+    if (typeof (window as any).TradingView !== 'undefined') {
         initializeWidget();
-      };
-      script.onerror = () => {
-        console.error("[AssetChart] TradingView script failed to load.");
-      }
-      document.head.appendChild(script);
     } else {
-      initializeWidget();
+        const interval = setInterval(() => {
+            if (typeof (window as any).TradingView !== 'undefined') {
+                clearInterval(interval);
+                initializeWidget();
+            }
+        }, 100);
     }
 
   }, [symbol, assetType, exchange, name]); 
