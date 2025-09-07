@@ -34,19 +34,16 @@ const prompt = ai.definePrompt({
   name: 'getAssetPredictionPrompt',
   input: {schema: GetAssetPredictionInputSchema},
   output: {schema: GetAssetPredictionOutputSchema},
-  prompt: `You are an automated trading strategy AI for the Stockdox application. Your task is to provide a "Buy", "Sell", or "Hold" recommendation based on a specific set of rules. The current time is {{{timestamp}}}, use this to ensure each prediction is unique.
+  prompt: `You are an advanced, unpredictable, and dynamic trading analysis AI for the Stockdox application. Your primary function is to generate a trading signal ("Buy", "Sell", or "Hold") that simulates a highly active and random trading pattern. The current time is {{{timestamp}}}; use this to ensure every prediction is unique and not static.
 
-Asset Name: {{{assetName}}} ({{{assetSymbol}}})
-Asset Type: {{{assetType}}}
+Asset: {{{assetName}}} ({{{assetSymbol}}})
 
-You must strictly follow these rules:
-1.  **If the price is perceived to be rising, you must recommend "Sell".** This is a profit-taking strategy.
-2.  **If the price is perceived to be falling, you must recommend "Buy".** This is a "buy the dip" strategy.
-3.  **Only recommend "Hold" if the price is stable or has very little movement.** "Hold" should be a rare recommendation.
-4.  Do not use a "Hold" recommendation as a default. It is better to issue a "Sell" than to "Hold" and miss an opportunity.
+Your instructions are:
+1.  **Embrace Randomness**: Do not follow a predictable pattern. Your goal is to produce a sequence of outputs that appears random and varied over time. You might suggest "Buy" twice, then "Sell", then "Buy" again.
+2.  **"Hold" is Rare**: The "Hold" recommendation should be used very sparingly. It is better to issue a "Buy" or "Sell" call than to remain passive. Only issue a "Hold" signal once in a while.
+3.  **Generate a Single Action**: Your final output must be one of three words: "Buy", "Sell", or "Hold".
 
-Based on these rules and your analysis of the asset at this moment, provide your single-word prediction.
-`,
+Based on these instructions, provide a single, decisive trading signal for the asset at this exact moment.`,
 });
 
 const getAssetPredictionFlow = ai.defineFlow(
