@@ -10,6 +10,7 @@ import type { Asset } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from '../ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 interface AssetPredictionProps {
     asset: Asset;
@@ -45,6 +46,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
     const [error, setError] = useState<string | null>(null);
     const [loadingText, setLoadingText] = useState(loadingTexts[0]);
     const [showCard, setShowCard] = useState(true);
+    const { toast } = useToast();
 
     const handleGetPrediction = async () => {
         setIsLoading(true);
@@ -59,6 +61,11 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
             };
             const result = await getAssetPrediction(input);
             setPrediction(result);
+            toast({
+                title: `AI Prediction for ${asset.symbol.toUpperCase()}: ${result.prediction}`,
+                description: "This is an AI-generated insight. Always do your own research.",
+                duration: 6000,
+            });
 
         } catch (e) {
             console.error("Failed to get AI prediction:", e);
@@ -94,9 +101,20 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
     }
 
     return (
-        <div className="mt-8">
+        <div className="relative mt-8">
+            {isLoading && (
+                 <div className="absolute inset-0 bg-card/50 backdrop-blur-[2px] rounded-lg z-10 flex flex-col items-center justify-center p-4 overflow-hidden">
+                    <div className="flex items-center justify-center space-x-2 animate-pulse text-foreground mb-4">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span className="font-medium">{loadingText}</span>
+                    </div>
+                    <div className="w-full h-1 bg-primary/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary animate-scan-line rounded-full"></div>
+                    </div>
+                </div>
+            )}
             <Card className="bg-card/80 backdrop-blur-sm shadow-2xl border border-border/50 relative">
-                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={handleClose}>
+                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 z-20" onClick={handleClose}>
                     <X className="h-4 w-4" />
                     <span className="sr-only">Close prediction</span>
                 </Button>
@@ -107,19 +125,12 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="min-h-[150px] flex items-center justify-center">
-                    {isLoading && (
-                        <div className="flex items-center justify-center space-x-2 animate-pulse">
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            <span className="font-medium text-muted-foreground">{loadingText}</span>
-                        </div>
-                    )}
-                    
                     {!isLoading && prediction && (
-                        <div className="space-y-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="space-y-3 text-center w-full">
+                            <div className="flex items-center justify-center gap-2">
                                 <PredictionIcon prediction={prediction.prediction} />
                                 <h3 className="text-xl font-bold font-headline text-primary">AI Prediction: {prediction.prediction}</h3>
-                        </div>
+                            </div>
                             <Alert variant="destructive" className="text-left mt-3">
                                 <AlertTriangle className="h-4 w-4" />
                                 <AlertTitle className="font-semibold text-destructive">Disclaimer</AlertTitle>
@@ -128,7 +139,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                                 </AlertDescription>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                            <Button variant="link" size="sm" className="text-primary hover:text-primary/80 h-auto p-0 mt-1 text-xs font-bold">Read More</Button>
+                                        <Button variant="link" size="sm" className="text-primary hover:text-primary/80 h-auto p-0 mt-1 text-xs font-bold">Read More</Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
