@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bot, Loader2, AlertTriangle, TrendingUp, TrendingDown, Minus, X } from 'lucide-react';
+import { Bot, Loader2, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { getAssetPrediction, type GetAssetPredictionInput, type GetAssetPredictionOutput } from '@/ai/flows/get-asset-prediction-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Asset } from '@/types';
@@ -45,7 +45,6 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
     const [prediction, setPrediction] = useState<GetAssetPredictionOutput | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loadingText, setLoadingText] = useState(loadingTexts[0]);
-    const [showCard, setShowCard] = useState(true);
     const { toast } = useToast();
 
     const handleGetPrediction = async () => {
@@ -92,14 +91,6 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
         return () => clearInterval(interval);
     }, [isLoading]);
 
-    const handleClose = () => {
-        setShowCard(false);
-    }
-    
-    if (!showCard) {
-        return null;
-    }
-
     return (
         <div className="relative mt-8">
             {isLoading && (
@@ -114,10 +105,6 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                 </div>
             )}
             <Card className="bg-card/80 backdrop-blur-sm shadow-2xl border border-border/50 relative">
-                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 z-20" onClick={handleClose}>
-                    <X className="h-4 w-4" />
-                    <span className="sr-only">Close prediction</span>
-                </Button>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Bot className="h-6 w-6 text-primary" />
