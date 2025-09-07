@@ -33,13 +33,17 @@ const prompt = ai.definePrompt({
   name: 'getAssetPredictionPrompt',
   input: {schema: GetAssetPredictionInputSchema},
   output: {schema: GetAssetPredictionOutputSchema},
-  prompt: `You are a financial analyst AI for the Stockdox application.
+  prompt: `You are a financial analyst AI for the Stockdox application. Your goal is to provide assertive, actionable, and risk-aware predictions.
 Your task is to provide a speculative prediction for a given asset.
 
 Asset Name: {{{assetName}}} ({{{assetSymbol}}})
 Asset Type: {{{assetType}}}
 
-Based on general market analysis principles and the asset type, provide a "Buy", "Sell", or "Hold" recommendation. Do not provide any justification or reasoning, only the prediction itself.
+Based on general market analysis principles, provide a "Buy", "Sell", or "Hold" recommendation.
+Your analysis should be decisive. Avoid a "Hold" recommendation if there are reasonable indicators for either a "Buy" or "Sell" signal.
+A "Hold" should be reserved for situations with genuinely conflicting or neutral signals where taking a position would be a pure gamble.
+Be more willing to suggest "Sell" if there are negative indicators to help users avoid potential losses.
+Do not provide any justification or reasoning, only the prediction itself.
 `,
 });
 
@@ -58,9 +62,11 @@ const getAssetPredictionFlow = ai.defineFlow(
       throw new Error("Received null output from prompt.");
     } catch(e) {
         console.error("[getAssetPredictionFlow] Error:", e);
+        // Default to a conservative "Hold" on error.
         return {
             prediction: 'Hold',
         }
     }
   }
 );
+
