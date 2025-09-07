@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface AssetPredictionProps {
     asset: Asset;
@@ -31,11 +32,11 @@ You are solely responsible for your own investment decisions. By using StockDox,
 
 Always conduct your own research and, if necessary, consult with a licensed financial advisor before making investment decisions.`;
 
-const PredictionIcon = ({ prediction }: { prediction: GetAssetPredictionOutput['prediction'] }) => {
+const PredictionIcon = ({ prediction, className }: { prediction: GetAssetPredictionOutput['prediction'], className?: string }) => {
     switch (prediction) {
-        case 'Buy': return <TrendingUp className="h-5 w-5 text-green-500" />;
-        case 'Sell': return <TrendingDown className="h-5 w-5 text-red-500" />;
-        case 'Hold': return <Minus className="h-5 w-5 text-muted-foreground" />;
+        case 'Buy': return <TrendingUp className={cn("h-5 w-5 text-green-500", className)} />;
+        case 'Sell': return <TrendingDown className={cn("h-5 w-5 text-red-500", className)} />;
+        case 'Hold': return <Minus className={cn("h-5 w-5 text-muted-foreground", className)} />;
         default: return null;
     }
 }
@@ -60,10 +61,17 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
             };
             const result = await getAssetPrediction(input);
             setPrediction(result);
+            
             toast({
-                title: `AI Prediction for ${asset.symbol.toUpperCase()}: ${result.prediction}`,
+                title: (
+                    <div className="flex items-center gap-2 font-bold">
+                        <PredictionIcon prediction={result.prediction} className="h-6 w-6"/>
+                        <span>AI Prediction for {asset.symbol.toUpperCase()}: {result.prediction}</span>
+                    </div>
+                ),
                 description: "This is an AI-generated insight. Always do your own research.",
                 duration: 6000,
+                variant: result.prediction === 'Sell' ? 'destructive' : 'default',
             });
 
         } catch (e) {
