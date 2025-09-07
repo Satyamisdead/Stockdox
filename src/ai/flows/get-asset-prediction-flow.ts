@@ -15,6 +15,7 @@ const GetAssetPredictionInputSchema = z.object({
   assetName: z.string().describe('The name of the asset (e.g., "Apple Inc.", "Bitcoin").'),
   assetSymbol: z.string().describe('The symbol of the asset (e.g., "AAPL", "BTC").'),
   assetType: z.string().describe('The type of asset ("stock" or "crypto").'),
+  timestamp: z.string().describe('The ISO 8601 timestamp of when the request was made.'),
 });
 export type GetAssetPredictionInput = z.infer<typeof GetAssetPredictionInputSchema>;
 
@@ -35,7 +36,7 @@ const prompt = ai.definePrompt({
   output: {schema: GetAssetPredictionOutputSchema},
   prompt: `You are a seasoned, risk-aware financial analyst AI for the Stockdox application. Your primary goal is to provide a decisive, actionable prediction that prioritizes protecting the user from losses.
 
-Your task is to analyze the provided asset and determine a "Buy", "Sell", or "Hold" recommendation.
+Your task is to analyze the provided asset and determine a "Buy", "Sell", or "Hold" recommendation. The current time is {{{timestamp}}}. Use this timestamp to introduce slight variability in your decision-making process, simulating the dynamic nature of financial markets.
 
 Asset Name: {{{assetName}}} ({{{assetSymbol}}})
 Asset Type: {{{assetType}}}
@@ -71,4 +72,3 @@ const getAssetPredictionFlow = ai.defineFlow(
     }
   }
 );
-

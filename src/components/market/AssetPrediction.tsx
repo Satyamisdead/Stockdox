@@ -63,6 +63,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
                 assetName: asset.name,
                 assetSymbol: asset.symbol,
                 assetType: asset.type,
+                timestamp: new Date().toISOString(),
             };
             const result = await getAssetPrediction(input);
             setPrediction(result);
@@ -88,7 +89,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
             setIsLoading(false);
             setCountdown(REFRESH_INTERVAL_SECONDS);
         }
-    }, [asset.name, asset.symbol, asset.type, toast, REFRESH_INTERVAL_SECONDS]);
+    }, [asset.name, asset.symbol, asset.type, toast]);
     
     // Initial fetch
     useEffect(() => {
