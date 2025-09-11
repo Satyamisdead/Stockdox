@@ -366,10 +366,10 @@ export default function GamesPage() {
         }
 
         // Brick collision
-        let bricksBroken = false;
+        let bricksBrokenThisFrame = 0;
         let allBricksBroken = true;
         const newBricks = localBricks.map(brick => {
-          if (brick.active) {
+          if (brick.active && bricksBrokenThisFrame < 2) {
             if (
               newX + BALL_RADIUS > brick.x &&
               newX - BALL_RADIUS < brick.x + brick.width &&
@@ -401,15 +401,17 @@ export default function GamesPage() {
 
               setScore(s => s + 10);
               playSound('brick');
-              bricksBroken = true;
+              bricksBrokenThisFrame++;
               return { ...brick, active: false };
             }
              allBricksBroken = false;
+          } else if (brick.active) {
+            allBricksBroken = false;
           }
           return brick;
         });
         
-        if (bricksBroken) {
+        if (bricksBrokenThisFrame > 0) {
             localBricks = newBricks;
             setBricks(newBricks);
         }
@@ -519,7 +521,7 @@ export default function GamesPage() {
               />
 
               {bricks.map((brick, index) =>
-                brick.active ? (
+                (
                   <div
                     key={index}
                     className="absolute rounded shadow transition-opacity duration-300"
@@ -529,10 +531,11 @@ export default function GamesPage() {
                       width: brick.width,
                       height: brick.height,
                       backgroundColor: brick.color,
-                      border: '1px solid hsl(var(--background)/0.5)'
+                      border: '1px solid hsl(var(--background)/0.5)',
+                      opacity: brick.active ? 1 : 0
                     }}
                   />
-                ) : null
+                )
               )}
               
               <Confetti particles={confettiParticles} />
@@ -595,5 +598,7 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
 
     
