@@ -154,8 +154,13 @@ export default function GamesPage() {
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const gameWrapperRef = useRef<HTMLDivElement>(null);
   const animationFrameId = useRef<number | null>(null);
+  const gameStateRef = useRef(gameState);
 
-  const initializeBricks = useCallback((resetLevel = false) => {
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
+  const initializeBricks = useCallback((newLevel: number) => {
     const newBricks: Brick[] = [];
     for (let r = 0; r < BRICK_ROWS; r++) {
       for (let c = 0; c < BRICK_COLS; c++) {
@@ -170,9 +175,11 @@ export default function GamesPage() {
       }
     }
     setBricks(newBricks);
-    if(resetLevel) {
-       setLevel(1);
-    }
+    setLevel(newLevel);
+    setBall(prev => ({
+        ...prev,
+        speed: BALL_SPEED_INITIAL + (newLevel - 1) * BALL_SPEED_INCREMENT
+      }));
   }, []);
   
   const triggerConfetti = () => {
@@ -202,7 +209,6 @@ export default function GamesPage() {
       }));
       playSound('levelUp');
       triggerConfetti();
-      // Give a bonus life every 2 levels
       if (newLevel % 2 === 0) {
         setLives(prev => Math.min(5, prev + 1));
       }
@@ -210,7 +216,7 @@ export default function GamesPage() {
   }, [score, level]);
 
 
-  const resetBallAndPaddle = useCallback(() => {
+  const resetBallAndPaddle = useCallback((isNewLife: boolean) => {
     setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
     setBall(prev => ({
       ...prev,
@@ -220,14 +226,17 @@ export default function GamesPage() {
       dy: 0,
       launched: false,
     }));
+    if (isNewLife && gameStateRef.current === "PLAYING") {
+      setTimeout(() => launchBall(), 500);
+    }
   }, []);
 
   const resetGame = useCallback(() => {
     setGameState("IDLE");
     setScore(0);
     setLives(INITIAL_LIVES);
-    initializeBricks(true);
-    resetBallAndPaddle();
+    initializeBricks(1);
+    resetBallAndPaddle(false);
     setBall(prev => ({...prev, speed: BALL_SPEED_INITIAL}));
   }, [initializeBricks, resetBallAndPaddle]);
   
@@ -306,6 +315,10 @@ export default function GamesPage() {
     let localBricks = bricks;
 
     const gameLoop = () => {
+      if (gameStateRef.current !== "PLAYING") {
+        animationFrameId.current = null;
+        return;
+      }
       handleLevelUp();
 
       // Update confetti
@@ -354,6 +367,7 @@ export default function GamesPage() {
 
         // Brick collision
         let bricksBroken = false;
+        let allBricksBroken = true;
         const newBricks = localBricks.map(brick => {
           if (brick.active) {
             if (
@@ -390,6 +404,7 @@ export default function GamesPage() {
               bricksBroken = true;
               return { ...brick, active: false };
             }
+             allBricksBroken = false;
           }
           return brick;
         });
@@ -397,11 +412,12 @@ export default function GamesPage() {
         if (bricksBroken) {
             localBricks = newBricks;
             setBricks(newBricks);
-            // Check for level clear
-            if (newBricks.every(b => !b.active)) {
-                initializeBricks(false); // Reload bricks for the same level
-                resetBallAndPaddle();
-            }
+        }
+        
+        if(allBricksBroken) {
+             initializeBricks(level + 1);
+             setLives(l => l + 1);
+             resetBallAndPaddle(true);
         }
         
         // Lose life
@@ -412,11 +428,10 @@ export default function GamesPage() {
           
           if (newLives <= 0) {
             setGameState("GAME_OVER");
-            return { ...prevBall, x: -100, y: -100, dx: 0, dy: 0, launched: false }; // Move ball off-screen
+            return { ...prevBall, launched: false };
           } else {
-            resetBallAndPaddle();
-            // Return a new ball state that is un-launched
-            return { ...prevBall, x: paddleX + PADDLE_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
+            resetBallAndPaddle(true);
+            return { ...prevBall, launched: false };
           }
         }
         
@@ -431,7 +446,7 @@ export default function GamesPage() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [gameState, paddleX, bricks, resetBallAndPaddle, launchBall, handleLevelUp, initializeBricks, lives]);
+  }, [gameState, paddleX, bricks, resetBallAndPaddle, launchBall, handleLevelUp, initializeBricks, lives, level]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -562,6 +577,7 @@ export default function GamesPage() {
           aria-label={getButtonText()}
           variant="default" 
           className="p-3 sm:p-4 text-sm sm:text-base h-auto w-32"
+          disabled={gameState === "GAME_OVER"}
         >
           {getButtonIcon()} <span className="hidden sm:inline">{getButtonText()}</span>
         </Button>
@@ -579,3 +595,5 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
