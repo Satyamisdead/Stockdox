@@ -182,7 +182,7 @@ const Confetti = ({ particles }: { particles: ConfettiParticle[] }) => {
 };
 
 const createInitialBall = (level: number): Ball => ({
-  id: 'ball-1',
+  id: `ball-${Date.now()}`,
   x: GAME_WIDTH / 2,
   y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
   dx: 0,
@@ -271,31 +271,18 @@ export default function GamesPage() {
     }, 6000);
   };
 
-  const handleLevelUp = useCallback(() => {
-    const newLevel = Math.floor(score / 100) + 1;
-    if (newLevel > level) {
-      setLevel(newLevel);
-      setBalls(prev => prev.map(b => ({ ...b, speed: BALL_SPEED_INITIAL + (newLevel - 1) * BALL_SPEED_INCREMENT })));
-      playSound('levelUp');
-      triggerConfetti();
-      if (newLevel % 2 === 0) {
-        setLives(prev => Math.min(5, prev + 1));
-      }
-    }
-  }, [score, level]);
-
   const launchBall = useCallback(() => {
-      setBalls(prevBalls => prevBalls.map(ball => {
-        if(ball.launched) return ball;
-        const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
-        const speed = ball.speed;
-        return {
-          ...ball,
-          dx: speed * Math.cos(randomAngle) * (Math.random() > 0.5 ? 1 : -1),
-          dy: -speed * Math.sin(randomAngle),
-          launched: true,
-        };
-      }));
+    setBalls(prevBalls => prevBalls.map(ball => {
+      if (ball.launched) return ball;
+      const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
+      const speed = ball.speed;
+      return {
+        ...ball,
+        dx: speed * Math.cos(randomAngle) * (Math.random() > 0.5 ? 1 : -1),
+        dy: -speed * Math.sin(randomAngle),
+        launched: true,
+      };
+    }));
   }, []);
 
   const resetBallAndPaddle = useCallback((isNewLife: boolean) => {
@@ -315,6 +302,19 @@ export default function GamesPage() {
     setBalls([createInitialBall(1)]);
     setPowerUps([]);
   }, [initializeBricks]);
+
+  const handleLevelUp = useCallback(() => {
+    const newLevel = Math.floor(score / 100) + 1;
+    if (newLevel > level) {
+      setLevel(newLevel);
+      setBalls(prev => prev.map(b => ({ ...b, speed: BALL_SPEED_INITIAL + (newLevel - 1) * BALL_SPEED_INCREMENT })));
+      playSound('levelUp');
+      triggerConfetti();
+      if (newLevel % 2 === 0) {
+        setLives(prev => Math.min(5, prev + 1));
+      }
+    }
+  }, [score, level]);
   
 
   const handleStartPause = () => {
@@ -366,25 +366,29 @@ export default function GamesPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleStartPause]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (gameState !== "PLAYING") {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = null;
       return;
     }
 
+    let localBalls = balls;
     let localBricks = bricks;
     let localPowerUps = powerUps;
+    let localLives = lives;
 
     const gameLoop = () => {
       if (gameStateRef.current !== "PLAYING") {
         animationFrameId.current = null;
         return;
       }
+      
       handleLevelUp();
 
-      // Update confetti
       setConfettiParticles(prev => prev.map(p => ({
             ...p,
             x: p.x + p.dx,
@@ -393,16 +397,13 @@ export default function GamesPage() {
         })).filter(p => p.opacity > 0)
       );
 
-      // Cheerleaders
-      if (Math.random() < 0.001) handleShowCheerleader(); // Low chance each frame
-      setCheerleaders(prev => prev.map((c, i) => ({ ...c, opacity: Math.min(1, c.opacity + 0.05) })));
+      if (Math.random() < 0.001) handleShowCheerleader();
+      setCheerleaders(prev => prev.map((c) => ({ ...c, opacity: Math.min(1, c.opacity + 0.05) })));
       
-      // Update falling bricks
       let paddleHitByFallingBrick = false;
-      const updatedBricks = localBricks.map(brick => {
+      const updatedBricksAfterFall = localBricks.map(brick => {
         if (brick.isFalling) {
           const newY = brick.y + 2;
-          // Check collision with paddle
           if (
             newY + BRICK_HEIGHT > GAME_HEIGHT - PADDLE_HEIGHT &&
             newY < GAME_HEIGHT &&
@@ -410,26 +411,30 @@ export default function GamesPage() {
             brick.x < paddleX + PADDLE_WIDTH
           ) {
             paddleHitByFallingBrick = true;
-            return { ...brick, active: false, isFalling: false }; // Deactivate brick
+            return { ...brick, active: false, isFalling: false };
           }
-
           if (newY > GAME_HEIGHT) {
-            return { ...brick, active: false, isFalling: false }; // Deactivate if off-screen
+            return { ...brick, active: false, isFalling: false };
           }
           return { ...brick, y: newY };
         }
         return brick;
       }).filter(brick => brick.active);
+      localBricks = updatedBricksAfterFall;
+      setBricks(updatedBricksAfterFall);
+
 
       if (paddleHitByFallingBrick) {
          playSound('loseLife');
-         setLives(l => l - 1);
-         if (lives - 1 <= 0) {
+         const newLives = localLives -1;
+         setLives(newLives);
+         localLives = newLives;
+         if (newLives <= 0) {
             setGameState("GAME_OVER");
+            return;
          }
       }
 
-      // Update power-ups
       const updatedPowerUps = localPowerUps.map(p => {
           if (p.active) {
               const newY = p.y + POWERUP_SPEED;
@@ -439,158 +444,144 @@ export default function GamesPage() {
                   p.x + POWERUP_SIZE > paddleX &&
                   p.x < paddleX + PADDLE_WIDTH
               ) {
-                  // Caught power-up
                   playSound('powerUp');
                   if (p.type === 'extraLife') {
                       setLives(l => Math.min(5, l + 1));
                   }
                   if (p.type === 'multiBall' && balls.length < 3) {
                      setBalls(prev => {
-                         const newBall: Ball = { ...prev[0], id: `ball-${Date.now()}`, dx: -prev[0].dx };
-                         return [...prev, newBall];
+                         if(prev.length > 0){
+                             const newBall: Ball = { ...prev[0], id: `ball-${Date.now()}`, dx: -prev[0].dx };
+                             localBalls = [...prev, newBall];
+                             return [...prev, newBall];
+                         }
+                         return prev;
                      });
                   }
                   return { ...p, active: false };
               }
-
-              if (newY > GAME_HEIGHT) {
-                  return { ...p, active: false };
-              }
+              if (newY > GAME_HEIGHT) return { ...p, active: false };
               return { ...p, y: newY };
           }
           return p;
       }).filter(p => p.active);
-      setPowerUps(updatedPowerUps);
       localPowerUps = updatedPowerUps;
+      setPowerUps(updatedPowerUps);
 
+      const nextBalls = localBalls.map(ball => ({...ball}));
+      if (!nextBalls.some(b => b.launched)) {
+          nextBalls.forEach(b => b.x = paddleX + PADDLE_WIDTH / 2);
+          setBalls(nextBalls);
+          animationFrameId.current = requestAnimationFrame(gameLoop);
+          return;
+      }
+      
       let remainingBalls: Ball[] = [];
-      setBalls(prevBalls => {
-        if (!prevBalls.some(b => b.launched)) {
-            return prevBalls.map(b => ({ ...b, x: paddleX + PADDLE_WIDTH / 2 }));
-        }
-
-        prevBalls.forEach(ball => {
-            let newX = ball.x + ball.dx;
-            let newY = ball.y + ball.dy;
-            let newDx = ball.dx;
-            let newDy = ball.dy;
-            
-            // Wall collision
-            if (newX + BALL_RADIUS > GAME_WIDTH || newX - BALL_RADIUS < 0) {
-              newDx = -newDx;
-              playSound('wall');
-            }
-            if (newY - BALL_RADIUS < 0) {
-              newDy = -newDy;
-              playSound('wall');
-            }
-
-            // Paddle collision
-            if (
-              newY + BALL_RADIUS > GAME_HEIGHT - PADDLE_HEIGHT &&
-              newY + BALL_RADIUS < GAME_HEIGHT &&
-              newX + BALL_RADIUS > paddleX &&
-              newX - BALL_RADIUS < paddleX + PADDLE_WIDTH &&
-              newDy > 0
-            ) {
-              newDy = -Math.abs(newDy);
-              newY = GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 1;
-              let hitPos = (newX - (paddleX + PADDLE_WIDTH / 2)) / (PADDLE_WIDTH / 2);
-              newDx = hitPos * ball.speed * 1.2;
-              playSound('paddle');
-            }
-
-            // Brick collision
-            let bricksBrokenThisFrame = 0;
-            let allBricksCleared = true;
-            const newBricks = updatedBricks.map(brick => {
-              if (brick.active && !brick.isFalling && bricksBrokenThisFrame < 2) {
-                if (
-                  newX + BALL_RADIUS > brick.x &&
-                  newX - BALL_RADIUS < brick.x + brick.width &&
-                  newY + BALL_RADIUS > brick.y &&
-                  newY - BALL_RADIUS < brick.y + brick.height
-                ) {
-                  const ballBottom = newY + BALL_RADIUS;
-                  const ballTop = newY - BALL_RADIUS;
-                  const prevBallBottom = ball.y + BALL_RADIUS;
-                  const prevBallTop = ball.y - BALL_RADIUS;
-                  const brickTop = brick.y;
-                  const brickBottom = brick.y + brick.height;
-                  
-                  if (prevBallBottom <= brickTop && ballBottom > brickTop) { newDy = -Math.abs(newDy); newY = brick.y - BALL_RADIUS; } 
-                  else if (prevBallTop >= brickBottom && ballTop < brickBottom) { newDy = Math.abs(newDy); newY = brick.y + brick.height + BALL_RADIUS; }
-                  else { newDx = -newDx; newX = ball.x; }
-                  
-                  let newBrick = { ...brick };
-                  newBrick.hits -= 1;
-                  bricksBrokenThisFrame++;
-
-                  if (newBrick.hits <= 0) {
-                      newBrick.active = false;
-                      setScore(s => s + (newBrick.type === 'steel' ? 25 : 10));
-                      playSound('brick');
-                      if (Math.random() < POWERUP_CHANCE) {
-                          const powerUpType = Math.random() > 0.5 ? 'extraLife' : 'multiBall';
-                          setPowerUps(prevP => [...prevP, { id: `${Date.now()}-${Math.random()}`, x: newBrick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2, y: newBrick.y, type: powerUpType, active: true }]);
-                      }
-                  } else {
-                      newBrick.isFalling = true;
-                      newBrick.color = steelHitColor;
-                      playSound('steelHit');
-                  }
-                  return newBrick;
-                }
-                 allBricksCleared = false;
-              } else if (brick.active && !brick.isFalling) {
-                allBricksCleared = false;
-              }
-              return brick;
-            });
-            
-            if (bricksBrokenThisFrame > 0) {
-                localBricks = newBricks;
-                setBricks(newBricks);
-            }
-            
-            if (allBricksCleared && bricks.some(b => b.active)) { // Ensure there were bricks to clear
-                 initializeBricks(level + 1);
-                 setLives(l => l + 1);
-                 resetBallAndPaddle(true);
-            }
-            
-            // Check if ball is out of bounds
-            if (newY - BALL_RADIUS < GAME_HEIGHT) {
-              remainingBalls.push({ ...ball, x: newX, y: newY, dx: newDx, dy: newDy });
-            }
-        });
-        
-        if (prevBalls.length > 0 && remainingBalls.length === 0) { // All balls were lost
-          playSound('loseLife');
-          const newLives = lives - 1;
-          setLives(newLives);
+      nextBalls.forEach(ball => {
+          let newX = ball.x + ball.dx;
+          let newY = ball.y + ball.dy;
+          let newDx = ball.dx;
+          let newDy = ball.dy;
           
-          if (newLives <= 0) {
-            setGameState("GAME_OVER");
-            return [];
-          } else {
-            resetBallAndPaddle(true);
-            return [createInitialBall(level)]; // Return a non-launched ball
+          if (newX + BALL_RADIUS > GAME_WIDTH || newX - BALL_RADIUS < 0) { newDx = -newDx; playSound('wall'); }
+          if (newY - BALL_RADIUS < 0) { newDy = -newDy; playSound('wall'); }
+
+          if ( newY + BALL_RADIUS > GAME_HEIGHT - PADDLE_HEIGHT && newY + BALL_RADIUS < GAME_HEIGHT && newX + BALL_RADIUS > paddleX && newX - BALL_RADIUS < paddleX + PADDLE_WIDTH && newDy > 0 ) {
+            newDy = -Math.abs(newDy);
+            newY = GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 1;
+            let hitPos = (newX - (paddleX + PADDLE_WIDTH / 2)) / (PADDLE_WIDTH / 2);
+            newDx = hitPos * ball.speed * 1.2;
+            playSound('paddle');
           }
-        }
-        
-        return remainingBalls;
+
+          let bricksBrokenThisFrame = 0;
+          let allBricksCleared = true;
+          const newBricks = localBricks.map(brick => {
+            if (brick.active && !brick.isFalling && bricksBrokenThisFrame < 2) {
+              if ( newX + BALL_RADIUS > brick.x && newX - BALL_RADIUS < brick.x + brick.width && newY + BALL_RADIUS > brick.y && newY - BALL_RADIUS < brick.y + brick.height ) {
+                const ballBottom = newY + BALL_RADIUS, ballTop = newY - BALL_RADIUS;
+                const prevBallBottom = ball.y + BALL_RADIUS, prevBallTop = ball.y - BALL_RADIUS;
+                const brickTop = brick.y, brickBottom = brick.y + brick.height;
+                
+                if (prevBallBottom <= brickTop && ballBottom > brickTop) { newDy = -Math.abs(newDy); newY = brick.y - BALL_RADIUS; } 
+                else if (prevBallTop >= brickBottom && ballTop < brickBottom) { newDy = Math.abs(newDy); newY = brick.y + brick.height + BALL_RADIUS; }
+                else { newDx = -newDx; newX = ball.x; }
+                
+                let newBrick = { ...brick };
+                newBrick.hits -= 1;
+                bricksBrokenThisFrame++;
+
+                if (newBrick.hits <= 0) {
+                    newBrick.active = false;
+                    setScore(s => s + (newBrick.type === 'steel' ? 25 : 10));
+                    playSound('brick');
+                    if (Math.random() < POWERUP_CHANCE) {
+                        const powerUpType = Math.random() > 0.5 ? 'extraLife' : 'multiBall';
+                        localPowerUps.push({ id: `${Date.now()}-${Math.random()}`, x: newBrick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2, y: newBrick.y, type: powerUpType, active: true });
+                        setPowerUps([...localPowerUps]);
+                    }
+                } else {
+                    newBrick.isFalling = true;
+                    newBrick.color = steelHitColor;
+                    playSound('steelHit');
+                }
+                return newBrick;
+              }
+               allBricksCleared = false;
+            } else if (brick.active && !brick.isFalling) {
+              allBricksCleared = false;
+            }
+            return brick;
+          });
+          
+          if (bricksBrokenThisFrame > 0) {
+              localBricks = newBricks;
+              setBricks(newBricks);
+          }
+          
+          if (allBricksCleared && bricks.some(b => b.active)) {
+               initializeBricks(level + 1);
+               setLives(l => l + 1);
+               resetBallAndPaddle(true);
+          }
+          
+          if (newY - BALL_RADIUS < GAME_HEIGHT) {
+            remainingBalls.push({ ...ball, x: newX, y: newY, dx: newDx, dy: newDy });
+          }
       });
+      
+      if (nextBalls.length > 0 && remainingBalls.length === 0) {
+        playSound('loseLife');
+        const newLives = localLives - 1;
+        setLives(newLives);
+        localLives = newLives;
+        
+        if (newLives <= 0) {
+          setGameState("GAME_OVER");
+          setBalls([]);
+          return;
+        } else {
+          const newBall = createInitialBall(level);
+          setBalls([newBall]);
+          resetBallAndPaddle(true);
+        }
+      } else {
+         setBalls(remainingBalls);
+         localBalls = remainingBalls;
+      }
       
       animationFrameId.current = requestAnimationFrame(gameLoop);
     };
 
-    animationFrameId.current = requestAnimationFrame(gameLoop);
+    if(!animationFrameId.current) {
+        animationFrameId.current = requestAnimationFrame(gameLoop);
+    }
     
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = null;
     };
-  }, [gameState, paddleX, bricks, powerUps, resetBallAndPaddle, launchBall, handleLevelUp, initializeBricks, lives, level, balls]);
+  }, [gameState, paddleX, initializeBricks, resetBallAndPaddle, launchBall, handleLevelUp, level, bricks, balls, powerUps, lives]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -667,7 +658,7 @@ export default function GamesPage() {
 
 
               {bricks.map((brick, index) =>
-                (
+                ( brick.active &&
                   <div
                     key={index}
                     className="absolute rounded shadow-sm"
@@ -678,7 +669,7 @@ export default function GamesPage() {
                       height: brick.height,
                       backgroundColor: brick.color,
                       border: '1px solid hsl(var(--background)/0.5)',
-                      opacity: brick.active ? 1 : 0,
+                      opacity: 1,
                       transition: 'opacity 0.3s ease-out, background-color 0.1s ease-in',
                     }}
                   >
@@ -717,8 +708,8 @@ export default function GamesPage() {
 
               {(gameState === "IDLE" || gameState === "PAUSED") && !balls.some(b => b.launched) && (
                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white p-4 animate-fade-in">
-                      <h2 className="text-2xl font-bold mb-2">Level {level}</h2>
-                      <p className="text-lg">Press Start</p>
+                      <h2 className="text-2xl font-bold mb-2 text-white">Level {level}</h2>
+                      <p className="text-lg text-white">Press Start</p>
                   </div>
               )}
                {gameState === "PAUSED" && balls.some(b => b.launched) && (
