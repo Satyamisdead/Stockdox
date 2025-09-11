@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Gem, Heart, ShieldAlert, Play, Pause, ChevronsUp } from 'lucide-react';
+import { Gem, Heart, ShieldAlert, Play, Pause, ChevronsUp, ShieldHalf } from 'lucide-react';
 
 const GAME_WIDTH = 600;
 const GAME_HEIGHT = 450;
@@ -21,6 +21,10 @@ const BRICK_GAP = 4;
 const BRICK_OFFSET_TOP = 50;
 const BRICK_OFFSET_LEFT = (GAME_WIDTH - (BRICK_COLS * ((GAME_WIDTH - (BRICK_COLS + 1) * BRICK_GAP) / BRICK_COLS) + (BRICK_COLS - 1) * BRICK_GAP)) / 2;
 const BRICK_WIDTH = (GAME_WIDTH - BRICK_OFFSET_LEFT * 2 - (BRICK_COLS - 1) * BRICK_GAP) / BRICK_COLS;
+const POWERUP_CHANCE = 0.15; // 15% chance to drop a power-up
+const POWERUP_SIZE = 15;
+const POWERUP_SPEED = 2;
+
 
 const INITIAL_LIVES = 3;
 
@@ -31,6 +35,17 @@ interface Brick {
   height: number;
   active: boolean;
   color: string;
+  type: 'normal' | 'steel';
+  hits: number;
+  isFalling?: boolean;
+}
+
+interface PowerUp {
+  id: number;
+  x: number;
+  y: number;
+  type: 'extraLife';
+  active: boolean;
 }
 
 interface ConfettiParticle {
@@ -53,9 +68,12 @@ const brickColors = [
   "hsl(var(--chart-4))",
   "hsl(var(--chart-5))",
 ];
+const steelColor = "hsl(var(--muted-foreground))";
+const steelHitColor = "hsl(var(--muted))";
+
 
 let audioContext: AudioContext | null = null;
-const playSound = (type: 'brick' | 'paddle' | 'wall' | 'loseLife' | 'levelUp') => {
+const playSound = (type: 'brick' | 'steelHit' | 'paddle' | 'wall' | 'loseLife' | 'levelUp' | 'powerUp') => {
   if (typeof window === 'undefined') return;
   if (!audioContext) {
     try {
@@ -77,6 +95,11 @@ const playSound = (type: 'brick' | 'paddle' | 'wall' | 'loseLife' | 'levelUp') =
       oscillator.type = 'triangle';
       oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+      break;
+    case 'steelHit':
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(180, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
       break;
     case 'paddle':
       oscillator.type = 'square';
@@ -104,6 +127,11 @@ const playSound = (type: 'brick' | 'paddle' | 'wall' | 'loseLife' | 'levelUp') =
         osc2.connect(gainNode);
         osc2.start(audioContext.currentTime + 0.1);
         osc2.stop(audioContext.currentTime + 0.4);
+        break;
+    case 'powerUp':
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
         break;
   }
 
@@ -144,6 +172,7 @@ export default function GamesPage() {
     launched: false,
   });
   const [bricks, setBricks] = useState<Brick[]>([]);
+  const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(INITIAL_LIVES);
   const [level, setLevel] = useState(1);
@@ -164,13 +193,16 @@ export default function GamesPage() {
     const newBricks: Brick[] = [];
     for (let r = 0; r < BRICK_ROWS; r++) {
       for (let c = 0; c < BRICK_COLS; c++) {
+        const isSteel = newLevel > 2 && Math.random() < 0.2; // 20% chance for steel brick after level 2
         newBricks.push({
           x: BRICK_OFFSET_LEFT + c * (BRICK_WIDTH + BRICK_GAP),
           y: BRICK_OFFSET_TOP + r * (BRICK_HEIGHT + BRICK_GAP),
           width: BRICK_WIDTH,
           height: BRICK_HEIGHT,
           active: true,
-          color: brickColors[r % brickColors.length],
+          color: isSteel ? steelColor : brickColors[r % brickColors.length],
+          type: isSteel ? 'steel' : 'normal',
+          hits: isSteel ? 2 : 1,
         });
       }
     }
@@ -237,6 +269,7 @@ export default function GamesPage() {
     setLives(INITIAL_LIVES);
     initializeBricks(1);
     resetBallAndPaddle(false);
+    setPowerUps([]);
     setBall(prev => ({...prev, speed: BALL_SPEED_INITIAL}));
   }, [initializeBricks, resetBallAndPaddle]);
   
@@ -313,6 +346,7 @@ export default function GamesPage() {
     }
 
     let localBricks = bricks;
+    let localPowerUps = powerUps;
 
     const gameLoop = () => {
       if (gameStateRef.current !== "PLAYING") {
@@ -329,6 +363,66 @@ export default function GamesPage() {
             opacity: p.opacity - 0.01,
         })).filter(p => p.opacity > 0)
       );
+
+      // Update falling bricks
+      let paddleHitByFallingBrick = false;
+      const updatedBricks = localBricks.map(brick => {
+        if (brick.isFalling) {
+          const newY = brick.y + 2;
+          // Check collision with paddle
+          if (
+            newY + BRICK_HEIGHT > GAME_HEIGHT - PADDLE_HEIGHT &&
+            newY < GAME_HEIGHT &&
+            brick.x + BRICK_WIDTH > paddleX &&
+            brick.x < paddleX + PADDLE_WIDTH
+          ) {
+            paddleHitByFallingBrick = true;
+            return { ...brick, active: false, isFalling: false }; // Deactivate brick
+          }
+
+          if (newY > GAME_HEIGHT) {
+            return { ...brick, active: false, isFalling: false }; // Deactivate if off-screen
+          }
+          return { ...brick, y: newY };
+        }
+        return brick;
+      }).filter(brick => brick.active);
+
+      if (paddleHitByFallingBrick) {
+         playSound('loseLife');
+         setLives(l => l - 1);
+         if (lives - 1 <= 0) {
+            setGameState("GAME_OVER");
+         }
+      }
+
+      // Update power-ups
+      const updatedPowerUps = localPowerUps.map(p => {
+          if (p.active) {
+              const newY = p.y + POWERUP_SPEED;
+              if (
+                  newY + POWERUP_SIZE > GAME_HEIGHT - PADDLE_HEIGHT &&
+                  newY < GAME_HEIGHT &&
+                  p.x + POWERUP_SIZE > paddleX &&
+                  p.x < paddleX + PADDLE_WIDTH
+              ) {
+                  // Caught power-up
+                  playSound('powerUp');
+                  if (p.type === 'extraLife') {
+                      setLives(l => Math.min(5, l + 1));
+                  }
+                  return { ...p, active: false };
+              }
+
+              if (newY > GAME_HEIGHT) {
+                  return { ...p, active: false };
+              }
+              return { ...p, y: newY };
+          }
+          return p;
+      }).filter(p => p.active);
+      setPowerUps(updatedPowerUps);
+      localPowerUps = updatedPowerUps;
 
       setBall(prevBall => {
         if (!prevBall.launched) {
@@ -368,8 +462,8 @@ export default function GamesPage() {
         // Brick collision
         let bricksBrokenThisFrame = 0;
         let allBricksBroken = true;
-        const newBricks = localBricks.map(brick => {
-          if (brick.active && bricksBrokenThisFrame < 2) {
+        const newBricks = updatedBricks.map(brick => {
+          if (brick.active && !brick.isFalling && bricksBrokenThisFrame < 2) {
             if (
               newX + BALL_RADIUS > brick.x &&
               newX - BALL_RADIUS < brick.x + brick.width &&
@@ -398,14 +492,29 @@ export default function GamesPage() {
                   newDx = -newDx;
                   newX = prevBall.x;
               }
-
-              setScore(s => s + 10);
-              playSound('brick');
+              
+              let newBrick = { ...brick };
+              newBrick.hits -= 1;
               bricksBrokenThisFrame++;
-              return { ...brick, active: false };
+
+              if (newBrick.hits <= 0) {
+                  newBrick.active = false;
+                  setScore(s => s + (newBrick.type === 'steel' ? 25 : 10));
+                  playSound('brick');
+                  // Chance to spawn power-up
+                  if (Math.random() < POWERUP_CHANCE) {
+                      setPowerUps(prevP => [...prevP, { id: Date.now(), x: newBrick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2, y: newBrick.y, type: 'extraLife', active: true }]);
+                  }
+
+              } else {
+                  newBrick.isFalling = true; // Start falling if it's a steel brick
+                  newBrick.color = steelHitColor;
+                  playSound('steelHit');
+              }
+              return newBrick;
             }
              allBricksBroken = false;
-          } else if (brick.active) {
+          } else if (brick.active && !brick.isFalling) {
             allBricksBroken = false;
           }
           return brick;
@@ -416,7 +525,7 @@ export default function GamesPage() {
             setBricks(newBricks);
         }
         
-        if(allBricksBroken) {
+        if(allBricksBroken && level < 10) { // Assume max level or condition
              initializeBricks(level + 1);
              setLives(l => l + 1);
              resetBallAndPaddle(true);
@@ -448,7 +557,7 @@ export default function GamesPage() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [gameState, paddleX, bricks, resetBallAndPaddle, launchBall, handleLevelUp, initializeBricks, lives, level]);
+  }, [gameState, paddleX, bricks, powerUps, resetBallAndPaddle, launchBall, handleLevelUp, initializeBricks, lives, level]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -524,7 +633,7 @@ export default function GamesPage() {
                 (
                   <div
                     key={index}
-                    className="absolute rounded shadow transition-opacity duration-300"
+                    className="absolute rounded shadow-sm"
                     style={{
                       left: brick.x,
                       top: brick.y,
@@ -532,11 +641,24 @@ export default function GamesPage() {
                       height: brick.height,
                       backgroundColor: brick.color,
                       border: '1px solid hsl(var(--background)/0.5)',
-                      opacity: brick.active ? 1 : 0
+                      opacity: brick.active ? 1 : 0,
+                      transition: 'opacity 0.3s ease-out, background-color 0.1s ease-in',
                     }}
-                  />
+                  >
+                   {brick.type === 'steel' && brick.hits === 1 && (
+                       <ShieldHalf className="w-full h-full text-background/30 p-1" />
+                   )}
+                  </div>
                 )
               )}
+
+              {powerUps.map((p) => (
+                p.active && (
+                  <div key={p.id} className="absolute" style={{left: p.x, top: p.y}}>
+                     <Heart className="w-5 h-5 text-red-500 fill-red-500 animate-pulse"/>
+                  </div>
+                )
+              ))}
               
               <Confetti particles={confettiParticles} />
 
@@ -587,7 +709,8 @@ export default function GamesPage() {
       </div>
 
       <div className="text-center text-muted-foreground text-xs sm:text-sm max-w-md px-4 mt-2">
-        <p>Use the slider to control the paddle. Press spacebar to start/pause.</p>
+        <p>Use the slider or your keyboard arrows to control the paddle.</p>
+        <p>Press spacebar to start/pause.</p>
       </div>
       
       <div className="w-full max-w-sm px-4 pt-8">
@@ -598,7 +721,3 @@ export default function GamesPage() {
     </div>
   );
 }
-
-    
-
-    
