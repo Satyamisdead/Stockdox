@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Gem, Heart, ShieldAlert, Trophy, Play, Pause, ChevronsUp } from 'lucide-react';
+import { Gem, Heart, ShieldAlert, Play, Pause, ChevronsUp } from 'lucide-react';
 
 const GAME_WIDTH = 600;
 const GAME_HEIGHT = 450;
@@ -24,7 +24,6 @@ const BRICK_WIDTH = (GAME_WIDTH - BRICK_OFFSET_LEFT * 2 - (BRICK_COLS - 1) * BRI
 
 const INITIAL_LIVES = 3;
 
-
 interface Brick {
   x: number;
   y: number;
@@ -32,6 +31,17 @@ interface Brick {
   height: number;
   active: boolean;
   color: string;
+}
+
+interface ConfettiParticle {
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+  color: string;
+  size: number;
+  opacity: number;
+  id: number;
 }
 
 type GameState = "IDLE" | "PLAYING" | "PAUSED" | "GAME_OVER";
@@ -44,9 +54,8 @@ const brickColors = [
   "hsl(var(--chart-5))",
 ];
 
-// Audio Context for sound effects
 let audioContext: AudioContext | null = null;
-const playSound = (type: 'brick' | 'paddle' | 'wall' | 'loseLife') => {
+const playSound = (type: 'brick' | 'paddle' | 'wall' | 'loseLife' | 'levelUp') => {
   if (typeof window === 'undefined') return;
   if (!audioContext) {
     try {
@@ -66,17 +75,17 @@ const playSound = (type: 'brick' | 'paddle' | 'wall' | 'loseLife') => {
   switch(type) {
     case 'brick':
       oscillator.type = 'triangle';
-      oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
       break;
     case 'paddle':
       oscillator.type = 'square';
-      oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // A3
+      oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
       break;
     case 'wall':
        oscillator.type = 'sine';
-       oscillator.frequency.setValueAtTime(110, audioContext.currentTime); // A2
+       oscillator.frequency.setValueAtTime(110, audioContext.currentTime);
        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
        break;
     case 'loseLife':
@@ -85,12 +94,44 @@ const playSound = (type: 'brick' | 'paddle' | 'wall' | 'loseLife') => {
       oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
       gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
       break;
+    case 'levelUp':
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+        const osc2 = audioContext.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(783.99, audioContext.currentTime); // G5
+        osc2.connect(gainNode);
+        osc2.start(audioContext.currentTime + 0.1);
+        osc2.stop(audioContext.currentTime + 0.4);
+        break;
   }
 
   oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + 0.2);
+  oscillator.stop(audioContext.currentTime + 0.3);
 };
 
+const Confetti = ({ particles }: { particles: ConfettiParticle[] }) => {
+    return (
+      <div className="absolute inset-0 pointer-events-none">
+        {particles.map(p => (
+          <div
+            key={p.id}
+            className="absolute rounded-full"
+            style={{
+              left: p.x,
+              top: p.y,
+              width: p.size,
+              height: p.size,
+              backgroundColor: p.color,
+              opacity: p.opacity,
+              transition: 'opacity 0.5s ease-out',
+            }}
+          />
+        ))}
+      </div>
+    );
+};
 
 export default function GamesPage() {
   const [paddleX, setPaddleX] = useState((GAME_WIDTH - PADDLE_WIDTH) / 2);
@@ -108,6 +149,7 @@ export default function GamesPage() {
   const [level, setLevel] = useState(1);
   const [gameState, setGameState] = useState<GameState>("IDLE");
   const [dynamicScale, setDynamicScale] = useState(1);
+  const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([]);
 
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const gameWrapperRef = useRef<HTMLDivElement>(null);
@@ -129,19 +171,54 @@ export default function GamesPage() {
     }
     setBricks(newBricks);
   }, []);
+  
+  const triggerConfetti = () => {
+    const newParticles: ConfettiParticle[] = [];
+    for (let i = 0; i < 50; i++) {
+        newParticles.push({
+            id: Math.random(),
+            x: GAME_WIDTH / 2,
+            y: GAME_HEIGHT / 2,
+            dx: (Math.random() - 0.5) * 10,
+            dy: (Math.random() - 0.5) * 15,
+            color: brickColors[Math.floor(Math.random() * brickColors.length)],
+            size: Math.random() * 5 + 3,
+            opacity: 1,
+        });
+    }
+    setConfettiParticles(newParticles);
+  };
 
-  const resetBallAndPaddle = useCallback((isNewLevel = false) => {
-    const newSpeed = BALL_SPEED_INITIAL + ((isNewLevel ? level : level -1) * BALL_SPEED_INCREMENT);
+
+  useEffect(() => {
+    const newLevel = Math.floor(score / 100) + 1;
+    if (newLevel > level) {
+        setLevel(newLevel);
+        setBall(prev => ({
+            ...prev,
+            speed: BALL_SPEED_INITIAL + (newLevel - 1) * BALL_SPEED_INCREMENT
+        }));
+        playSound('levelUp');
+        triggerConfetti();
+        // Give a bonus life every 2 levels
+        if (newLevel % 2 === 0) {
+            setLives(prev => Math.min(5, prev + 1));
+        }
+    }
+  }, [score, level]);
+
+
+  const resetBallAndPaddle = useCallback(() => {
     setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
-    setBall({
+    setBall(prev => ({
       x: GAME_WIDTH / 2,
       y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
       dx: 0,
       dy: 0,
-      speed: newSpeed,
+      speed: prev.speed,
       launched: false,
-    });
-  }, [level]);
+    }));
+  }, []);
 
   const resetGame = useCallback(() => {
     setGameState("IDLE");
@@ -150,14 +227,7 @@ export default function GamesPage() {
     setLevel(1);
     initializeBricks();
     resetBallAndPaddle();
-  }, [initializeBricks, resetBallAndPaddle]);
-
-  const handleLevelClear = useCallback(() => {
-    setLevel(prev => prev + 1);
-    setLives(prev => Math.min(INITIAL_LIVES + 2, prev + 1)); // Bonus life, max 5
-    initializeBricks();
-    resetBallAndPaddle(true);
-    // Keep game playing, don't set to IDLE
+    setBall(prev => ({...prev, speed: BALL_SPEED_INITIAL}));
   }, [initializeBricks, resetBallAndPaddle]);
   
   const launchBall = useCallback(() => {
@@ -215,7 +285,7 @@ export default function GamesPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === " " && (gameState === "IDLE" || gameState === "PLAYING" || gameState === "PAUSED")) {
+      if (e.key === " ") {
         e.preventDefault();
         handleStartPause();
       }
@@ -223,7 +293,7 @@ export default function GamesPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, ball.launched]);
+  }, [gameState]);
 
 
   useEffect(() => {
@@ -235,6 +305,15 @@ export default function GamesPage() {
     let localBricks = bricks;
 
     const gameLoop = () => {
+      // Update confetti
+      setConfettiParticles(prev => prev.map(p => ({
+            ...p,
+            x: p.x + p.dx,
+            y: p.y + p.dy + 0.2, // gravity
+            opacity: p.opacity - 0.01,
+        })).filter(p => p.opacity > 0)
+      );
+
       setBall(prevBall => {
         if (!prevBall.launched) {
           return { ...prevBall, x: paddleX + PADDLE_WIDTH / 2 };
@@ -294,8 +373,7 @@ export default function GamesPage() {
             localBricks = newBricks;
             setBricks(newBricks);
             if (newBricks.every(b => !b.active)) {
-               handleLevelClear();
-               return { ...prevBall, x: GAME_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
+               initializeBricks();
             }
         }
         
@@ -308,7 +386,6 @@ export default function GamesPage() {
               setGameState("GAME_OVER");
               return 0;
             } else {
-              setGameState("IDLE");
               resetBallAndPaddle();
               return currentLives;
             }
@@ -327,7 +404,7 @@ export default function GamesPage() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [gameState, paddleX, bricks, resetBallAndPaddle, ball.launched, handleLevelClear]);
+  }, [gameState, paddleX, bricks, resetBallAndPaddle, initializeBricks]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -415,14 +492,16 @@ export default function GamesPage() {
                   />
                 ) : null
               )}
+              
+              <Confetti particles={confettiParticles} />
 
-              {gameState === "IDLE" && lives > 0 && (
+              {(gameState === "IDLE" || gameState === "PAUSED") && !ball.launched && (
                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4 animate-fade-in">
                       <h2 className="text-2xl font-bold mb-2">Level {level}</h2>
                       <p className="text-lg">Press Start</p>
                   </div>
               )}
-               {gameState === "PAUSED" && (
+               {gameState === "PAUSED" && ball.launched && (
                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4 animate-fade-in">
                       <p className="text-2xl font-bold">Paused</p>
                   </div>
@@ -462,7 +541,7 @@ export default function GamesPage() {
       </div>
 
       <div className="text-center text-muted-foreground text-xs sm:text-sm max-w-md px-4 mt-2">
-        <p>Use the slider to control the paddle.</p>
+        <p>Use the slider to control the paddle. Press spacebar to start/pause.</p>
       </div>
       
       <div className="w-full max-w-sm px-4 pt-8">
@@ -473,5 +552,3 @@ export default function GamesPage() {
     </div>
   );
 }
-
-    
