@@ -41,7 +41,7 @@ interface Brick {
 }
 
 interface PowerUp {
-  id: number;
+  id: string;
   x: number;
   y: number;
   type: 'extraLife';
@@ -503,7 +503,7 @@ export default function GamesPage() {
                   playSound('brick');
                   // Chance to spawn power-up
                   if (Math.random() < POWERUP_CHANCE) {
-                      setPowerUps(prevP => [...prevP, { id: Date.now(), x: newBrick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2, y: newBrick.y, type: 'extraLife', active: true }]);
+                      setPowerUps(prevP => [...prevP, { id: `${Date.now()}-${Math.random()}`, x: newBrick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2, y: newBrick.y, type: 'extraLife', active: true }]);
                   }
 
               } else {
