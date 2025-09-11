@@ -191,7 +191,9 @@ export default function GamesPage() {
 
 
   useEffect(() => {
-    const newLevel = Math.floor(score / 100) + 1;
+    if (gameState !== "PLAYING") return;
+    
+    const newLevel = Math.floor(score / (BRICK_ROWS * BRICK_COLS * 10)) + 1;
     if (newLevel > level) {
         setLevel(newLevel);
         setBall(prev => ({
@@ -204,18 +206,19 @@ export default function GamesPage() {
         if (newLevel % 2 === 0) {
             setLives(prev => Math.min(5, prev + 1));
         }
+        initializeBricks(); // Reset bricks for the new level
     }
-  }, [score, level]);
+  }, [score, level, gameState, initializeBricks]);
 
 
   const resetBallAndPaddle = useCallback(() => {
     setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
     setBall(prev => ({
+      ...prev,
       x: GAME_WIDTH / 2,
       y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
       dx: 0,
       dy: 0,
-      speed: prev.speed,
       launched: false,
     }));
   }, []);
@@ -293,7 +296,7 @@ export default function GamesPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState]);
+  }, [handleStartPause]);
 
 
   useEffect(() => {
@@ -359,7 +362,32 @@ export default function GamesPage() {
               newY + BALL_RADIUS > brick.y &&
               newY - BALL_RADIUS < brick.y + brick.height
             ) {
-              newDy = -newDy;
+              // Collision logic
+              const ballBottom = newY + BALL_RADIUS;
+              const ballTop = newY - BALL_RADIUS;
+              
+              const prevBallBottom = prevBall.y + BALL_RADIUS;
+              const prevBallTop = prevBall.y - BALL_RADIUS;
+
+              const brickTop = brick.y;
+              const brickBottom = brick.y + brick.height;
+              
+              // If ball was previously above the brick and now is intersecting
+              if (prevBallBottom <= brickTop && ballBottom > brickTop) {
+                  newDy = -Math.abs(newDy); // Bounce up
+                  newY = brick.y - BALL_RADIUS;
+              } 
+              // If ball was previously below the brick and now is intersecting
+              else if (prevBallTop >= brickBottom && ballTop < brickBottom) {
+                  newDy = Math.abs(newDy); // Bounce down
+                  newY = brick.y + brick.height + BALL_RADIUS;
+              }
+              // Otherwise, horizontal collision
+              else {
+                  newDx = -newDx;
+                  newX = prevBall.x; // Prevent sticking
+              }
+
               setScore(s => s + 10);
               playSound('brick');
               bricksBroken = true;
@@ -372,9 +400,6 @@ export default function GamesPage() {
         if (bricksBroken) {
             localBricks = newBricks;
             setBricks(newBricks);
-            if (newBricks.every(b => !b.active)) {
-               initializeBricks();
-            }
         }
         
         // Lose life
@@ -390,6 +415,7 @@ export default function GamesPage() {
               return currentLives;
             }
           });
+          // Reset ball state directly instead of relying on subsequent state update
           return { ...prevBall, x: paddleX + PADDLE_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
         }
         
@@ -404,7 +430,7 @@ export default function GamesPage() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [gameState, paddleX, bricks, resetBallAndPaddle, initializeBricks]);
+  }, [gameState, paddleX, bricks, resetBallAndPaddle, launchBall]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -552,3 +578,5 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
