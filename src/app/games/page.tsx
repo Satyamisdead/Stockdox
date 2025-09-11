@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Gem, Heart, ShieldAlert, Trophy, Play, Pause, ChevronsUp, Snake } from 'lucide-react';
+import { Gem, Heart, ShieldAlert, Trophy, Play, Pause, ChevronsUp, Github } from 'lucide-react';
 
 const GAME_WIDTH = 600;
 const GAME_HEIGHT = 450;
@@ -477,19 +477,17 @@ export default function GamesPage() {
       </div>
 
       <div className="text-center text-muted-foreground text-xs sm:text-sm max-w-md px-4 mt-2">
-        <p>Use the slider to control the paddle, or press Spacebar to start/pause.</p>
+        <p>Use the slider to control the paddle.</p>
       </div>
       
       <div className="w-full max-w-sm px-4 pt-8">
         <div className="relative rounded-lg border-2 border-dashed border-border p-4 flex items-center justify-center">
             <div className="flex items-center gap-3 text-muted-foreground">
-                <Snake className="h-6 w-6"/>
-                <span className="font-semibold text-lg">Snake Game Coming Soon!</span>
+                <Github className="h-6 w-6"/>
+                <span className="font-semibold text-lg">More Games Coming Soon!</span>
             </div>
         </div>
       </div>
     </div>
   );
 }
-
-    
