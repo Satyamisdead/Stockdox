@@ -284,24 +284,6 @@ export default function GamesPage() {
     }
   }, [score, level]);
 
-  const resetBallAndPaddle = useCallback((isNewLife: boolean) => {
-    setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
-    setBalls([createInitialBall(level)]);
-    if (isNewLife && gameStateRef.current === "PLAYING") {
-      setTimeout(() => launchBall(), 500);
-    }
-  }, [level]);
-
-  const resetGame = useCallback(() => {
-    setGameState("IDLE");
-    setScore(0);
-    setLives(INITIAL_LIVES);
-    setLevel(1);
-    initializeBricks(1);
-    setBalls([createInitialBall(1)]);
-    setPowerUps([]);
-  }, [initializeBricks]);
-  
   const launchBall = useCallback(() => {
       setBalls(prevBalls => prevBalls.map(ball => {
         if(ball.launched) return ball;
@@ -315,6 +297,25 @@ export default function GamesPage() {
         };
       }));
   }, []);
+
+  const resetBallAndPaddle = useCallback((isNewLife: boolean) => {
+    setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
+    setBalls([createInitialBall(level)]);
+    if (isNewLife && gameStateRef.current === "PLAYING") {
+      setTimeout(() => launchBall(), 500);
+    }
+  }, [level, launchBall]);
+
+  const resetGame = useCallback(() => {
+    setGameState("IDLE");
+    setScore(0);
+    setLives(INITIAL_LIVES);
+    setLevel(1);
+    initializeBricks(1);
+    setBalls([createInitialBall(1)]);
+    setPowerUps([]);
+  }, [initializeBricks]);
+  
 
   const handleStartPause = () => {
     if (gameState === "IDLE" || gameState === "GAME_OVER") {
