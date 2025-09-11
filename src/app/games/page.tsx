@@ -153,11 +153,11 @@ export default function GamesPage() {
   }, [initializeBricks, resetBallAndPaddle]);
 
   const handleLevelClear = useCallback(() => {
-    setGameState("IDLE");
     setLevel(prev => prev + 1);
     setLives(prev => Math.min(INITIAL_LIVES + 2, prev + 1)); // Bonus life, max 5
     initializeBricks();
     resetBallAndPaddle(true);
+    // Keep game playing, don't set to IDLE
   }, [initializeBricks, resetBallAndPaddle]);
   
   const launchBall = useCallback(() => {
@@ -232,6 +232,8 @@ export default function GamesPage() {
       return;
     }
 
+    let localBricks = bricks;
+
     const gameLoop = () => {
       setBall(prevBall => {
         if (!prevBall.launched) {
@@ -270,7 +272,7 @@ export default function GamesPage() {
 
         // Brick collision
         let bricksBroken = false;
-        const newBricks = bricks.map(brick => {
+        const newBricks = localBricks.map(brick => {
           if (brick.active) {
             if (
               newX + BALL_RADIUS > brick.x &&
@@ -289,12 +291,12 @@ export default function GamesPage() {
         });
         
         if (bricksBroken) {
-          setBricks(newBricks);
-          // Check for level clear after updating bricks state
-          if (newBricks.every(b => !b.active)) {
-             handleLevelClear();
-             return { ...prevBall, x: GAME_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
-          }
+            localBricks = newBricks;
+            setBricks(newBricks);
+            if (newBricks.every(b => !b.active)) {
+               handleLevelClear();
+               return { ...prevBall, x: GAME_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
+            }
         }
         
         // Lose life
@@ -471,3 +473,5 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
