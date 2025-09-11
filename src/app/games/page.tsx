@@ -210,7 +210,7 @@ export default function GamesPage() {
   const animationFrameId = useRef<number | null>(null);
   const gameStateRef = useRef(gameState);
   
-  const cheerTexts = ["Great Shot!", "Awesome!", "Keep it up!", "You're on fire!"];
+  const cheerTexts = ["Great Shot!", "Awesome!", "Keep it up!", "You're on fire!", "Amazing!", "Super!"];
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -254,7 +254,7 @@ export default function GamesPage() {
     setConfettiParticles(newParticles);
   };
   
-  const handleShowCheerleader = () => {
+  const handleShowCheerleader = useCallback(() => {
     const id = Date.now().toString();
     const newCheer: Cheerleader = {
         id: id,
@@ -269,7 +269,7 @@ export default function GamesPage() {
     setTimeout(() => {
         setCheerleaders(prev => prev.filter(c => c.id !== id));
     }, 6000);
-  };
+  }, [cheerTexts]);
 
   const launchBall = useCallback(() => {
     setBalls(prevBalls => prevBalls.map(ball => {
@@ -376,9 +376,9 @@ export default function GamesPage() {
       return;
     }
 
-    let localBalls = balls;
-    let localBricks = bricks;
-    let localPowerUps = powerUps;
+    let localBalls = [...balls];
+    let localBricks = [...bricks];
+    let localPowerUps = [...powerUps];
     let localLives = lives;
 
     const gameLoop = () => {
@@ -397,7 +397,7 @@ export default function GamesPage() {
         })).filter(p => p.opacity > 0)
       );
 
-      if (Math.random() < 0.001) handleShowCheerleader();
+      if (Math.random() < 0.005) handleShowCheerleader();
       setCheerleaders(prev => prev.map((c) => ({ ...c, opacity: Math.min(1, c.opacity + 0.05) })));
       
       let paddleHitByFallingBrick = false;
@@ -448,10 +448,10 @@ export default function GamesPage() {
                   if (p.type === 'extraLife') {
                       setLives(l => Math.min(5, l + 1));
                   }
-                  if (p.type === 'multiBall' && balls.length < 3) {
+                  if (p.type === 'multiBall' && localBalls.length < 3) {
                      setBalls(prev => {
                          if(prev.length > 0){
-                             const newBall: Ball = { ...prev[0], id: `ball-${Date.now()}`, dx: -prev[0].dx };
+                             const newBall: Ball = { ...prev[0], id: `ball-${Date.now()}-${Math.random()}`, dx: -prev[0].dx };
                              localBalls = [...prev, newBall];
                              return [...prev, newBall];
                          }
@@ -470,8 +470,14 @@ export default function GamesPage() {
 
       const nextBalls = localBalls.map(ball => ({...ball}));
       if (!nextBalls.some(b => b.launched)) {
-          nextBalls.forEach(b => b.x = paddleX + PADDLE_WIDTH / 2);
-          setBalls(nextBalls);
+          setBalls(currentBalls => {
+              const newBalls = currentBalls.map(b => ({
+                  ...b,
+                  x: paddleX + PADDLE_WIDTH / 2,
+              }));
+              localBalls = newBalls;
+              return newBalls;
+          });
           animationFrameId.current = requestAnimationFrame(gameLoop);
           return;
       }
@@ -563,11 +569,16 @@ export default function GamesPage() {
         } else {
           const newBall = createInitialBall(level);
           setBalls([newBall]);
+          localBalls = [newBall];
           resetBallAndPaddle(true);
         }
+      } else if (remainingBalls.length !== localBalls.length && nextBalls.length > 0) {
+          setBalls(remainingBalls);
+          localBalls = remainingBalls;
       } else {
-         setBalls(remainingBalls);
-         localBalls = remainingBalls;
+          // This must be a direct state update, not a functional one, to avoid re-renders.
+          setBalls(remainingBalls);
+          localBalls = remainingBalls;
       }
       
       animationFrameId.current = requestAnimationFrame(gameLoop);
@@ -581,12 +592,12 @@ export default function GamesPage() {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
       animationFrameId.current = null;
     };
-  }, [gameState, paddleX, initializeBricks, resetBallAndPaddle, launchBall, handleLevelUp, level, bricks, balls, powerUps, lives]);
+  }, [gameState, paddleX, initializeBricks, resetBallAndPaddle, launchBall, handleLevelUp, level, handleShowCheerleader]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
     if (gameState === "PAUSED") return "Resume";
-    if (gameState === "GAME_OVER") return "Restart";
+    if (gameState === "GAME_OVER") return "Replay";
     return "Start";
   };
   
@@ -713,16 +724,16 @@ export default function GamesPage() {
                   </div>
               )}
                {gameState === "PAUSED" && balls.some(b => b.launched) && (
-                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4 animate-fade-in">
+                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white p-4 animate-fade-in">
                       <p className="text-2xl font-bold">Paused</p>
                   </div>
               )}
                {gameState === "GAME_OVER" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-background p-4 animate-fade-in">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-white p-4 animate-fade-in">
                   <ShieldAlert className="w-12 h-12 sm:w-16 sm:h-16 text-destructive mb-3 sm:mb-4 animate-bounce"/>
                   <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Game Over!</p>
                   <p className="text-md sm:text-xl mb-3 sm:mb-4">Final Score: {score}</p>
-                  <Button onClick={resetGame} variant="default" size="lg">Restart</Button>
+                  <Button onClick={resetGame} variant="default" size="lg">Replay</Button>
                 </div>
               )}
             </div>
@@ -764,3 +775,5 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
