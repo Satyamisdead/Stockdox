@@ -279,22 +279,27 @@ export default function GamesPage() {
   };
   
   const handleShowCheerleader = useCallback(() => {
-    if (Math.random() > 0.05 || cheerleaders.length > 0) return;
-    const id = Date.now().toString();
-    const newCheer: Cheerleader = {
-        id: id,
-        x: Math.random() * (GAME_WIDTH - 150),
-        y: Math.random() * (GAME_HEIGHT / 2) + GAME_HEIGHT / 4,
-        text: cheerTexts[Math.floor(Math.random() * cheerTexts.length)],
-        opacity: 0,
-        animation: 'fade-in-out'
-    };
-    setCheerleaders(prev => [...prev, newCheer]);
+    if (Math.random() > 0.05) return;
+    setCheerleaders(prev => {
+        if (prev.length > 0) return prev; // Only one at a time
+        const id = Date.now().toString();
+        const newCheer: Cheerleader = {
+            id: id,
+            x: Math.random() * (GAME_WIDTH - 150),
+            y: Math.random() * (GAME_HEIGHT / 2) + GAME_HEIGHT / 4,
+            text: cheerTexts[Math.floor(Math.random() * cheerTexts.length)],
+            opacity: 0,
+            animation: 'fade-in-out'
+        };
+        
+        setTimeout(() => {
+            setCheerleaders(current => current.filter(c => c.id !== id));
+        }, 6000);
 
-    setTimeout(() => {
-        setCheerleaders(prev => prev.filter(c => c.id !== id));
-    }, 6000);
-  }, [cheerTexts, cheerleaders.length]);
+        return [newCheer];
+    });
+  }, [cheerTexts]);
+
 
   const launchBall = useCallback(() => {
     setBalls(prevBalls => {
@@ -547,6 +552,7 @@ export default function GamesPage() {
           let bricksBrokenThisFrame = 0;
           let allBricksCleared = true;
           const nextFrameBricks = [...localBricks.current];
+          const newPowerUps: PowerUp[] = [];
 
           for (let i = 0; i < nextFrameBricks.length; i++) {
             let brick = nextFrameBricks[i];
@@ -567,18 +573,17 @@ export default function GamesPage() {
                     brick.opacity = 0.99;
                     newScore += (brick.type === 'steel' ? 25 : 10);
                     playSound('brick');
-                    if (Math.random() < 0.2) handleShowCheerleader();
+                    handleShowCheerleader();
                     
                      if (Math.random() < POWERUP_CHANCE) {
                         const powerUpType = Math.random() > 0.65 ? 'extraLife' : 'multiBall';
-                        const newPowerUp = {
+                        newPowerUps.push({
                             id: `${Date.now()}-${i}-${Math.random()}`,
                             x: brick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2,
                             y: brick.y,
                             type: powerUpType,
                             active: true
-                        };
-                        setPowerUps(prev => [...prev, newPowerUp]);
+                        });
                     }
                 } else {
                     brick.isFalling = true;
@@ -591,6 +596,11 @@ export default function GamesPage() {
                 allBricksCleared = false;
             }
           }
+
+          if (newPowerUps.length > 0) {
+              setPowerUps(prev => [...prev, ...newPowerUps]);
+          }
+
           if(bricksBrokenThisFrame > 0) {
              localBricks.current = nextFrameBricks;
              setBricks(nextFrameBricks);
@@ -780,16 +790,6 @@ export default function GamesPage() {
                   <ShieldAlert className="w-12 h-12 sm:w-16 sm:h-16 text-destructive mb-3 sm:mb-4 animate-bounce"/>
                   <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 text-white">Game Over!</p>
                   <p className="text-md sm:text-xl mb-3 sm:mb-4 text-white">Final Score: {score}</p>
-                   {lives <= 0 && (
-                     <Button 
-                        onClick={handleStartPause}
-                        aria-label="Start New Game"
-                        variant="default" 
-                        className="p-3 sm:p-4 text-sm sm:text-base h-auto"
-                      >
-                       <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2"/> Replay
-                    </Button>
-                  )}
                 </div>
               )}
             </div>
