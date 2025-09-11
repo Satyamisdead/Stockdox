@@ -260,7 +260,8 @@ export default function GamesPage() {
   };
   
   const handleShowCheerleader = useCallback(() => {
-    if (Math.random() > 0.05) return;
+    // Only show if random check passes AND no other cheerleaders are active.
+    if (Math.random() > 0.1 || cheerleaders.length > 0) return;
     const id = Date.now().toString();
     const newCheer: Cheerleader = {
         id: id,
@@ -275,7 +276,7 @@ export default function GamesPage() {
     setTimeout(() => {
         setCheerleaders(prev => prev.filter(c => c.id !== id));
     }, 6000);
-  }, [cheerTexts]);
+  }, [cheerTexts, cheerleaders.length]);
 
   const launchBall = useCallback(() => {
     setBalls(prevBalls => {
@@ -433,7 +434,6 @@ export default function GamesPage() {
         })).filter(p => p.opacity > 0)
       );
 
-      handleShowCheerleader();
       setCheerleaders(prev => prev.map((c) => ({ ...c, opacity: Math.min(1, c.opacity + 0.05) })));
       
       let paddleHitByFallingBrick = false;
@@ -582,10 +582,14 @@ export default function GamesPage() {
                     brick.opacity = 0.99; // Start fade out
                     setScore(s => s + (brick.type === 'steel' ? 25 : 10));
                     playSound('brick');
+                    handleShowCheerleader();
+                    
                     if (Math.random() < POWERUP_CHANCE) {
-                        const powerUpType = Math.random() > 0.65 ? 'extraLife' : 'multiBall'; // More chance for multi-ball
-                        const newPowerUp = { id: `${Date.now()}-${i}-${Math.random()}`, x: brick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2, y: brick.y, type: powerUpType, active: true };
-                        setPowerUps(prev => [...prev, newPowerUp]);
+                      setPowerUps(prev => {
+                          const powerUpType = Math.random() > 0.65 ? 'extraLife' : 'multiBall'; // More chance for multi-ball
+                          const newPowerUp = { id: `${Date.now()}-${i}-${Math.random()}`, x: brick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2, y: brick.y, type: powerUpType, active: true };
+                          return [...prev, newPowerUp];
+                      });
                     }
                 } else {
                     brick.isFalling = true;
