@@ -260,12 +260,11 @@ export default function GamesPage() {
   };
   
   const handleShowCheerleader = useCallback(() => {
-    // Only show if random check passes AND no other cheerleaders are active.
-    if (Math.random() > 0.1 || cheerleaders.length > 0) return;
+    if (Math.random() > 0.05 || cheerleaders.length > 0) return;
     const id = Date.now().toString();
     const newCheer: Cheerleader = {
         id: id,
-        x: Math.random() * (GAME_WIDTH - 150), // prevent going off-screen
+        x: Math.random() * (GAME_WIDTH - 150),
         y: Math.random() * (GAME_HEIGHT / 2) + GAME_HEIGHT / 4,
         text: cheerTexts[Math.floor(Math.random() * cheerTexts.length)],
         opacity: 0,
@@ -280,13 +279,12 @@ export default function GamesPage() {
 
   const launchBall = useCallback(() => {
     setBalls(prevBalls => {
-      // Find the first unlaunched ball and launch it.
       const unlaunchedIndex = prevBalls.findIndex(ball => !ball.launched);
-      if (unlaunchedIndex === -1) return prevBalls; // All balls are launched.
+      if (unlaunchedIndex === -1) return prevBalls;
 
       return prevBalls.map((ball, index) => {
         if (index === unlaunchedIndex) {
-          const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4; // Launch between 45 and 135 degrees
+          const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
           const speed = ball.speed;
           return {
             ...ball,
@@ -305,13 +303,9 @@ export default function GamesPage() {
     const newBall = createInitialBall(level);
     setBalls([newBall]);
     if (isNewLife && gameStateRef.current === "PLAYING") {
-       setTimeout(() => {
-            if (gameStateRef.current === 'PLAYING') {
-                launchBall();
-            }
-        }, 500);
+        // The game loop will handle the launch now
     }
-  }, [level, launchBall]);
+  }, [level]);
 
   const resetGame = useCallback(() => {
     setScore(0);
@@ -327,7 +321,6 @@ export default function GamesPage() {
     const newLevel = Math.floor(score / 100) + 1;
     if (newLevel > level) {
       setLevel(newLevel);
-      // Do not re-initialize bricks here. Leveling is purely score based.
       setBalls(prev => prev.map(b => ({ ...b, speed: BALL_SPEED_INITIAL + (newLevel - 1) * BALL_SPEED_INCREMENT })));
       playSound('levelUp');
       triggerConfetti();
@@ -342,9 +335,6 @@ export default function GamesPage() {
     if (gameState === "IDLE" || gameState === "GAME_OVER") {
       resetGame();
       setGameState("PLAYING");
-      if (!balls.some(b => b.launched)) {
-          setTimeout(() => launchBall(), 500);
-      }
     } else if (gameState === "PLAYING") {
       setGameState("PAUSED");
     } else if (gameState === "PAUSED") {
@@ -374,7 +364,6 @@ export default function GamesPage() {
       const newPaddleX = (value[0] / 100) * (GAME_WIDTH - PADDLE_WIDTH);
       setPaddleX(newPaddleX);
 
-      // If a ball is not launched, move it with the paddle
        if (balls.some(b => !b.launched)) {
             setBalls(prevBalls => prevBalls.map(ball => {
                 if (!ball.launched) {
@@ -405,25 +394,31 @@ export default function GamesPage() {
       return;
     }
 
-    let localBalls = balls;
-    let localBricks = bricks;
-    let localPowerUps = powerUps;
+    let localBalls = [...balls];
+    let localBricks = [...bricks];
+    let localPowerUps = [...powerUps];
     let localLives = lives;
-    const localPaddleX = paddleX;
+    let localPaddleX = paddleX;
     
     const gameLoop = () => {
-      if (gameStateRef.current !== "PLAYING") {
-        if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
-        animationFrameId.current = null;
-        return;
-      }
+        localPaddleX = (gameAreaRef.current?.querySelector('.bg-primary.rounded') as HTMLDivElement)?.offsetLeft ?? localPaddleX;
+
+        if (gameStateRef.current !== "PLAYING") {
+            if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+            animationFrameId.current = null;
+            return;
+        }
+
+        if (localBalls.length > 0 && !localBalls.some(b => b.launched)) {
+            launchBall();
+        }
       
       handleLevelUp();
 
       setConfettiParticles(prev => prev.map(p => ({
             ...p,
             x: p.x + p.dx,
-            y: p.y + p.dy + 0.2, // gravity
+            y: p.y + p.dy + 0.2,
             opacity: p.opacity - 0.01,
         })).filter(p => p.opacity > 0)
       );
@@ -433,9 +428,7 @@ export default function GamesPage() {
       let paddleHitByFallingBrick = false;
       const updatedBricksAndPowerUps = () => {
         let nextBricks = [...localBricks];
-        let nextPowerUps = [...localPowerUps];
 
-        // Animate brick fading
         nextBricks = nextBricks.map(brick => {
            if (brick.opacity !== undefined && brick.opacity < 1) {
              const newOpacity = brick.opacity - 0.05;
@@ -479,14 +472,18 @@ export default function GamesPage() {
                         if (p.type === 'extraLife') {
                             setLives(l => Math.min(5, l + 1));
                         } else if (p.type === 'multiBall') {
-                            setBalls(currentBalls => {
+                           setBalls(currentBalls => {
                                 if (currentBalls.length >= 3) return currentBalls;
                                 const activeBall = currentBalls.find(b => b.launched) || currentBalls[0];
                                 const newBall: Ball = {
                                     ...activeBall,
                                     id: `ball-${Date.now()}-${Math.random()}`,
-                                    dx: -activeBall.dx,
+                                    dx: -activeBall.dx, // Launch in opposite direction
+                                    dy: activeBall.dy,
+                                    x: localPaddleX + PADDLE_WIDTH / 2,
+                                    y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
                                     color: 'hsl(var(--chart-2))',
+                                    launched: true,
                                 };
                                 return [...currentBalls, newBall];
                             });
@@ -521,7 +518,6 @@ export default function GamesPage() {
       
       let nextBalls = [...balls];
       if (!nextBalls.some(b => b.launched)) {
-          // This ensures the un-launched ball stays on the paddle
           setBalls(currentBalls => {
               return currentBalls.map(b => b.launched ? b : { ...b, x: localPaddleX + PADDLE_WIDTH / 2 });
           });
@@ -572,24 +568,23 @@ export default function GamesPage() {
                 bricksBrokenThisFrame++;
 
                 if (brick.hits <= 0) {
-                    brick.opacity = 0.99; // Start fade out
+                    brick.opacity = 0.99;
                     setScore(s => s + (brick.type === 'steel' ? 25 : 10));
                     playSound('brick');
-                    if (Math.random() < 0.1) handleShowCheerleader();
+                    handleShowCheerleader();
                     
-                     if (Math.random() < POWERUP_CHANCE) {
-                        setPowerUps(prev => {
-                            const powerUpType = Math.random() > 0.65 ? 'extraLife' : 'multiBall';
-                            const newPowerUp = {
-                                id: `${Date.now()}-${i}-${Math.random()}`,
-                                x: brick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2,
-                                y: brick.y,
-                                type: powerUpType,
-                                active: true
-                            };
-                            return [...prev, newPowerUp];
-                        });
-                    }
+                     setPowerUps(prev => {
+                       if (Math.random() > POWERUP_CHANCE) return prev;
+                        const powerUpType = Math.random() > 0.65 ? 'extraLife' : 'multiBall';
+                        const newPowerUp = {
+                            id: `${Date.now()}-${i}-${Math.random()}`,
+                            x: brick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2,
+                            y: brick.y,
+                            type: powerUpType,
+                            active: true
+                        };
+                        return [...prev, newPowerUp];
+                    });
                 } else {
                     brick.isFalling = true;
                     brick.color = steelHitColor;
@@ -618,9 +613,8 @@ export default function GamesPage() {
           }
       });
       
-      // Check if any balls were lost this frame
       if (nextBalls.length > 0 && remainingBalls.length < nextBalls.length) {
-          if (remainingBalls.length === 0) { // Last ball was lost
+          if (remainingBalls.length === 0) {
             playSound('loseLife');
             const newLives = lives - 1;
             setLives(newLives);
@@ -632,7 +626,7 @@ export default function GamesPage() {
             } else {
               resetBallAndPaddle(true);
             }
-          } else { // Some balls remain
+          } else {
              setBalls(remainingBalls);
           }
       } else {
@@ -651,7 +645,7 @@ export default function GamesPage() {
       animationFrameId.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState]);
+  }, [gameState, paddleX]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -675,7 +669,7 @@ export default function GamesPage() {
                 <ChevronsUp className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Level: {level}
             </div>
             <div className="flex items-center text-foreground">
-                <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 smw-4 text-primary" /> Score: {score}
+                <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Score: {score}
             </div>
             <div className="flex items-center text-foreground">
                 <Heart className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-red-500" /> Lives: {lives}
@@ -793,6 +787,16 @@ export default function GamesPage() {
                   <ShieldAlert className="w-12 h-12 sm:w-16 sm:h-16 text-destructive mb-3 sm:mb-4 animate-bounce"/>
                   <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 text-white">Game Over!</p>
                   <p className="text-md sm:text-xl mb-3 sm:mb-4 text-white">Final Score: {score}</p>
+                   {lives <= 0 && (
+                     <Button 
+                        onClick={handleStartPause}
+                        aria-label="Start New Game"
+                        variant="default" 
+                        className="p-3 sm:p-4 text-sm sm:text-base h-auto"
+                      >
+                       <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2"/> Start New Game
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -816,7 +820,7 @@ export default function GamesPage() {
           aria-label={getButtonText()}
           variant="default" 
           className="p-3 sm:p-4 text-sm sm:text-base h-auto w-32"
-          disabled={false}
+          disabled={gameState === "GAME_OVER" && lives > 0}
         >
           {getButtonIcon()} <span className="hidden sm:inline">{getButtonText()}</span>
         </Button>
