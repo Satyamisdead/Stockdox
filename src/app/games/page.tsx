@@ -495,7 +495,7 @@ export default function GamesPage() {
                             dx: -activeBall.dx,
                             color: 'hsl(var(--chart-2))',
                           };
-                          localBalls = [...prevBalls, newBall];
+                          
                           return [...prevBalls, newBall];
                       });
                   }
@@ -655,7 +655,7 @@ export default function GamesPage() {
       animationFrameId.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState, paddleX]);
+  }, [gameState, paddleX, balls, bricks, powerUps, lives, score, level, handleLevelUp, resetBallAndPaddle, launchBall, initializeBricks, handleShowCheerleader]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
