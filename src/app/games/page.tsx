@@ -23,7 +23,6 @@ const BRICK_OFFSET_LEFT = (GAME_WIDTH - (BRICK_COLS * ((GAME_WIDTH - (BRICK_COLS
 const BRICK_WIDTH = (GAME_WIDTH - BRICK_OFFSET_LEFT * 2 - (BRICK_COLS - 1) * BRICK_GAP) / BRICK_COLS;
 
 const INITIAL_LIVES = 3;
-const SCORE_PER_LEVEL = 20;
 
 
 interface Brick {
@@ -35,7 +34,7 @@ interface Brick {
   color: string;
 }
 
-type GameState = "IDLE" | "PLAYING" | "PAUSED" | "GAME_OVER" | "LEVEL_CLEAR";
+type GameState = "IDLE" | "PLAYING" | "PAUSED" | "GAME_OVER";
 
 const brickColors = [
   "hsl(var(--chart-1))",
@@ -132,36 +131,38 @@ export default function GamesPage() {
   }, []);
 
   const resetBallAndPaddle = useCallback((isNewLevel = false) => {
+    const newSpeed = BALL_SPEED_INITIAL + ((isNewLevel ? level : level -1) * BALL_SPEED_INCREMENT);
     setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
-    setBall(prev => ({
+    setBall({
       x: GAME_WIDTH / 2,
       y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
       dx: 0,
       dy: 0,
-      speed: isNewLevel ? BALL_SPEED_INITIAL + ((level) * BALL_SPEED_INCREMENT) : BALL_SPEED_INITIAL,
+      speed: newSpeed,
       launched: false,
-    }));
+    });
   }, [level]);
 
   const resetGame = useCallback(() => {
-    setLevel(1);
+    setGameState("IDLE");
     setScore(0);
     setLives(INITIAL_LIVES);
+    setLevel(1);
     initializeBricks();
     resetBallAndPaddle();
-    setGameState("IDLE");
   }, [initializeBricks, resetBallAndPaddle]);
 
   const handleLevelClear = useCallback(() => {
-      setLevel(prev => prev + 1);
-      setLives(prev => Math.min(INITIAL_LIVES + 2, prev + 1)); // Bonus life for clearing level, max 5
-      initializeBricks();
-      resetBallAndPaddle(true);
-      setGameState("IDLE");
+    setGameState("IDLE");
+    setLevel(prev => prev + 1);
+    setLives(prev => Math.min(INITIAL_LIVES + 2, prev + 1)); // Bonus life, max 5
+    initializeBricks();
+    resetBallAndPaddle(true);
   }, [initializeBricks, resetBallAndPaddle]);
   
   const launchBall = useCallback(() => {
       setBall(prev => {
+        if(prev.launched) return prev;
         const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
         const speed = prev.speed;
         return {
@@ -175,9 +176,11 @@ export default function GamesPage() {
 
   const handleStartPause = () => {
     if (gameState === "IDLE" || gameState === "GAME_OVER") {
+      if (gameState === "GAME_OVER") {
+        resetGame();
+      }
       setGameState("PLAYING");
       if (!ball.launched) {
-        // Delay launch slightly to allow state to update
         setTimeout(() => launchBall(), 100);
       }
     } else if (gameState === "PLAYING") {
@@ -255,7 +258,8 @@ export default function GamesPage() {
           newY + BALL_RADIUS > GAME_HEIGHT - PADDLE_HEIGHT &&
           newY + BALL_RADIUS < GAME_HEIGHT &&
           newX + BALL_RADIUS > paddleX &&
-          newX - BALL_RADIUS < paddleX + PADDLE_WIDTH
+          newX - BALL_RADIUS < paddleX + PADDLE_WIDTH &&
+          newDy > 0
         ) {
           newDy = -Math.abs(newDy);
           newY = GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 1;
@@ -265,10 +269,9 @@ export default function GamesPage() {
         }
 
         // Brick collision
-        let newScore = score;
+        let bricksBroken = false;
         const newBricks = bricks.map(brick => {
           if (brick.active) {
-            // Check for collision
             if (
               newX + BALL_RADIUS > brick.x &&
               newX - BALL_RADIUS < brick.x + brick.width &&
@@ -276,27 +279,22 @@ export default function GamesPage() {
               newY - BALL_RADIUS < brick.y + brick.height
             ) {
               newDy = -newDy;
-              newScore += 10;
+              setScore(s => s + 10);
               playSound('brick');
+              bricksBroken = true;
               return { ...brick, active: false };
             }
           }
           return brick;
         });
         
-        if (newScore !== score) {
-            setScore(newScore);
-            // Level up based on score
-            const currentLevelFromScore = Math.floor(score / SCORE_PER_LEVEL) + 1;
-            const newLevelFromScore = Math.floor(newScore / SCORE_PER_LEVEL) + 1;
-            if (newLevelFromScore > currentLevelFromScore) {
-                setGameState("LEVEL_CLEAR");
-            }
-        }
-        
-        const activeBricksChanged = newBricks.some((b, i) => b.active !== bricks[i].active);
-        if (activeBricksChanged) {
+        if (bricksBroken) {
           setBricks(newBricks);
+          // Check for level clear after updating bricks state
+          if (newBricks.every(b => !b.active)) {
+             handleLevelClear();
+             return { ...prevBall, x: GAME_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
+          }
         }
         
         // Lose life
@@ -313,18 +311,12 @@ export default function GamesPage() {
               return currentLives;
             }
           });
-          // Important: Reset ball state for the next turn
           return { ...prevBall, x: paddleX + PADDLE_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
         }
         
         return { ...prevBall, x: newX, y: newY, dx: newDx, dy: newDy };
       });
       
-      // Also check for clearing all bricks as a level-up condition
-      if (bricks.length > 0 && bricks.every(b => !b.active) && gameState === "PLAYING") {
-        setGameState("LEVEL_CLEAR");
-      }
-
       animationFrameId.current = requestAnimationFrame(gameLoop);
     };
 
@@ -333,17 +325,7 @@ export default function GamesPage() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [gameState, paddleX, bricks, score, resetBallAndPaddle, ball.launched, level, launchBall]);
-
-
-  useEffect(() => {
-    if (gameState === "LEVEL_CLEAR") {
-        const timer = setTimeout(() => {
-            handleLevelClear();
-        }, 2000);
-        return () => clearTimeout(timer);
-    }
-  }, [gameState, handleLevelClear]);
+  }, [gameState, paddleX, bricks, resetBallAndPaddle, ball.launched, handleLevelClear]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -404,18 +386,16 @@ export default function GamesPage() {
                 }}
               />
 
-              { (gameState !== "LEVEL_CLEAR") &&
-                  <div
-                    className="absolute bg-destructive rounded-full"
-                    style={{
-                      left: ball.x - BALL_RADIUS,
-                      top: ball.y - BALL_RADIUS,
-                      width: BALL_RADIUS * 2,
-                      height: BALL_RADIUS * 2,
-                      boxShadow: '0 0 12px hsl(var(--destructive))'
-                    }}
-                  />
-              }
+              <div
+                className="absolute bg-destructive rounded-full"
+                style={{
+                  left: ball.x - BALL_RADIUS,
+                  top: ball.y - BALL_RADIUS,
+                  width: BALL_RADIUS * 2,
+                  height: BALL_RADIUS * 2,
+                  boxShadow: '0 0 12px hsl(var(--destructive))'
+                }}
+              />
 
               {bricks.map((brick, index) =>
                 brick.active ? (
@@ -434,7 +414,7 @@ export default function GamesPage() {
                 ) : null
               )}
 
-              {gameState === "IDLE" && (
+              {gameState === "IDLE" && lives > 0 && (
                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4 animate-fade-in">
                       <h2 className="text-2xl font-bold mb-2">Level {level}</h2>
                       <p className="text-lg">Press Start</p>
@@ -451,13 +431,6 @@ export default function GamesPage() {
                   <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Game Over!</p>
                   <p className="text-md sm:text-xl mb-3 sm:mb-4">Final Score: {score}</p>
                   <Button onClick={resetGame} variant="default" size="lg">Restart</Button>
-                </div>
-              )}
-              {gameState === "LEVEL_CLEAR" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-primary-foreground p-4 animate-fade-in">
-                   <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-primary mb-3 sm:mb-4 animate-bounce"/>
-                  <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Level {level + 1}!</p>
-                  <p className="text-md sm:text-xl">Next level loading...</p>
                 </div>
               )}
             </div>
@@ -477,11 +450,10 @@ export default function GamesPage() {
             aria-label="Move Paddle"
         />
         <Button 
-          onClick={gameState === 'GAME_OVER' ? resetGame : handleStartPause} 
+          onClick={handleStartPause}
           aria-label={getButtonText()}
           variant="default" 
           className="p-3 sm:p-4 text-sm sm:text-base h-auto w-32"
-          disabled={gameState === "LEVEL_CLEAR"}
         >
           {getButtonIcon()} <span className="hidden sm:inline">{getButtonText()}</span>
         </Button>
