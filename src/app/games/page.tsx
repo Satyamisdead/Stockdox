@@ -716,7 +716,7 @@ export default function GamesPage() {
               <Confetti particles={confettiParticles} />
 
               {(gameState === "IDLE" || gameState === "PAUSED") && !balls.some(b => b.launched) && (
-                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-background p-4 animate-fade-in">
+                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white p-4 animate-fade-in">
                       <h2 className="text-2xl font-bold mb-2">Level {level}</h2>
                       <p className="text-lg">Press Start</p>
                   </div>
