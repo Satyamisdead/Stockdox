@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Gem, Heart, ShieldAlert, Trophy, Play, Pause, ChevronsUp } from 'lucide-react';
+import { Gem, Heart, ShieldAlert, Trophy, Play, Pause, ChevronsUp, Snake } from 'lucide-react';
 
 const GAME_WIDTH = 600;
 const GAME_HEIGHT = 450;
@@ -136,10 +136,10 @@ export default function GamesPage() {
       y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
       dx: 0,
       dy: 0,
-      speed: isNewLevel ? prev.speed + BALL_SPEED_INCREMENT : BALL_SPEED_INITIAL,
+      speed: isNewLevel ? BALL_SPEED_INITIAL + (level * BALL_SPEED_INCREMENT) : BALL_SPEED_INITIAL,
       launched: false,
     }));
-  }, []);
+  }, [level]);
 
   const resetGame = useCallback(() => {
     setLevel(1);
@@ -350,7 +350,7 @@ export default function GamesPage() {
     <div className="flex flex-col items-center justify-center py-6 sm:py-10 space-y-4">
       <Card className="w-full max-w-[640px] shadow-xl bg-card border border-border">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xl sm:text-2xl font-headline text-primary">Take a Break</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl font-headline text-primary">Brick Breaker</CardTitle>
           <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm">
              <div className="flex items-center text-foreground">
                 <ChevronsUp className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Level: {level}
@@ -477,9 +477,19 @@ export default function GamesPage() {
       </div>
 
       <div className="text-center text-muted-foreground text-xs sm:text-sm max-w-md px-4 mt-2">
-        <p>Use the slider to control the paddle.</p>
-        <p className="mt-1">Press <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Spacebar</kbd> or the button to start/pause.</p>
+        <p>Use the slider to control the paddle, or press Spacebar to start/pause.</p>
+      </div>
+      
+      <div className="w-full max-w-sm px-4 pt-8">
+        <div className="relative rounded-lg border-2 border-dashed border-border p-4 flex items-center justify-center">
+            <div className="flex items-center gap-3 text-muted-foreground">
+                <Snake className="h-6 w-6"/>
+                <span className="font-semibold text-lg">Snake Game Coming Soon!</span>
+            </div>
+        </div>
       </div>
     </div>
   );
 }
+
+    
