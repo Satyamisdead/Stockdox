@@ -753,7 +753,7 @@ export default function GamesPage() {
       </div>
 
       <div className="text-center text-muted-foreground text-xs sm:text-sm max-w-md px-4 mt-2">
-        <p>Use the slider or your keyboard arrows to control the paddle.</p>
+        <p>Use slider to control the paddle.</p>
       </div>
       
       <div className="w-full max-w-sm px-4 pt-8">
