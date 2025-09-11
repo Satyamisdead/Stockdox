@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Gem, Heart, ShieldAlert, Trophy, Play, Pause, ChevronsUp, Github } from 'lucide-react';
+import { Gem, Heart, ShieldAlert, Trophy, Play, Pause, ChevronsUp } from 'lucide-react';
 
 const GAME_WIDTH = 600;
 const GAME_HEIGHT = 450;
@@ -482,10 +482,7 @@ export default function GamesPage() {
       
       <div className="w-full max-w-sm px-4 pt-8">
         <div className="relative rounded-lg border-2 border-dashed border-border p-4 flex items-center justify-center">
-            <div className="flex items-center gap-3 text-muted-foreground">
-                <Github className="h-6 w-6"/>
-                <span className="font-semibold text-lg">More Games Coming Soon!</span>
-            </div>
+            <span className="font-semibold text-lg text-muted-foreground">More Games Coming Soon!</span>
         </div>
       </div>
     </div>
