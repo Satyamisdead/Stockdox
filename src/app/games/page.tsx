@@ -787,7 +787,7 @@ export default function GamesPage() {
                         variant="default" 
                         className="p-3 sm:p-4 text-sm sm:text-base h-auto"
                       >
-                       <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2"/> Start New Game
+                       <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2"/> Replay
                     </Button>
                   )}
                 </div>
@@ -831,5 +831,7 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
 
     
