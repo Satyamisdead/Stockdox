@@ -407,17 +407,17 @@ export default function GamesPage() {
         // Lose life
         if (newY - BALL_RADIUS > GAME_HEIGHT) {
           playSound('loseLife');
-          setLives(prevLives => {
-            const currentLives = prevLives - 1;
-            if (currentLives <= 0) {
-              setGameState("GAME_OVER");
-              return 0;
-            } else {
-              resetBallAndPaddle();
-              return currentLives;
-            }
-          });
-          return { ...prevBall, x: paddleX + PADDLE_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
+          const newLives = lives - 1;
+          setLives(newLives);
+          
+          if (newLives <= 0) {
+            setGameState("GAME_OVER");
+            return { ...prevBall, x: -100, y: -100, dx: 0, dy: 0, launched: false }; // Move ball off-screen
+          } else {
+            resetBallAndPaddle();
+            // Return a new ball state that is un-launched
+            return { ...prevBall, x: paddleX + PADDLE_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
+          }
         }
         
         return { ...prevBall, x: newX, y: newY, dx: newDx, dy: newDy };
@@ -431,7 +431,7 @@ export default function GamesPage() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [gameState, paddleX, bricks, resetBallAndPaddle, launchBall, handleLevelUp, initializeBricks]);
+  }, [gameState, paddleX, bricks, resetBallAndPaddle, launchBall, handleLevelUp, initializeBricks, lives]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -455,7 +455,7 @@ export default function GamesPage() {
                 <ChevronsUp className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Level: {level}
             </div>
             <div className="flex items-center text-foreground">
-                <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 smw-4 text-primary" /> Score: {score}
+                <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Score: {score}
             </div>
             <div className="flex items-center text-foreground">
                 <Heart className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-red-500" /> Lives: {lives}
@@ -579,5 +579,3 @@ export default function GamesPage() {
     </div>
   );
 }
-
-    
