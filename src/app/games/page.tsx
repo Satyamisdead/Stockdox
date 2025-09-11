@@ -23,6 +23,8 @@ const BRICK_OFFSET_LEFT = (GAME_WIDTH - (BRICK_COLS * ((GAME_WIDTH - (BRICK_COLS
 const BRICK_WIDTH = (GAME_WIDTH - BRICK_OFFSET_LEFT * 2 - (BRICK_COLS - 1) * BRICK_GAP) / BRICK_COLS;
 
 const INITIAL_LIVES = 3;
+const SCORE_PER_LEVEL = 20;
+
 
 interface Brick {
   x: number;
@@ -136,7 +138,7 @@ export default function GamesPage() {
       y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
       dx: 0,
       dy: 0,
-      speed: isNewLevel ? BALL_SPEED_INITIAL + (level * BALL_SPEED_INCREMENT) : BALL_SPEED_INITIAL,
+      speed: isNewLevel ? BALL_SPEED_INITIAL + ((level) * BALL_SPEED_INCREMENT) : BALL_SPEED_INITIAL,
       launched: false,
     }));
   }, [level]);
@@ -274,7 +276,7 @@ export default function GamesPage() {
               newY - BALL_RADIUS < brick.y + brick.height
             ) {
               newDy = -newDy;
-              newScore += 10 * level;
+              newScore += 10;
               playSound('brick');
               return { ...brick, active: false };
             }
@@ -282,7 +284,15 @@ export default function GamesPage() {
           return brick;
         });
         
-        if (newScore !== score) setScore(newScore);
+        if (newScore !== score) {
+            setScore(newScore);
+            // Level up based on score
+            const currentLevelFromScore = Math.floor(score / SCORE_PER_LEVEL) + 1;
+            const newLevelFromScore = Math.floor(newScore / SCORE_PER_LEVEL) + 1;
+            if (newLevelFromScore > currentLevelFromScore) {
+                setGameState("LEVEL_CLEAR");
+            }
+        }
         
         const activeBricksChanged = newBricks.some((b, i) => b.active !== bricks[i].active);
         if (activeBricksChanged) {
@@ -309,7 +319,8 @@ export default function GamesPage() {
         
         return { ...prevBall, x: newX, y: newY, dx: newDx, dy: newDy };
       });
-
+      
+      // Also check for clearing all bricks as a level-up condition
       if (bricks.length > 0 && bricks.every(b => !b.active) && gameState === "PLAYING") {
         setGameState("LEVEL_CLEAR");
       }
@@ -445,7 +456,7 @@ export default function GamesPage() {
               {gameState === "LEVEL_CLEAR" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-primary-foreground p-4 animate-fade-in">
                    <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-primary mb-3 sm:mb-4 animate-bounce"/>
-                  <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Level {level} Cleared!</p>
+                  <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Level {level + 1}!</p>
                   <p className="text-md sm:text-xl">Next level loading...</p>
                 </div>
               )}
