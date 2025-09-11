@@ -484,20 +484,16 @@ export default function GamesPage() {
                   if (p.type === 'extraLife') {
                       setLives(l => Math.min(5, l + 1));
                   } else if (p.type === 'multiBall') {
-                      setBalls(prevBalls => {
-                          if (prevBalls.length >= 3) return prevBalls;
-                          const activeBall = prevBalls.find(b => b.launched);
-                          if (!activeBall) return prevBalls;
-
+                       if (localBalls.length < 3) {
+                          const activeBall = localBalls.find(b => b.launched) || localBalls[0];
                           const newBall: Ball = {
                             ...activeBall,
                             id: `ball-${Date.now()}-${Math.random()}`,
-                            dx: -activeBall.dx,
-                            color: 'hsl(var(--chart-2))',
+                            dx: -activeBall.dx, // Launch in opposite direction
+                            color: 'hsl(var(--chart-2))', // Blue color
                           };
-                          
-                          return [...prevBalls, newBall];
-                      });
+                          localBalls.push(newBall);
+                       }
                   }
                   return { ...p, active: false };
               }
@@ -635,14 +631,13 @@ export default function GamesPage() {
               resetBallAndPaddle(true);
             }
           } else { // Some balls remain
-             setBalls(remainingBalls);
              localBalls = remainingBalls;
           }
       } else {
-         setBalls(remainingBalls);
          localBalls = remainingBalls;
       }
       
+      setBalls(localBalls);
       animationFrameId.current = requestAnimationFrame(gameLoop);
     };
 
@@ -655,7 +650,7 @@ export default function GamesPage() {
       animationFrameId.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState, paddleX, balls, bricks, powerUps, lives, score, level, handleLevelUp, resetBallAndPaddle, launchBall, initializeBricks, handleShowCheerleader]);
+  }, [gameState, paddleX]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -679,7 +674,7 @@ export default function GamesPage() {
                 <ChevronsUp className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Level: {level}
             </div>
             <div className="flex items-center text-foreground">
-                <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Score: {score}
+                <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 smw-4 text-primary" /> Score: {score}
             </div>
             <div className="flex items-center text-foreground">
                 <Heart className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-red-500" /> Lives: {lives}
