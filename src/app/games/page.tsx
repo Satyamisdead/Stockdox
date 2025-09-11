@@ -155,7 +155,7 @@ export default function GamesPage() {
   const gameWrapperRef = useRef<HTMLDivElement>(null);
   const animationFrameId = useRef<number | null>(null);
 
-  const initializeBricks = useCallback(() => {
+  const initializeBricks = useCallback((resetLevel = false) => {
     const newBricks: Brick[] = [];
     for (let r = 0; r < BRICK_ROWS; r++) {
       for (let c = 0; c < BRICK_COLS; c++) {
@@ -170,6 +170,9 @@ export default function GamesPage() {
       }
     }
     setBricks(newBricks);
+    if(resetLevel) {
+       setLevel(1);
+    }
   }, []);
   
   const triggerConfetti = () => {
@@ -189,26 +192,22 @@ export default function GamesPage() {
     setConfettiParticles(newParticles);
   };
 
-
-  useEffect(() => {
-    if (gameState !== "PLAYING") return;
-    
-    const newLevel = Math.floor(score / (BRICK_ROWS * BRICK_COLS * 10)) + 1;
+  const handleLevelUp = useCallback(() => {
+    const newLevel = Math.floor(score / 100) + 1;
     if (newLevel > level) {
-        setLevel(newLevel);
-        setBall(prev => ({
-            ...prev,
-            speed: BALL_SPEED_INITIAL + (newLevel - 1) * BALL_SPEED_INCREMENT
-        }));
-        playSound('levelUp');
-        triggerConfetti();
-        // Give a bonus life every 2 levels
-        if (newLevel % 2 === 0) {
-            setLives(prev => Math.min(5, prev + 1));
-        }
-        initializeBricks(); // Reset bricks for the new level
+      setLevel(newLevel);
+      setBall(prev => ({
+        ...prev,
+        speed: BALL_SPEED_INITIAL + (newLevel - 1) * BALL_SPEED_INCREMENT
+      }));
+      playSound('levelUp');
+      triggerConfetti();
+      // Give a bonus life every 2 levels
+      if (newLevel % 2 === 0) {
+        setLives(prev => Math.min(5, prev + 1));
+      }
     }
-  }, [score, level, gameState, initializeBricks]);
+  }, [score, level]);
 
 
   const resetBallAndPaddle = useCallback(() => {
@@ -227,8 +226,7 @@ export default function GamesPage() {
     setGameState("IDLE");
     setScore(0);
     setLives(INITIAL_LIVES);
-    setLevel(1);
-    initializeBricks();
+    initializeBricks(true);
     resetBallAndPaddle();
     setBall(prev => ({...prev, speed: BALL_SPEED_INITIAL}));
   }, [initializeBricks, resetBallAndPaddle]);
@@ -308,6 +306,8 @@ export default function GamesPage() {
     let localBricks = bricks;
 
     const gameLoop = () => {
+      handleLevelUp();
+
       // Update confetti
       setConfettiParticles(prev => prev.map(p => ({
             ...p,
@@ -372,20 +372,17 @@ export default function GamesPage() {
               const brickTop = brick.y;
               const brickBottom = brick.y + brick.height;
               
-              // If ball was previously above the brick and now is intersecting
               if (prevBallBottom <= brickTop && ballBottom > brickTop) {
-                  newDy = -Math.abs(newDy); // Bounce up
+                  newDy = -Math.abs(newDy); 
                   newY = brick.y - BALL_RADIUS;
               } 
-              // If ball was previously below the brick and now is intersecting
               else if (prevBallTop >= brickBottom && ballTop < brickBottom) {
-                  newDy = Math.abs(newDy); // Bounce down
+                  newDy = Math.abs(newDy); 
                   newY = brick.y + brick.height + BALL_RADIUS;
               }
-              // Otherwise, horizontal collision
               else {
                   newDx = -newDx;
-                  newX = prevBall.x; // Prevent sticking
+                  newX = prevBall.x;
               }
 
               setScore(s => s + 10);
@@ -400,6 +397,11 @@ export default function GamesPage() {
         if (bricksBroken) {
             localBricks = newBricks;
             setBricks(newBricks);
+            // Check for level clear
+            if (newBricks.every(b => !b.active)) {
+                initializeBricks(false); // Reload bricks for the same level
+                resetBallAndPaddle();
+            }
         }
         
         // Lose life
@@ -415,7 +417,6 @@ export default function GamesPage() {
               return currentLives;
             }
           });
-          // Reset ball state directly instead of relying on subsequent state update
           return { ...prevBall, x: paddleX + PADDLE_WIDTH / 2, y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5, dx: 0, dy: 0, launched: false };
         }
         
@@ -430,7 +431,7 @@ export default function GamesPage() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [gameState, paddleX, bricks, resetBallAndPaddle, launchBall]);
+  }, [gameState, paddleX, bricks, resetBallAndPaddle, launchBall, handleLevelUp, initializeBricks]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -454,7 +455,7 @@ export default function GamesPage() {
                 <ChevronsUp className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Level: {level}
             </div>
             <div className="flex items-center text-foreground">
-                <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-primary" /> Score: {score}
+                <Gem className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 smw-4 text-primary" /> Score: {score}
             </div>
             <div className="flex items-center text-foreground">
                 <Heart className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-4 sm:w-4 text-red-500" /> Lives: {lives}
