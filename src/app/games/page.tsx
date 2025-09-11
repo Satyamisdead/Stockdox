@@ -586,7 +586,6 @@ export default function GamesPage() {
                         const powerUpType = Math.random() > 0.65 ? 'extraLife' : 'multiBall'; // More chance for multi-ball
                         const newPowerUp = { id: `${Date.now()}-${i}-${Math.random()}`, x: brick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2, y: brick.y, type: powerUpType, active: true };
                         setPowerUps(prev => [...prev, newPowerUp]);
-                        localPowerUps.push(newPowerUp);
                     }
                 } else {
                     brick.isFalling = true;
