@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -221,6 +220,7 @@ export default function GamesPage() {
   const localPowerUps = useRef(powerUps);
   const localLives = useRef(lives);
   const localScore = useRef(score);
+  const localLevel = useRef(level);
   const scoreMilestoneReached = useRef(false);
 
   useEffect(() => {
@@ -233,6 +233,7 @@ export default function GamesPage() {
   useEffect(() => { localPowerUps.current = powerUps; }, [powerUps]);
   useEffect(() => { localLives.current = lives; }, [lives]);
   useEffect(() => { localScore.current = score; }, [score]);
+  useEffect(() => { localLevel.current = level; }, [level]);
   
   const cheerTexts = ["Great Shot!", "Awesome!", "Keep it up!", "You're on fire!", "Amazing!", "Super!"];
 
@@ -260,15 +261,15 @@ export default function GamesPage() {
   
   const triggerConfetti = () => {
     const newParticles: ConfettiParticle[] = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 100; i++) { // Increased confetti
         newParticles.push({
             id: Math.random(),
-            x: GAME_WIDTH / 2,
-            y: GAME_HEIGHT / 2,
-            dx: (Math.random() - 0.5) * 10,
-            dy: (Math.random() - 0.5) * 15,
+            x: Math.random() * GAME_WIDTH,
+            y: -20,
+            dx: (Math.random() - 0.5) * 8,
+            dy: Math.random() * 8 + 2,
             color: brickColors[Math.floor(Math.random() * brickColors.length)],
-            size: Math.random() * 5 + 3,
+            size: Math.random() * 6 + 4,
             opacity: 1,
         });
     }
@@ -276,7 +277,7 @@ export default function GamesPage() {
   };
   
   const handleShowCheerleader = useCallback(() => {
-    if (Math.random() > 0.05) return;
+    if (Math.random() > 0.1) return; // Slightly increased chance on brick break
     setCheerleaders(prev => {
         if (prev.length > 0) return prev; // Only one at a time
         const id = Date.now().toString();
@@ -291,7 +292,7 @@ export default function GamesPage() {
         
         setTimeout(() => {
             setCheerleaders(current => current.filter(c => c.id !== id));
-        }, 6000);
+        }, 3000); // Shorter duration
 
         return [newCheer];
     });
@@ -321,9 +322,9 @@ export default function GamesPage() {
 
   const resetBallAndPaddle = useCallback((isNewLife: boolean) => {
     setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
-    const newBall = createInitialBall(level);
+    const newBall = createInitialBall(localLevel.current);
     setBalls([newBall]);
-  }, [level]);
+  }, []);
 
   const resetGame = useCallback(() => {
     setScore(0);
@@ -333,7 +334,6 @@ export default function GamesPage() {
     setPowerUps([]);
     setBalls([createInitialBall(1)]);
     setGameState("IDLE");
-    scoreMilestoneReached.current = false;
   }, [initializeBricks]);
   
   const handleStartPause = () => {
@@ -402,7 +402,7 @@ export default function GamesPage() {
       setConfettiParticles(prev => prev.map(p => ({
             ...p,
             x: p.x + p.dx,
-            y: p.y + p.dy + 0.2,
+            y: p.y + p.dy,
             opacity: p.opacity - 0.01,
         })).filter(p => p.opacity > 0)
       );
@@ -491,7 +491,6 @@ export default function GamesPage() {
          }
       }
       
-      let allBricksCleared = true;
       const nextBalls = localBalls.current.map(ball => {
           if (!ball.launched) {
             return { ...ball, x: localPaddleX.current + PADDLE_WIDTH / 2 };
@@ -534,11 +533,21 @@ export default function GamesPage() {
 
                 if (brick.hits <= 0) {
                     brick.opacity = 0.99;
-                    newScore += (brick.type === 'steel' ? 25 : 10);
-                    if (newScore >= 100 && !scoreMilestoneReached.current) {
+                    const scoreGained = brick.type === 'steel' ? 25 : 10;
+                    newScore += scoreGained;
+
+                    const currentLevel = Math.floor(localScore.current / 100);
+                    const newLevel = Math.floor(newScore / 100);
+                    
+                    if (newLevel > currentLevel) {
+                        playSound('levelUp');
+                        setLevel(l => l + 1);
+                        initializeBricks(localLevel.current + 1);
+                        setLives(l => Math.min(5, l + 1));
                         triggerConfetti();
-                        scoreMilestoneReached.current = true;
+                        resetBallAndPaddle(false);
                     }
+
                     playSound('brick');
                     handleShowCheerleader();
                     
@@ -559,9 +568,6 @@ export default function GamesPage() {
                 }
               }
             }
-             if (brick.active && brick.hits > 0) {
-                allBricksCleared = false;
-            }
           }
 
           if (newPowerUps.length > 0) {
@@ -574,8 +580,9 @@ export default function GamesPage() {
              setScore(newScore);
           }
           
-          if (allBricksCleared && localBricks.current.length > 0 && localBricks.current.some(b => b.active)) {
-               const currentLevel = level;
+          const allBricksCleared = !localBricks.current.some(b => b.active);
+          if (allBricksCleared && localBricks.current.length > 0) {
+               const currentLevel = localLevel.current;
                setLevel(l => l + 1);
                initializeBricks(currentLevel + 1);
                setLives(l => Math.min(5, l + 1));
@@ -625,7 +632,7 @@ export default function GamesPage() {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState, launchBall, resetBallAndPaddle, initializeBricks, level, handleShowCheerleader]);
+  }, [gameState, launchBall, resetBallAndPaddle, initializeBricks, handleShowCheerleader]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -742,7 +749,7 @@ export default function GamesPage() {
                          top: cheer.y,
                          opacity: cheer.opacity,
                          transition: 'opacity 3s ease-in-out',
-                         animation: 'fade-in-out 6s ease-in-out forwards',
+                         animation: 'fade-in-out 3s ease-in-out forwards',
                        }}
                    >
                      <p className="font-bold text-sm">🎉 {cheer.text} 🎉</p>
@@ -817,3 +824,5 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
