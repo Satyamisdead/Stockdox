@@ -11,15 +11,35 @@ type AssetChartProps = {
   name: string;
 };
 
+const SCRIPT_ID = 'tradingview-widget-script';
+let scriptLoadingPromise: Promise<void> | null = null;
+
+
 const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, name }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const isWidgetCreated = useRef(false); 
 
   useEffect(() => {
-    // Ensure this code runs only on the client
-    if (typeof window === 'undefined' || !chartContainerRef.current) {
-      return;
-    }
+    const loadScript = () => {
+      if (document.getElementById(SCRIPT_ID) || scriptLoadingPromise) {
+        return scriptLoadingPromise || Promise.resolve();
+      }
+
+      scriptLoadingPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.id = SCRIPT_ID;
+        script.src = 'https://s3.tradingview.com/tv.js';
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = (error) => {
+            console.error("TradingView script failed to load.", error);
+            reject(error);
+        };
+        document.head.appendChild(script);
+      });
+      return scriptLoadingPromise;
+    };
+
 
     const tradingViewSymbol = () => {
       let tvSymbol = symbol.toUpperCase();
@@ -87,17 +107,9 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
       }
     };
     
-    // Check if TradingView is already loaded. If not, wait for it.
-    if (typeof (window as any).TradingView !== 'undefined') {
-        initializeWidget();
-    } else {
-        const interval = setInterval(() => {
-            if (typeof (window as any).TradingView !== 'undefined') {
-                clearInterval(interval);
-                initializeWidget();
-            }
-        }, 100);
-    }
+    loadScript().then(initializeWidget).catch(err => {
+        console.error("Could not initialize TradingView widget because the script failed to load.", err);
+    });
 
   }, [symbol, assetType, exchange, name]); 
 
