@@ -221,7 +221,6 @@ export default function GamesPage() {
   const localLives = useRef(lives);
   const localScore = useRef(score);
   const localLevel = useRef(level);
-  const scoreMilestoneReached = useRef(false);
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -277,7 +276,7 @@ export default function GamesPage() {
   };
   
   const handleShowCheerleader = useCallback(() => {
-    if (Math.random() > 0.1) return; // Slightly increased chance on brick break
+    if (Math.random() > 0.1) return; // 10% chance on brick break
     setCheerleaders(prev => {
         if (prev.length > 0) return prev; // Only one at a time
         const id = Date.now().toString();
@@ -536,16 +535,9 @@ export default function GamesPage() {
                     const scoreGained = brick.type === 'steel' ? 25 : 10;
                     newScore += scoreGained;
 
-                    const currentLevel = Math.floor(localScore.current / 100);
-                    const newLevel = Math.floor(newScore / 100);
-                    
-                    if (newLevel > currentLevel) {
-                        playSound('levelUp');
-                        setLevel(l => l + 1);
-                        initializeBricks(localLevel.current + 1);
-                        setLives(l => Math.min(5, l + 1));
+                    const scoreLevel = Math.floor(newScore / 100);
+                    if (scoreLevel > Math.floor(localScore.current / 100)) {
                         triggerConfetti();
-                        resetBallAndPaddle(false);
                     }
 
                     playSound('brick');
@@ -637,7 +629,7 @@ export default function GamesPage() {
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
     if (gameState === "PAUSED") return "Resume";
-    if (gameState === "GAME_OVER") return "Replay";
+    if (gameState === "GAME_OVER") return "New Game";
     return "Start";
   };
   
@@ -777,11 +769,11 @@ export default function GamesPage() {
                    {lives <= 0 && (
                        <Button 
                           onClick={handleStartPause}
-                          aria-label="Replay"
+                          aria-label="New Game"
                           variant="default" 
                           className="mt-4"
                         >
-                         Replay
+                         New Game
                        </Button>
                    )}
                 </div>
@@ -824,5 +816,7 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
 
     
