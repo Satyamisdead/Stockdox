@@ -226,10 +226,6 @@ export default function GamesPage() {
     gameStateRef.current = gameState;
   }, [gameState]);
 
-  useEffect(() => {
-    localPaddleX.current = paddleX;
-  }, [paddleX]);
-
   // Sync state to refs
   useEffect(() => { localBalls.current = balls; }, [balls]);
   useEffect(() => { localBricks.current = bricks; }, [bricks]);
@@ -337,19 +333,6 @@ export default function GamesPage() {
     setBalls([createInitialBall(1)]);
     setGameState("IDLE");
   }, [initializeBricks]);
-
-  const handleLevelUp = useCallback(() => {
-    const newLevel = Math.floor(score / 100) + 1;
-    if (newLevel > level) {
-      setLevel(newLevel);
-      setBalls(prev => prev.map(b => ({ ...b, speed: BALL_SPEED_INITIAL + (newLevel - 1) * BALL_SPEED_INCREMENT })));
-      playSound('levelUp');
-      triggerConfetti();
-      if (newLevel % 2 === 0) {
-        setLives(prev => Math.min(5, prev + 1));
-      }
-    }
-  }, [score, level]);
   
   const handleStartPause = () => {
     if (gameState === "IDLE" || gameState === "GAME_OVER") {
@@ -382,16 +365,8 @@ export default function GamesPage() {
   const handlePaddleMove = (value: number[]) => {
       if (gameState === "PAUSED" || gameState === "GAME_OVER") return;
       const newPaddleX = (value[0] / 100) * (GAME_WIDTH - PADDLE_WIDTH);
+      localPaddleX.current = newPaddleX;
       setPaddleX(newPaddleX);
-
-       if (balls.some(b => !b.launched)) {
-            setBalls(prevBalls => prevBalls.map(ball => {
-                if (!ball.launched) {
-                    return { ...ball, x: newPaddleX + PADDLE_WIDTH / 2 };
-                }
-                return ball;
-            }));
-        }
   };
 
   useEffect(() => {
@@ -405,7 +380,7 @@ export default function GamesPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState, balls]);
+  }, [gameState]);
 
   useEffect(() => {
     const gameLoop = () => {
@@ -419,17 +394,7 @@ export default function GamesPage() {
 
         // Auto-launch ball if needed
         if (localBalls.current.length > 0 && !localBalls.current.some(b => b.launched)) {
-            const unlaunchedIndex = localBalls.current.findIndex(b => !b.launched);
-            if (unlaunchedIndex !== -1) {
-                const updatedBalls = [...localBalls.current];
-                const ballToLaunch = updatedBalls[unlaunchedIndex];
-                const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
-                ballToLaunch.dx = ballToLaunch.speed * Math.cos(randomAngle) * (Math.random() > 0.5 ? 1 : -1);
-                ballToLaunch.dy = -ballToLaunch.speed * Math.sin(randomAngle);
-                ballToLaunch.launched = true;
-                localBalls.current = updatedBalls;
-                setBalls(updatedBalls);
-            }
+           launchBall();
         }
       
       const prevLevel = Math.floor(localScore.current / 100) + 1;
@@ -478,8 +443,12 @@ export default function GamesPage() {
          }
          return brick;
       }).filter(b => b.active);
-      localBricks.current = updatedBricks;
-      setBricks(updatedBricks);
+      
+      if(JSON.stringify(updatedBricks) !== JSON.stringify(localBricks.current)) {
+        localBricks.current = updatedBricks;
+        setBricks(updatedBricks);
+      }
+
 
       const updatedPowerUps = localPowerUps.current.map(p => {
           if (p.active) {
@@ -504,7 +473,6 @@ export default function GamesPage() {
                          color: 'hsl(var(--chart-2))',
                          launched: true,
                      };
-                     localBalls.current = [...localBalls.current, newBall];
                      setBalls(prev => [...prev, newBall]);
                   }
                   return { ...p, active: false };
@@ -514,8 +482,12 @@ export default function GamesPage() {
           }
           return p;
       }).filter(p => p.active);
-      localPowerUps.current = updatedPowerUps;
-      setPowerUps(updatedPowerUps);
+
+      if(JSON.stringify(updatedPowerUps) !== JSON.stringify(localPowerUps.current)) {
+        localPowerUps.current = updatedPowerUps;
+        setPowerUps(updatedPowerUps);
+      }
+      
 
       if (paddleHitByFallingBrick) {
          playSound('loseLife');
@@ -523,8 +495,8 @@ export default function GamesPage() {
          setLives(newLives);
          if (newLives <= 0) {
             setGameState("GAME_OVER");
-            animationFrameId.current = requestAnimationFrame(gameLoop);
-            return;
+         } else {
+            resetBallAndPaddle(true);
          }
       }
       
@@ -631,12 +603,21 @@ export default function GamesPage() {
               resetBallAndPaddle(true);
             }
           } else {
-             localBalls.current = nextBalls;
              setBalls(nextBalls);
           }
       } else {
-         localBalls.current = nextBalls;
-         setBalls(nextBalls);
+         if (JSON.stringify(nextBalls) !== JSON.stringify(localBalls.current)) {
+            setBalls(nextBalls);
+         }
+      }
+
+      if (!balls.some(ball => ball.launched)) {
+        setBalls(prevBalls => prevBalls.map(ball => {
+            if (!ball.launched) {
+                return { ...ball, x: localPaddleX.current + PADDLE_WIDTH / 2 };
+            }
+            return ball;
+        }));
       }
       
       animationFrameId.current = requestAnimationFrame(gameLoop);
@@ -648,12 +629,12 @@ export default function GamesPage() {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState]);
+  }, [gameState, launchBall]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
     if (gameState === "PAUSED") return "Resume";
-    if (gameState === "GAME_OVER") return "Start";
+    if (gameState === "GAME_OVER") return "Replay";
     return "Start";
   };
   
@@ -813,7 +794,7 @@ export default function GamesPage() {
           aria-label={getButtonText()}
           variant="default" 
           className="p-3 sm:p-4 text-sm sm:text-base h-auto w-32"
-          disabled={gameState === "GAME_OVER" && lives > 0}
+          disabled={gameState === "GAME_OVER" && lives <= 0}
         >
           {getButtonIcon()} <span className="hidden sm:inline">{getButtonText()}</span>
         </Button>
@@ -835,3 +816,4 @@ export default function GamesPage() {
     
 
     
+
