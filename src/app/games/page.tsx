@@ -221,6 +221,7 @@ export default function GamesPage() {
   const localPowerUps = useRef(powerUps);
   const localLives = useRef(lives);
   const localScore = useRef(score);
+  const scoreMilestoneReached = useRef(false);
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -332,6 +333,7 @@ export default function GamesPage() {
     setPowerUps([]);
     setBalls([createInitialBall(1)]);
     setGameState("IDLE");
+    scoreMilestoneReached.current = false;
   }, [initializeBricks]);
   
   const handleStartPause = () => {
@@ -533,6 +535,10 @@ export default function GamesPage() {
                 if (brick.hits <= 0) {
                     brick.opacity = 0.99;
                     newScore += (brick.type === 'steel' ? 25 : 10);
+                    if (newScore >= 100 && !scoreMilestoneReached.current) {
+                        triggerConfetti();
+                        scoreMilestoneReached.current = true;
+                    }
                     playSound('brick');
                     handleShowCheerleader();
                     
@@ -553,7 +559,7 @@ export default function GamesPage() {
                 }
               }
             }
-             if (brick.active) {
+             if (brick.active && brick.hits > 0) {
                 allBricksCleared = false;
             }
           }
@@ -570,8 +576,8 @@ export default function GamesPage() {
           
           if (allBricksCleared && localBricks.current.length > 0 && localBricks.current.some(b => b.active)) {
                const currentLevel = level;
-               initializeBricks(currentLevel + 1);
                setLevel(l => l + 1);
+               initializeBricks(currentLevel + 1);
                setLives(l => Math.min(5, l + 1));
                triggerConfetti();
                resetBallAndPaddle(false);
