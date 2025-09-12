@@ -396,17 +396,6 @@ export default function GamesPage() {
         if (localBalls.current.length > 0 && !localBalls.current.some(b => b.launched)) {
            launchBall();
         }
-      
-      const prevLevel = Math.floor(localScore.current / 100) + 1;
-      const currentLevel = Math.floor(newScore / 100) + 1;
-      if (currentLevel > prevLevel) {
-          setLevel(currentLevel);
-          playSound('levelUp');
-          triggerConfetti();
-          if(currentLevel % 2 === 0){
-             setLives(l => Math.min(5, l + 1));
-          }
-      }
 
       setConfettiParticles(prev => prev.map(p => ({
             ...p,
@@ -500,6 +489,7 @@ export default function GamesPage() {
          }
       }
       
+      let allBricksCleared = true;
       const nextBalls = localBalls.current.map(ball => {
           if (!ball.launched) {
             return { ...ball, x: localPaddleX.current + PADDLE_WIDTH / 2 };
@@ -522,7 +512,6 @@ export default function GamesPage() {
           }
 
           let bricksBrokenThisFrame = 0;
-          let allBricksCleared = true;
           const nextFrameBricks = [...localBricks.current];
           const newPowerUps: PowerUp[] = [];
 
@@ -579,12 +568,13 @@ export default function GamesPage() {
              setScore(newScore);
           }
           
-          if (allBricksCleared && localBricks.current.some(b => b.active)) {
+          if (allBricksCleared && localBricks.current.length > 0 && localBricks.current.some(b => b.active)) {
                const currentLevel = level;
                initializeBricks(currentLevel + 1);
                setLevel(l => l + 1);
-               setLives(l => l + 1);
-               resetBallAndPaddle(true);
+               setLives(l => Math.min(5, l + 1));
+               triggerConfetti();
+               resetBallAndPaddle(false);
           }
           
           return { ...ball, x: newX, y: newY, dx: newDx, dy: newDy };
@@ -629,7 +619,7 @@ export default function GamesPage() {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState, launchBall]);
+  }, [gameState, launchBall, resetBallAndPaddle, initializeBricks, level, handleShowCheerleader]);
 
   const getButtonText = () => {
     if (gameState === "PLAYING") return "Pause";
@@ -771,6 +761,16 @@ export default function GamesPage() {
                   <ShieldAlert className="w-12 h-12 sm:w-16 sm:h-16 text-destructive mb-3 sm:mb-4 animate-bounce"/>
                   <p className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 text-white">Game Over!</p>
                   <p className="text-md sm:text-xl mb-3 sm:mb-4 text-white">Final Score: {score}</p>
+                   {lives <= 0 && (
+                       <Button 
+                          onClick={handleStartPause}
+                          aria-label="Replay"
+                          variant="default" 
+                          className="mt-4"
+                        >
+                         Replay
+                       </Button>
+                   )}
                 </div>
               )}
             </div>
@@ -794,7 +794,6 @@ export default function GamesPage() {
           aria-label={getButtonText()}
           variant="default" 
           className="p-3 sm:p-4 text-sm sm:text-base h-auto w-32"
-          disabled={gameState === "GAME_OVER" && lives <= 0}
         >
           {getButtonIcon()} <span className="hidden sm:inline">{getButtonText()}</span>
         </Button>
@@ -812,8 +811,3 @@ export default function GamesPage() {
     </div>
   );
 }
-
-    
-
-    
-
