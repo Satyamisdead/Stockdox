@@ -433,7 +433,14 @@ export default function GamesPage() {
                 
                 brick.active = false;
                 brickBroken = true;
+
+                const oldScore = newScore;
                 newScore += 10;
+                
+                if (newScore % 100 === 0 && newScore !== oldScore) {
+                    triggerConfetti();
+                }
+
                 playSound('brick');
                 handleShowCheerleader();
                 if (Math.random() < 0.15) { // 15% chance to drop power-up
@@ -669,5 +676,7 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
 
     
