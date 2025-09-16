@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Gem, Heart, ShieldAlert, Play, Pause, ChevronsUp, ShieldHalf, PlusCircle } from 'lucide-react';
+import { Gem, Heart, ShieldAlert, Play, Pause, ChevronsUp, ShieldHalf } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const GAME_WIDTH = 600;
@@ -22,10 +22,6 @@ const BRICK_GAP = 4;
 const BRICK_OFFSET_TOP = 50;
 const BRICK_OFFSET_LEFT = (GAME_WIDTH - (BRICK_COLS * ((GAME_WIDTH - (BRICK_COLS + 1) * BRICK_GAP) / BRICK_COLS) + (BRICK_COLS - 1) * BRICK_GAP)) / 2;
 const BRICK_WIDTH = (GAME_WIDTH - BRICK_OFFSET_LEFT * 2 - (BRICK_COLS - 1) * BRICK_GAP) / BRICK_COLS;
-const POWERUP_CHANCE = 0.20; // 20% chance to drop a power-up
-const POWERUP_SIZE = 15;
-const POWERUP_SPEED = 2;
-
 
 const INITIAL_LIVES = 3;
 
@@ -40,14 +36,6 @@ interface Brick {
   hits: number;
   isFalling?: boolean;
   opacity?: number;
-}
-
-interface PowerUp {
-  id: string;
-  x: number;
-  y: number;
-  type: 'extraLife' | 'multiBall';
-  active: boolean;
 }
 
 interface Ball {
@@ -95,7 +83,7 @@ const steelHitColor = "hsl(var(--muted))";
 
 
 let audioContext: AudioContext | null = null;
-const playSound = (type: 'brick' | 'steelHit' | 'paddle' | 'wall' | 'loseLife' | 'levelUp' | 'powerUp') => {
+const playSound = (type: 'brick' | 'steelHit' | 'paddle' | 'wall' | 'loseLife' | 'levelUp') => {
   if (typeof window === 'undefined') return;
   if (!audioContext) {
     try {
@@ -150,11 +138,6 @@ const playSound = (type: 'brick' | 'steelHit' | 'paddle' | 'wall' | 'loseLife' |
         osc2.start(audioContext.currentTime + 0.1);
         osc2.stop(audioContext.currentTime + 0.4);
         break;
-    case 'powerUp':
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-        break;
   }
 
   oscillator.start(audioContext.currentTime);
@@ -199,7 +182,6 @@ export default function GamesPage() {
   const [paddleX, setPaddleX] = useState((GAME_WIDTH - PADDLE_WIDTH) / 2);
   const [balls, setBalls] = useState<Ball[]>([createInitialBall(1)]);
   const [bricks, setBricks] = useState<Brick[]>([]);
-  const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(INITIAL_LIVES);
   const [level, setLevel] = useState(1);
@@ -217,7 +199,6 @@ export default function GamesPage() {
   const localPaddleX = useRef(paddleX);
   const localBalls = useRef(balls);
   const localBricks = useRef(bricks);
-  const localPowerUps = useRef(powerUps);
   const localLives = useRef(lives);
   const localScore = useRef(score);
   const localLevel = useRef(level);
@@ -229,7 +210,6 @@ export default function GamesPage() {
   // Sync state to refs
   useEffect(() => { localBalls.current = balls; }, [balls]);
   useEffect(() => { localBricks.current = bricks; }, [bricks]);
-  useEffect(() => { localPowerUps.current = powerUps; }, [powerUps]);
   useEffect(() => { localLives.current = lives; }, [lives]);
   useEffect(() => { localScore.current = score; }, [score]);
   useEffect(() => { localLevel.current = level; }, [level]);
@@ -255,7 +235,7 @@ export default function GamesPage() {
       }
     }
     setBricks(newBricks);
-    setBalls(prev => prev.map(b => ({ ...b, speed: BALL_SPEED_INITIAL + (newLevel - 1) * BALL_SPEED_INCREMENT })));
+    setBalls([createInitialBall(newLevel)]);
   }, []);
   
   const triggerConfetti = () => {
@@ -319,10 +299,9 @@ export default function GamesPage() {
     });
   }, []);
 
-  const resetBallAndPaddle = useCallback((isNewLife: boolean) => {
+  const resetBallAndPaddle = useCallback(() => {
     setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
-    const newBall = createInitialBall(localLevel.current);
-    setBalls([newBall]);
+    setBalls([createInitialBall(localLevel.current)]);
   }, []);
 
   const resetGame = useCallback(() => {
@@ -330,7 +309,6 @@ export default function GamesPage() {
     setLives(INITIAL_LIVES);
     setLevel(1);
     initializeBricks(1);
-    setPowerUps([]);
     setBalls([createInitialBall(1)]);
     setGameState("IDLE");
   }, [initializeBricks]);
@@ -438,47 +416,7 @@ export default function GamesPage() {
         localBricks.current = updatedBricks;
         setBricks(updatedBricks);
       }
-
-
-      const updatedPowerUps = localPowerUps.current.map(p => {
-          if (p.active) {
-              const newY = p.y + POWERUP_SPEED;
-              if (
-                  newY + POWERUP_SIZE > GAME_HEIGHT - PADDLE_HEIGHT &&
-                  newY < GAME_HEIGHT &&
-                  p.x + POWERUP_SIZE > localPaddleX.current &&
-                  p.x < localPaddleX.current + PADDLE_WIDTH
-              ) {
-                  playSound('powerUp');
-                  if (p.type === 'extraLife') {
-                      setLives(l => Math.min(5, l + 1));
-                  } else if (p.type === 'multiBall' && localBalls.current.length < 3) {
-                     const activeBall = localBalls.current.find(b => b.launched) || localBalls.current[0];
-                     const newBall: Ball = {
-                         ...activeBall,
-                         id: `ball-${Date.now()}-${Math.random()}`,
-                         dx: -activeBall.dx,
-                         x: localPaddleX.current + PADDLE_WIDTH / 2,
-                         y: GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 5,
-                         color: 'hsl(var(--chart-2))',
-                         launched: true,
-                     };
-                     setBalls(prev => [...prev, newBall]);
-                  }
-                  return { ...p, active: false };
-              }
-              if (newY > GAME_HEIGHT) return { ...p, active: false };
-              return { ...p, y: newY };
-          }
-          return p;
-      }).filter(p => p.active);
-
-      if(JSON.stringify(updatedPowerUps) !== JSON.stringify(localPowerUps.current)) {
-        localPowerUps.current = updatedPowerUps;
-        setPowerUps(updatedPowerUps);
-      }
       
-
       if (paddleHitByFallingBrick) {
          playSound('loseLife');
          newLives--;
@@ -486,7 +424,7 @@ export default function GamesPage() {
          if (newLives <= 0) {
             setGameState("GAME_OVER");
          } else {
-            resetBallAndPaddle(true);
+            resetBallAndPaddle();
          }
       }
       
@@ -513,8 +451,7 @@ export default function GamesPage() {
 
           let bricksBrokenThisFrame = 0;
           const nextFrameBricks = [...localBricks.current];
-          const newPowerUps: PowerUp[] = [];
-
+          
           for (let i = 0; i < nextFrameBricks.length; i++) {
             let brick = nextFrameBricks[i];
             if (brick.active && brick.opacity === 1 && !brick.isFalling && bricksBrokenThisFrame < 2) {
@@ -534,25 +471,8 @@ export default function GamesPage() {
                     brick.opacity = 0.99;
                     const scoreGained = brick.type === 'steel' ? 25 : 10;
                     newScore += scoreGained;
-
-                    const scoreLevel = Math.floor(newScore / 100);
-                    if (scoreLevel > Math.floor(localScore.current / 100)) {
-                        triggerConfetti();
-                    }
-
                     playSound('brick');
                     handleShowCheerleader();
-                    
-                     if (Math.random() < POWERUP_CHANCE) {
-                        const powerUpType = Math.random() > 0.65 ? 'extraLife' : 'multiBall';
-                        newPowerUps.push({
-                            id: `${Date.now()}-${i}-${Math.random()}`,
-                            x: brick.x + BRICK_WIDTH / 2 - POWERUP_SIZE / 2,
-                            y: brick.y,
-                            type: powerUpType,
-                            active: true
-                        });
-                    }
                 } else {
                     brick.isFalling = true;
                     brick.color = steelHitColor;
@@ -560,10 +480,6 @@ export default function GamesPage() {
                 }
               }
             }
-          }
-
-          if (newPowerUps.length > 0) {
-              setPowerUps(prev => [...prev, ...newPowerUps]);
           }
 
           if(bricksBrokenThisFrame > 0) {
@@ -579,7 +495,8 @@ export default function GamesPage() {
                initializeBricks(currentLevel + 1);
                setLives(l => Math.min(5, l + 1));
                triggerConfetti();
-               resetBallAndPaddle(false);
+               resetBallAndPaddle();
+               playSound('levelUp');
           }
           
           return { ...ball, x: newX, y: newY, dx: newDx, dy: newDy };
@@ -595,7 +512,7 @@ export default function GamesPage() {
               setGameState("GAME_OVER");
               setBalls([]);
             } else {
-              resetBallAndPaddle(true);
+              resetBallAndPaddle();
             }
           } else {
              setBalls(nextBalls);
@@ -724,15 +641,6 @@ export default function GamesPage() {
                 )
               )}
 
-              {powerUps.map((p) => (
-                p.active && (
-                  <div key={p.id} className="absolute" style={{left: p.x, top: p.y}}>
-                     {p.type === 'extraLife' && <Heart className="w-5 h-5 text-red-500 fill-red-500 animate-pulse"/>}
-                     {p.type === 'multiBall' && <PlusCircle className="w-5 h-5 text-blue-500 fill-blue-500 animate-pulse"/>}
-                  </div>
-                )
-              ))}
-
               {cheerleaders.map((cheer) => (
                   <div key={cheer.id} 
                        className="absolute p-2 bg-primary/80 text-primary-foreground rounded-lg shadow-lg text-center"
@@ -816,7 +724,3 @@ export default function GamesPage() {
     </div>
   );
 }
-
-    
-
-    
