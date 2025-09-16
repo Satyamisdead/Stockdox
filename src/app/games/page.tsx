@@ -374,9 +374,7 @@ export default function GamesPage() {
             opacity: p.opacity - 0.005,
         })).filter(p => p.opacity > 0 && p.y < GAME_HEIGHT);
 
-        if(JSON.stringify(nextConfetti) !== JSON.stringify(localConfetti.current)) {
-            setConfettiParticles(nextConfetti);
-        }
+        setConfettiParticles(nextConfetti);
 
         setCheerleaders(prev => prev.map((c) => ({ ...c, opacity: Math.min(1, c.opacity + 0.05) })));
         
