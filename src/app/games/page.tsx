@@ -13,8 +13,8 @@ const GAME_HEIGHT = 450;
 const PADDLE_WIDTH = 100;
 const PADDLE_HEIGHT = 15;
 const BALL_RADIUS = 7;
-const BALL_SPEED_INITIAL = 5;
-const BALL_SPEED_INCREMENT = 0.5; // Speed increase per level
+const BALL_SPEED_INITIAL = 7;
+const BALL_SPEED_INCREMENT = 0.75; // Speed increase per level
 const BRICK_ROWS = 5;
 const BRICK_COLS = 10;
 const BRICK_HEIGHT = 20;
@@ -661,5 +661,7 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
 
     
