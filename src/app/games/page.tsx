@@ -203,6 +203,8 @@ export default function GamesPage() {
   const localScore = useRef(score);
   const localLevel = useRef(level);
   const localPowerUps = useRef(powerUps);
+  const localConfetti = useRef(confettiParticles);
+
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -214,6 +216,8 @@ export default function GamesPage() {
   useEffect(() => { localScore.current = score; }, [score]);
   useEffect(() => { localLevel.current = level; }, [level]);
   useEffect(() => { localPowerUps.current = powerUps; }, [powerUps]);
+  useEffect(() => { localConfetti.current = confettiParticles; }, [confettiParticles]);
+
   
   const cheerTexts = ["Great Shot!", "Awesome!", "Keep it up!", "You're on fire!", "Amazing!", "Super!"];
 
@@ -242,9 +246,9 @@ export default function GamesPage() {
         newParticles.push({
             id: Math.random(),
             x: Math.random() * GAME_WIDTH,
-            y: -20,
+            y: Math.random() * GAME_HEIGHT * 0.5 - 50,
             dx: (Math.random() - 0.5) * 8,
-            dy: Math.random() * 8 + 2,
+            dy: Math.random() * 5 + 5,
             color: brickColors[Math.floor(Math.random() * brickColors.length)],
             size: Math.random() * 6 + 4,
             opacity: 1,
@@ -363,12 +367,16 @@ export default function GamesPage() {
            launchBall();
         }
 
-        setConfettiParticles(prev => prev.map(p => ({
+        const nextConfetti = localConfetti.current.map(p => ({
             ...p,
             x: p.x + p.dx,
             y: p.y + p.dy,
-            opacity: p.opacity - 0.01,
-        })).filter(p => p.opacity > 0));
+            opacity: p.opacity - 0.005,
+        })).filter(p => p.opacity > 0 && p.y < GAME_HEIGHT);
+
+        if(JSON.stringify(nextConfetti) !== JSON.stringify(localConfetti.current)) {
+            setConfettiParticles(nextConfetti);
+        }
 
         setCheerleaders(prev => prev.map((c) => ({ ...c, opacity: Math.min(1, c.opacity + 0.05) })));
         
@@ -437,7 +445,7 @@ export default function GamesPage() {
 
           if(brickBroken) {
              const activeBricks = nextFrameBricks.filter(b => b.active);
-             setBricks(activeBricks);
+             setBricks(nextFrameBricks);
              setScore(newScore);
 
              if (activeBricks.length === 0) {
@@ -661,7 +669,5 @@ export default function GamesPage() {
     </div>
   );
 }
-
-    
 
     
