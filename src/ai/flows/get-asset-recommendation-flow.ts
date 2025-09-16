@@ -153,6 +153,7 @@ const getAssetRecommendationFlow = ai.defineFlow(
             goalAlignment: z.number(),
         })},
         output: { schema: z.object({
+            decision: z.enum(['Buy', 'Hold', 'Sell']),
             reasons: z.array(z.string()),
             invalidationCondition: z.string(),
         })},
