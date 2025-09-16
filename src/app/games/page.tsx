@@ -174,7 +174,7 @@ const createInitialBall = (level: number): Ball => ({
   dy: 0,
   speed: BALL_SPEED_INITIAL + (level - 1) * BALL_SPEED_INCREMENT,
   launched: false,
-  color: "hsl(var(--primary))",
+  color: "hsl(var(--foreground))",
 });
 
 
@@ -392,9 +392,7 @@ export default function GamesPage() {
             }
         }
         
-        if (JSON.stringify(nextPowerUps) !== JSON.stringify(localPowerUps.current)) {
-            setPowerUps(nextPowerUps);
-        }
+        setPowerUps(nextPowerUps);
 
         let newBall = { ...localBall.current };
         if (newBall.launched) {
@@ -678,3 +676,4 @@ export default function GamesPage() {
     
 
     
+
