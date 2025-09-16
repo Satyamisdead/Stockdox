@@ -32,10 +32,6 @@ interface Brick {
   height: number;
   active: boolean;
   color: string;
-  type: 'normal' | 'steel';
-  hits: number;
-  isFalling?: boolean;
-  opacity?: number;
 }
 
 interface Ball {
@@ -47,6 +43,13 @@ interface Ball {
   speed: number;
   launched: boolean;
   color: string;
+}
+
+interface PowerUp {
+  id: string;
+  x: number;
+  y: number;
+  type: 'extraLife';
 }
 
 interface ConfettiParticle {
@@ -78,12 +81,9 @@ const brickColors = [
   "hsl(var(--chart-4))",
   "hsl(var(--chart-5))",
 ];
-const steelColor = "hsl(var(--muted-foreground))";
-const steelHitColor = "hsl(var(--muted))";
-
 
 let audioContext: AudioContext | null = null;
-const playSound = (type: 'brick' | 'steelHit' | 'paddle' | 'wall' | 'loseLife' | 'levelUp') => {
+const playSound = (type: 'brick' | 'powerUp' | 'paddle' | 'wall' | 'loseLife' | 'levelUp') => {
   if (typeof window === 'undefined') return;
   if (!audioContext) {
     try {
@@ -106,10 +106,10 @@ const playSound = (type: 'brick' | 'steelHit' | 'paddle' | 'wall' | 'loseLife' |
       oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
       break;
-    case 'steelHit':
-      oscillator.type = 'square';
-      oscillator.frequency.setValueAtTime(180, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+    case 'powerUp':
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
       break;
     case 'paddle':
       oscillator.type = 'square';
@@ -174,14 +174,15 @@ const createInitialBall = (level: number): Ball => ({
   dy: 0,
   speed: BALL_SPEED_INITIAL + (level - 1) * BALL_SPEED_INCREMENT,
   launched: false,
-  color: "hsl(var(--destructive))",
+  color: "hsl(var(--primary))",
 });
 
 
 export default function GamesPage() {
   const [paddleX, setPaddleX] = useState((GAME_WIDTH - PADDLE_WIDTH) / 2);
-  const [balls, setBalls] = useState<Ball[]>([createInitialBall(1)]);
+  const [ball, setBall] = useState<Ball>(createInitialBall(1));
   const [bricks, setBricks] = useState<Brick[]>([]);
+  const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(INITIAL_LIVES);
   const [level, setLevel] = useState(1);
@@ -195,24 +196,24 @@ export default function GamesPage() {
   const animationFrameId = useRef<number | null>(null);
   const gameStateRef = useRef(gameState);
   
-  // Refs for game state to use inside gameLoop
   const localPaddleX = useRef(paddleX);
-  const localBalls = useRef(balls);
+  const localBall = useRef(ball);
   const localBricks = useRef(bricks);
   const localLives = useRef(lives);
   const localScore = useRef(score);
   const localLevel = useRef(level);
+  const localPowerUps = useRef(powerUps);
 
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
 
-  // Sync state to refs
-  useEffect(() => { localBalls.current = balls; }, [balls]);
+  useEffect(() => { localBall.current = ball; }, [ball]);
   useEffect(() => { localBricks.current = bricks; }, [bricks]);
   useEffect(() => { localLives.current = lives; }, [lives]);
   useEffect(() => { localScore.current = score; }, [score]);
   useEffect(() => { localLevel.current = level; }, [level]);
+  useEffect(() => { localPowerUps.current = powerUps; }, [powerUps]);
   
   const cheerTexts = ["Great Shot!", "Awesome!", "Keep it up!", "You're on fire!", "Amazing!", "Super!"];
 
@@ -220,27 +221,24 @@ export default function GamesPage() {
     const newBricks: Brick[] = [];
     for (let r = 0; r < BRICK_ROWS; r++) {
       for (let c = 0; c < BRICK_COLS; c++) {
-        const isSteel = newLevel > 2 && Math.random() < 0.2; // 20% chance for steel brick after level 2
         newBricks.push({
           x: BRICK_OFFSET_LEFT + c * (BRICK_WIDTH + BRICK_GAP),
           y: BRICK_OFFSET_TOP + r * (BRICK_HEIGHT + BRICK_GAP),
           width: BRICK_WIDTH,
           height: BRICK_HEIGHT,
           active: true,
-          color: isSteel ? steelColor : brickColors[r % brickColors.length],
-          type: isSteel ? 'steel' : 'normal',
-          hits: isSteel ? 2 : 1,
-          opacity: 1,
+          color: brickColors[r % brickColors.length],
         });
       }
     }
     setBricks(newBricks);
-    setBalls([createInitialBall(newLevel)]);
+    setBall(createInitialBall(newLevel));
+    setPowerUps([]);
   }, []);
   
   const triggerConfetti = () => {
     const newParticles: ConfettiParticle[] = [];
-    for (let i = 0; i < 100; i++) { // Increased confetti
+    for (let i = 0; i < 100; i++) {
         newParticles.push({
             id: Math.random(),
             x: Math.random() * GAME_WIDTH,
@@ -256,9 +254,9 @@ export default function GamesPage() {
   };
   
   const handleShowCheerleader = useCallback(() => {
-    if (Math.random() > 0.1) return; // 10% chance on brick break
+    if (Math.random() > 0.1) return;
     setCheerleaders(prev => {
-        if (prev.length > 0) return prev; // Only one at a time
+        if (prev.length > 0) return prev;
         const id = Date.now().toString();
         const newCheer: Cheerleader = {
             id: id,
@@ -271,37 +269,29 @@ export default function GamesPage() {
         
         setTimeout(() => {
             setCheerleaders(current => current.filter(c => c.id !== id));
-        }, 3000); // Shorter duration
+        }, 3000);
 
         return [newCheer];
     });
   }, [cheerTexts]);
 
-
   const launchBall = useCallback(() => {
-    setBalls(prevBalls => {
-      const unlaunchedIndex = prevBalls.findIndex(ball => !ball.launched);
-      if (unlaunchedIndex === -1) return prevBalls;
-
-      return prevBalls.map((ball, index) => {
-        if (index === unlaunchedIndex) {
-          const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
-          const speed = ball.speed;
-          return {
-            ...ball,
-            dx: speed * Math.cos(randomAngle) * (Math.random() > 0.5 ? 1 : -1),
-            dy: -speed * Math.sin(randomAngle),
-            launched: true,
-          };
-        }
-        return ball;
-      });
+    if (ball.launched) return;
+    setBall(prevBall => {
+      const randomAngle = (Math.random() * Math.PI / 2) + Math.PI / 4;
+      const speed = prevBall.speed;
+      return {
+        ...prevBall,
+        dx: speed * Math.cos(randomAngle) * (Math.random() > 0.5 ? 1 : -1),
+        dy: -speed * Math.sin(randomAngle),
+        launched: true,
+      };
     });
-  }, []);
+  }, [ball.launched]);
 
   const resetBallAndPaddle = useCallback(() => {
     setPaddleX((GAME_WIDTH - PADDLE_WIDTH) / 2);
-    setBalls([createInitialBall(localLevel.current)]);
+    setBall(createInitialBall(localLevel.current));
   }, []);
 
   const resetGame = useCallback(() => {
@@ -309,7 +299,6 @@ export default function GamesPage() {
     setLives(INITIAL_LIVES);
     setLevel(1);
     initializeBricks(1);
-    setBalls([createInitialBall(1)]);
     setGameState("IDLE");
   }, [initializeBricks]);
   
@@ -355,7 +344,6 @@ export default function GamesPage() {
         handleStartPause();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -371,72 +359,43 @@ export default function GamesPage() {
         let newScore = localScore.current;
         let newLives = localLives.current;
 
-        // Auto-launch ball if needed
-        if (localBalls.current.length > 0 && !localBalls.current.some(b => b.launched)) {
+        if (!localBall.current.launched) {
            launchBall();
         }
 
-      setConfettiParticles(prev => prev.map(p => ({
+        setConfettiParticles(prev => prev.map(p => ({
             ...p,
             x: p.x + p.dx,
             y: p.y + p.dy,
             opacity: p.opacity - 0.01,
-        })).filter(p => p.opacity > 0)
-      );
+        })).filter(p => p.opacity > 0));
 
-      setCheerleaders(prev => prev.map((c) => ({ ...c, opacity: Math.min(1, c.opacity + 0.05) })));
-      
-      let paddleHitByFallingBrick = false;
-      const updatedBricks = localBricks.current.map(brick => {
-         if (brick.opacity !== undefined && brick.opacity < 1) {
-           const newOpacity = brick.opacity - 0.05;
-           if (newOpacity <= 0) return { ...brick, active: false };
-           return { ...brick, opacity: newOpacity };
-         }
-         if (brick.isFalling) {
-            const newY = brick.y + 2;
-            if (
-                newY + BRICK_HEIGHT > GAME_HEIGHT - PADDLE_HEIGHT &&
-                newY < GAME_HEIGHT &&
-                brick.x + BRICK_WIDTH > localPaddleX.current &&
-                brick.x < localPaddleX.current + PADDLE_WIDTH
-            ) {
-                paddleHitByFallingBrick = true;
-                return { ...brick, active: false, isFalling: false };
+        setCheerleaders(prev => prev.map((c) => ({ ...c, opacity: Math.min(1, c.opacity + 0.05) })));
+        
+        const nextPowerUps = localPowerUps.current.map(p => ({ ...p, y: p.y + 2 })).filter(p => p.y < GAME_HEIGHT);
+        
+        for (let i = nextPowerUps.length - 1; i >= 0; i--) {
+            const p = nextPowerUps[i];
+            if (p.y + 20 > GAME_HEIGHT - PADDLE_HEIGHT && p.y < GAME_HEIGHT && p.x + 20 > localPaddleX.current && p.x < localPaddleX.current + PADDLE_WIDTH) {
+                if (p.type === 'extraLife') {
+                    newLives = Math.min(5, newLives + 1);
+                    setLives(newLives);
+                    playSound('powerUp');
+                }
+                nextPowerUps.splice(i, 1);
             }
-            if (newY > GAME_HEIGHT) {
-                return { ...brick, active: false, isFalling: false };
-            }
-            return { ...brick, y: newY };
-         }
-         return brick;
-      }).filter(b => b.active);
-      
-      if(JSON.stringify(updatedBricks) !== JSON.stringify(localBricks.current)) {
-        localBricks.current = updatedBricks;
-        setBricks(updatedBricks);
-      }
-      
-      if (paddleHitByFallingBrick) {
-         playSound('loseLife');
-         newLives--;
-         setLives(newLives);
-         if (newLives <= 0) {
-            setGameState("GAME_OVER");
-         } else {
-            resetBallAndPaddle();
-         }
-      }
-      
-      const nextBalls = localBalls.current.map(ball => {
-          if (!ball.launched) {
-            return { ...ball, x: localPaddleX.current + PADDLE_WIDTH / 2 };
-          }
+        }
+        
+        if (JSON.stringify(nextPowerUps) !== JSON.stringify(localPowerUps.current)) {
+            setPowerUps(nextPowerUps);
+        }
 
-          let newX = ball.x + ball.dx;
-          let newY = ball.y + ball.dy;
-          let newDx = ball.dx;
-          let newDy = ball.dy;
+        let newBall = { ...localBall.current };
+        if (newBall.launched) {
+          let newX = newBall.x + newBall.dx;
+          let newY = newBall.y + newBall.dy;
+          let newDx = newBall.dx;
+          let newDy = newBall.dy;
           
           if (newX + BALL_RADIUS > GAME_WIDTH || newX - BALL_RADIUS < 0) { newDx = -newDx; playSound('wall'); }
           if (newY - BALL_RADIUS < 0) { newDy = -newDy; playSound('wall'); }
@@ -445,92 +404,73 @@ export default function GamesPage() {
             newDy = -Math.abs(newDy);
             newY = GAME_HEIGHT - PADDLE_HEIGHT - BALL_RADIUS - 1;
             let hitPos = (newX - (localPaddleX.current + PADDLE_WIDTH / 2)) / (PADDLE_WIDTH / 2);
-            newDx = hitPos * ball.speed * 1.2;
+            newDx = hitPos * newBall.speed * 1.2;
             playSound('paddle');
           }
 
-          let bricksBrokenThisFrame = 0;
           const nextFrameBricks = [...localBricks.current];
+          let brickBroken = false;
           
           for (let i = 0; i < nextFrameBricks.length; i++) {
             let brick = nextFrameBricks[i];
-            if (brick.active && brick.opacity === 1 && !brick.isFalling && bricksBrokenThisFrame < 2) {
+            if (brick.active) {
               if ( newX + BALL_RADIUS > brick.x && newX - BALL_RADIUS < brick.x + brick.width && newY + BALL_RADIUS > brick.y && newY - BALL_RADIUS < brick.y + brick.height ) {
                 const ballBottom = newY + BALL_RADIUS, ballTop = newY - BALL_RADIUS;
-                const prevBallBottom = ball.y + BALL_RADIUS, prevBallTop = ball.y - BALL_RADIUS;
+                const prevBallBottom = newBall.y + BALL_RADIUS, prevBallTop = newBall.y - BALL_RADIUS;
                 const brickTop = brick.y, brickBottom = brick.y + brick.height;
                 
                 if (prevBallBottom <= brickTop && ballBottom > brickTop) { newDy = -Math.abs(newDy); newY = brick.y - BALL_RADIUS; } 
                 else if (prevBallTop >= brickBottom && ballTop < brickBottom) { newDy = Math.abs(newDy); newY = brick.y + brick.height + BALL_RADIUS; }
-                else { newDx = -newDx; newX = ball.x; }
+                else { newDx = -newDx; newX = newBall.x; }
                 
-                brick.hits -= 1;
-                bricksBrokenThisFrame++;
-
-                if (brick.hits <= 0) {
-                    brick.opacity = 0.99;
-                    const scoreGained = brick.type === 'steel' ? 25 : 10;
-                    newScore += scoreGained;
-                    playSound('brick');
-                    handleShowCheerleader();
-                } else {
-                    brick.isFalling = true;
-                    brick.color = steelHitColor;
-                    playSound('steelHit');
+                brick.active = false;
+                brickBroken = true;
+                newScore += 10;
+                playSound('brick');
+                handleShowCheerleader();
+                if (Math.random() < 0.15) { // 15% chance to drop power-up
+                    setPowerUps(prev => [...prev, { id: `pu-${Date.now()}`, x: brick.x + BRICK_WIDTH / 2 - 10, y: brick.y, type: 'extraLife' }]);
                 }
               }
             }
           }
 
-          if(bricksBrokenThisFrame > 0) {
-             localBricks.current = nextFrameBricks;
-             setBricks(nextFrameBricks);
+          if(brickBroken) {
+             const activeBricks = nextFrameBricks.filter(b => b.active);
+             setBricks(activeBricks);
              setScore(newScore);
-          }
-          
-          const allBricksCleared = !localBricks.current.some(b => b.active);
-          if (allBricksCleared && localBricks.current.length > 0) {
+
+             if (activeBricks.length === 0) {
                const currentLevel = localLevel.current;
                setLevel(l => l + 1);
-               initializeBricks(currentLevel + 1);
                setLives(l => Math.min(5, l + 1));
+               initializeBricks(currentLevel + 1);
                triggerConfetti();
                resetBallAndPaddle();
                playSound('levelUp');
+             }
           }
-          
-          return { ...ball, x: newX, y: newY, dx: newDx, dy: newDy };
-      }).filter(ball => ball.y - BALL_RADIUS < GAME_HEIGHT);
-      
-      if (localBalls.current.length > 0 && nextBalls.length < localBalls.current.length) {
-          if (nextBalls.length === 0) {
+
+          newBall = { ...newBall, x: newX, y: newY, dx: newDx, dy: newDy };
+        } else {
+            newBall.x = localPaddleX.current + PADDLE_WIDTH / 2;
+        }
+
+        if (newBall.y + BALL_RADIUS > GAME_HEIGHT) {
             playSound('loseLife');
             newLives--;
             setLives(newLives);
 
             if (newLives <= 0) {
               setGameState("GAME_OVER");
-              setBalls([]);
             } else {
               resetBallAndPaddle();
             }
-          } else {
-             setBalls(nextBalls);
-          }
-      } else {
-         if (JSON.stringify(nextBalls) !== JSON.stringify(localBalls.current)) {
-            setBalls(nextBalls);
-         }
-      }
-
-      if (!balls.some(ball => ball.launched)) {
-        setBalls(prevBalls => prevBalls.map(ball => {
-            if (!ball.launched) {
-                return { ...ball, x: localPaddleX.current + PADDLE_WIDTH / 2 };
-            }
-            return ball;
-        }));
-      }
+        } else {
+           if (JSON.stringify(newBall) !== JSON.stringify(localBall.current)) {
+              setBall(newBall);
+           }
+        }
       
       animationFrameId.current = requestAnimationFrame(gameLoop);
     };
@@ -602,21 +542,18 @@ export default function GamesPage() {
                 }}
               />
 
-              {balls.map(ball => (
-                <div
-                  key={ball.id}
-                  className="absolute rounded-full"
-                  style={{
-                    left: ball.x - BALL_RADIUS,
-                    top: ball.y - BALL_RADIUS,
-                    width: BALL_RADIUS * 2,
-                    height: BALL_RADIUS * 2,
-                    backgroundColor: ball.color,
-                    boxShadow: `0 0 12px ${ball.color}`
-                  }}
-                />
-              ))}
-
+              <div
+                key={ball.id}
+                className="absolute rounded-full"
+                style={{
+                  left: ball.x - BALL_RADIUS,
+                  top: ball.y - BALL_RADIUS,
+                  width: BALL_RADIUS * 2,
+                  height: BALL_RADIUS * 2,
+                  backgroundColor: ball.color,
+                  boxShadow: `0 0 12px ${ball.color}`
+                }}
+              />
 
               {bricks.map((brick, index) =>
                 ( brick.active &&
@@ -630,16 +567,16 @@ export default function GamesPage() {
                       height: brick.height,
                       backgroundColor: brick.color,
                       border: '1px solid hsl(var(--background)/0.5)',
-                      opacity: brick.opacity,
-                      transition: 'opacity 0.3s ease-out, background-color 0.1s ease-in',
                     }}
-                  >
-                   {brick.type === 'steel' && brick.hits === 1 && (
-                       <ShieldHalf className="w-full h-full text-background/30 p-1" />
-                   )}
-                  </div>
+                  />
                 )
               )}
+
+              {powerUps.map(p => (
+                  <div key={p.id} className="absolute" style={{ left: p.x, top: p.y }}>
+                      {p.type === 'extraLife' && <Heart className="w-5 h-5 text-red-500 fill-red-500/50 animate-bounce" />}
+                  </div>
+              ))}
 
               {cheerleaders.map((cheer) => (
                   <div key={cheer.id} 
@@ -724,3 +661,5 @@ export default function GamesPage() {
     </div>
   );
 }
+
+    
