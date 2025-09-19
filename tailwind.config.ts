@@ -117,7 +117,7 @@ export default {
         'fade-in': 'fade-in 0.5s ease-in-out forwards',
         'bar-loader': 'bar-loader 1.2s infinite ease-in-out',
         'scan-line': 'scan-line 2.5s ease-in-out infinite',
-        marquee: 'marquee 50s linear infinite',
+        marquee: 'marquee 30s linear infinite',
       },
     },
   },
