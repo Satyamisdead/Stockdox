@@ -21,8 +21,11 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
 
   useEffect(() => {
     const loadScript = () => {
-      if (document.getElementById(SCRIPT_ID) || scriptLoadingPromise) {
-        return scriptLoadingPromise || Promise.resolve();
+      if (document.getElementById(SCRIPT_ID)) {
+        return Promise.resolve();
+      }
+      if (scriptLoadingPromise) {
+        return scriptLoadingPromise;
       }
 
       scriptLoadingPromise = new Promise((resolve, reject) => {
@@ -30,9 +33,13 @@ const AssetChart: React.FC<AssetChartProps> = ({ symbol, assetType, exchange, na
         script.id = SCRIPT_ID;
         script.src = 'https://s3.tradingview.com/tv.js';
         script.async = true;
-        script.onload = () => resolve();
+        script.onload = () => {
+          scriptLoadingPromise = null; // Reset on success
+          resolve();
+        };
         script.onerror = (error) => {
             console.error("TradingView script failed to load.", error);
+            scriptLoadingPromise = null; // Reset on failure
             reject(error);
         };
         document.head.appendChild(script);
