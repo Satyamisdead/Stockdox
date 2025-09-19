@@ -106,12 +106,8 @@ export default {
             '100%': { transform: 'translateY(110%)' },
         },
         marquee: {
-          '0%': { transform: 'translateX(0%)' },
-          '100%': { transform: 'translateX(-100%)' },
-        },
-        marquee2: {
-          '0%': { transform: 'translateX(100%)' },
-          '100%': { transform: 'translateX(0%)' },
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
         },
       },
       animation: {
@@ -121,8 +117,7 @@ export default {
         'fade-in': 'fade-in 0.5s ease-in-out forwards',
         'bar-loader': 'bar-loader 1.2s infinite ease-in-out',
         'scan-line': 'scan-line 2.5s ease-in-out infinite',
-        marquee: 'marquee 25s linear infinite',
-        marquee2: 'marquee2 25s linear infinite',
+        marquee: 'marquee 50s linear infinite',
       },
     },
   },

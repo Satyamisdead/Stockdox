@@ -53,16 +53,13 @@ export default function MarketTicker() {
     );
   }
 
+  const duplicatedAssets = [...tickerAssets, ...tickerAssets];
+
   return (
     <div className="w-full h-10 border-b overflow-hidden relative group">
       <div className="flex animate-marquee group-hover:pause">
-        {tickerAssets.map((asset) => (
-          <TickerItem key={`ticker-1-${asset.id}`} asset={asset} />
-        ))}
-      </div>
-      <div className="absolute top-0 flex animate-marquee2 group-hover:pause">
-         {tickerAssets.map((asset) => (
-          <TickerItem key={`ticker-2-${asset.id}`} asset={asset} />
+        {duplicatedAssets.map((asset, index) => (
+          <TickerItem key={`ticker-${index}-${asset.id}`} asset={asset} />
         ))}
       </div>
        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-background via-transparent to-background pointer-events-none" />
