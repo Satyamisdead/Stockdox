@@ -47,14 +47,14 @@ export default function MarketTicker() {
 
   if (isLoading) {
     return (
-        <div className="w-full h-10 bg-card border-b overflow-hidden flex items-center">
+        <div className="w-full h-10 border-b overflow-hidden flex items-center">
             <Skeleton className="h-6 w-full" />
         </div>
     );
   }
 
   return (
-    <div className="w-full h-10 bg-card border-b overflow-hidden relative group">
+    <div className="w-full h-10 border-b overflow-hidden relative group">
       <div className="flex animate-marquee group-hover:pause">
         {tickerAssets.map((asset) => (
           <TickerItem key={`ticker-1-${asset.id}`} asset={asset} />
@@ -65,7 +65,7 @@ export default function MarketTicker() {
           <TickerItem key={`ticker-2-${asset.id}`} asset={asset} />
         ))}
       </div>
-       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-card via-transparent to-card pointer-events-none" />
+       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-background via-transparent to-background pointer-events-none" />
     </div>
   );
 }
