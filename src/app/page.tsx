@@ -12,6 +12,7 @@ import { fetchQuotesForMultipleCryptos } from "@/services/coingeckoService";
 import BitcoinMiniChartWidget from "@/components/market/BitcoinMiniChartWidget";
 import AppleStockMiniChartWidget from "@/components/market/AppleStockMiniChartWidget";
 import { Skeleton } from "@/components/ui/skeleton";
+import MarketTicker from "@/components/market/MarketTicker";
 
 function AssetGridSkeleton() {
   return (
@@ -112,6 +113,7 @@ export default function DashboardPage() {
 
   return (
     <>
+      <MarketTicker />
       <div className="space-y-8 pt-4 md:pt-0">
         <section className="space-y-6">
           <div className="bg-background py-4 border-b border-border/40 shadow-sm flex flex-col items-start gap-4">

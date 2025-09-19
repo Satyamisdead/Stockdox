@@ -104,7 +104,15 @@ export default {
         'scan-line': {
             '0%': { transform: 'translateY(-10%)' },
             '100%': { transform: 'translateY(110%)' },
-        }
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
+        marquee2: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0%)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -113,8 +121,18 @@ export default {
         'fade-in': 'fade-in 0.5s ease-in-out forwards',
         'bar-loader': 'bar-loader 1.2s infinite ease-in-out',
         'scan-line': 'scan-line 2.5s ease-in-out infinite',
+        marquee: 'marquee 40s linear infinite',
+        marquee2: 'marquee2 40s linear infinite',
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [require('tailwindcss-animate'),
+    function ({ addUtilities }: { addUtilities: any }) {
+      addUtilities({
+        '.pause': {
+          'animation-play-state': 'paused',
+        },
+      });
+    },
+  ],
 } satisfies Config;
