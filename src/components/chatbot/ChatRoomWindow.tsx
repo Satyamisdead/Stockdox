@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Loader2, User, AlertTriangle } from 'lucide-react'; 
 import { cn } from '@/lib/utils';
-import { stockdoxChat, type StockdoxChatInput } from '@/ai/flows/stockdox-chat-flow';
+import { stockdoxChat, type StockdoxChatInput, type StockdoxChatOutput } from '@/ai/flows/stockdox-chat-flow';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useVirtualKeyboard } from '@/hooks/use-virtual-keyboard';
 
@@ -40,7 +40,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
       const initialAiMessage: Message = {
         id: Date.now().toString() + 'ai-initial',
         sender: 'ai',
-        text: "Hello! I'm Stockdox AI. How can I assist you today?",
+        text: "Hello! I'm Stockdox AI. How can I assist you today? You can ask me about stocks, crypto, or general financial topics.",
         timestamp: new Date(),
       };
       setMessages([initialAiMessage]);
@@ -63,12 +63,13 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
 
     try {
         const chatInput: StockdoxChatInput = { message: userMessageText };
-        const aiResponseData = await stockdoxChat(chatInput);
+        // The AI now returns a structured response. We'll just display the 'answer' part for now.
+        const aiResponseData: StockdoxChatOutput = await stockdoxChat(chatInput);
         
         const aiResponse: Message = {
             id: Date.now().toString() + Math.random().toString(36).substring(7) + 'ai',
             sender: 'ai',
-            text: aiResponseData.reply,
+            text: aiResponseData.answer, // Displaying the human-readable answer
             timestamp: new Date(),
         };
         setMessages(prev => [...prev, aiResponse]);
@@ -77,7 +78,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
         const errorMessage: Message = {
             id: Date.now().toString() + 'error',
             sender: 'ai',
-            text: "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
+            text: "Sorry, I'm having trouble connecting right now. Please check the console for errors and try again in a moment.",
             timestamp: new Date(),
             isError: true,
         };
