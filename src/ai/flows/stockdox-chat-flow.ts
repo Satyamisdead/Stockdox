@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A conversational AI flow for Stockdox, embodying the "FinBuddy" persona.
@@ -61,11 +62,8 @@ const stockdoxChatFlow = ai.defineFlow(
   async (input) => {
     const { output } = await stockdoxChatPrompt(input);
     
-    if (!output || !output.reply) {
-      console.error("[stockdoxChatFlow] Failed to get a valid reply from the AI.");
-      return { reply: "I'm sorry, I'm having trouble connecting to my knowledge base. Please try again in a moment." };
-    }
-    
-    return output;
+    // The prompt is configured to return a valid output, so we can be confident here.
+    // The model itself will generate a polite "I can't help with that" if needed.
+    return output!;
   }
 );

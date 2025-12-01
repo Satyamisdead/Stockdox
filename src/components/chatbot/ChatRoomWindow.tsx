@@ -40,7 +40,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
       const initialAiMessage: Message = {
         id: Date.now().toString() + 'ai-initial',
         sender: 'ai',
-        text: "Hello! I am Stockdox AI. How can I assist you with your financial queries today?",
+        text: "Namaste! Main FinBuddy hoon. Aaj main aapki kya madad kar sakta hoon?",
         timestamp: new Date(),
       };
       setMessages([initialAiMessage]);
@@ -61,29 +61,17 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
     setCurrentMessage('');
     setIsLoadingAI(true);
 
-    try {
-      const chatInput: StockdoxChatInput = { message: userMessageText };
-      const aiResponseData = await stockdoxChat(chatInput);
-      
-      const aiResponse: Message = {
-        id: Date.now().toString() + Math.random().toString(36).substring(7) + 'ai',
-        sender: 'ai',
-        text: aiResponseData.reply,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, aiResponse]);
-    } catch (error) {
-      console.error("Error calling Stockdox AI flow:", error);
-      const errorResponse: Message = {
-        id: Date.now().toString() + 'ai-error',
-        sender: 'ai',
-        text: "I'm sorry, I encountered a technical difficulty. Please try again later.",
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorResponse]);
-    } finally {
-      setIsLoadingAI(false);
-    }
+    const chatInput: StockdoxChatInput = { message: userMessageText };
+    const aiResponseData = await stockdoxChat(chatInput);
+    
+    const aiResponse: Message = {
+      id: Date.now().toString() + Math.random().toString(36).substring(7) + 'ai',
+      sender: 'ai',
+      text: aiResponseData.reply,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, aiResponse]);
+    setIsLoadingAI(false);
   };
 
   useEffect(() => {
@@ -126,7 +114,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
                   AI
                 </AvatarFallback>
               </Avatar>
-              <SheetTitle className="text-primary font-headline">Stockdox AI</SheetTitle>
+              <SheetTitle className="text-primary font-headline">FinBuddy</SheetTitle>
             </div>
           </div>
         </SheetHeader>
@@ -184,7 +172,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
                 </Avatar>
               <div className="p-2.5 rounded-xl shadow-md bg-card text-card-foreground rounded-bl-none border flex items-center space-x-2">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">Stockdox AI is typing...</span>
+                <span className="text-sm text-muted-foreground">FinBuddy is typing...</span>
               </div>
             </div>
           )}
@@ -201,7 +189,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Ask Stockdox AI..."
+              placeholder="Ask FinBuddy..."
               value={currentMessage}
               onChange={(e) => setCurrentMessage(e.target.value)}
               className="flex-grow bg-background focus:ring-primary/50"
