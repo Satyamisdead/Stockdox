@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -6,7 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, User } from 'lucide-react'; 
+import { Send, Loader2, User, AlertTriangle } from 'lucide-react'; 
 import { cn } from '@/lib/utils';
 import { stockdoxChat, type StockdoxChatInput } from '@/ai/flows/stockdox-chat-flow';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,6 +17,7 @@ interface Message {
   sender: 'user' | 'ai';
   text: string;
   timestamp: Date;
+  isError?: boolean;
 }
 
 interface ChatRoomWindowProps {
@@ -61,17 +61,30 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
     setCurrentMessage('');
     setIsLoadingAI(true);
 
-    const chatInput: StockdoxChatInput = { message: userMessageText };
-    const aiResponseData = await stockdoxChat(chatInput);
-    
-    const aiResponse: Message = {
-      id: Date.now().toString() + Math.random().toString(36).substring(7) + 'ai',
-      sender: 'ai',
-      text: aiResponseData.reply,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, aiResponse]);
-    setIsLoadingAI(false);
+    try {
+        const chatInput: StockdoxChatInput = { message: userMessageText };
+        const aiResponseData = await stockdoxChat(chatInput);
+        
+        const aiResponse: Message = {
+            id: Date.now().toString() + Math.random().toString(36).substring(7) + 'ai',
+            sender: 'ai',
+            text: aiResponseData.reply,
+            timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiResponse]);
+    } catch (e) {
+        console.error("Chatbot Error:", e);
+        const errorMessage: Message = {
+            id: Date.now().toString() + 'error',
+            sender: 'ai',
+            text: "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
+            timestamp: new Date(),
+            isError: true,
+        };
+        setMessages(prev => [...prev, errorMessage]);
+    } finally {
+        setIsLoadingAI(false);
+    }
   };
 
   useEffect(() => {
@@ -130,8 +143,8 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
             >
               {msg.sender === 'ai' && (
                 <Avatar className="h-7 w-7 mr-2 self-start shrink-0">
-                   <AvatarFallback className="bg-muted text-muted-foreground font-semibold text-xs">
-                    AI
+                   <AvatarFallback className={cn("bg-muted text-muted-foreground font-semibold text-xs", msg.isError && "bg-destructive")}>
+                    {msg.isError ? <AlertTriangle size={16} className="text-destructive-foreground"/> : "AI"}
                   </AvatarFallback>
                 </Avatar>
               )}
@@ -141,7 +154,9 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
                     "p-2.5 rounded-xl shadow-md text-sm leading-relaxed",
                     msg.sender === 'user'
                       ? 'bg-primary text-primary-foreground rounded-br-none'
-                      : 'bg-card text-card-foreground rounded-bl-none border'
+                      : msg.isError 
+                        ? 'bg-destructive/20 text-destructive-foreground rounded-bl-none border border-destructive/50'
+                        : 'bg-card text-card-foreground rounded-bl-none border'
                   )}
                 >
                   <p className="whitespace-pre-wrap">{msg.text}</p>

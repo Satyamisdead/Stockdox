@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A conversational AI flow for Stockdox, embodying the "Stockdox AI" persona.
@@ -61,6 +60,9 @@ const stockdoxChatFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await stockdoxChatPrompt(input);
-    return output!;
+    if (!output) {
+      return { reply: "I'm sorry, I encountered a technical difficulty. Please try again." };
+    }
+    return output;
   }
 );
