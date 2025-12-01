@@ -60,9 +60,8 @@ const stockdoxChatFlow = ai.defineFlow(
     outputSchema: StockdoxChatOutputSchema,
   },
   async (input) => {
-    const result = await stockdoxChatPrompt(input);
-    const output = result.output;
-
+    const { output } = await stockdoxChatPrompt(input);
+    
     if (!output || !output.reply) {
       console.error("[stockdoxChatFlow] Failed to get a valid reply from the AI.");
       return { reply: "I'm sorry, I'm having trouble connecting to my knowledge base. Please try again in a moment." };
