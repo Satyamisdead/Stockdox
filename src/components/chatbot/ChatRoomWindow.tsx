@@ -40,7 +40,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
       const initialAiMessage: Message = {
         id: Date.now().toString() + 'ai-initial',
         sender: 'ai',
-        text: "Namaste! Main FinBuddy hoon. Aaj main aapki kya madad kar sakta hoon?",
+        text: "Hello! I'm Stockdox AI. How can I assist you today?",
         timestamp: new Date(),
       };
       setMessages([initialAiMessage]);
@@ -114,7 +114,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
                   AI
                 </AvatarFallback>
               </Avatar>
-              <SheetTitle className="text-primary font-headline">FinBuddy</SheetTitle>
+              <SheetTitle className="text-primary font-headline">Stockdox AI</SheetTitle>
             </div>
           </div>
         </SheetHeader>
@@ -172,7 +172,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
                 </Avatar>
               <div className="p-2.5 rounded-xl shadow-md bg-card text-card-foreground rounded-bl-none border flex items-center space-x-2">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">FinBuddy is typing...</span>
+                <span className="text-sm text-muted-foreground">Stockdox AI is typing...</span>
               </div>
             </div>
           )}
@@ -189,7 +189,7 @@ export default function ChatRoomWindow({ isOpen, onClose }: ChatRoomWindowProps)
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Ask FinBuddy..."
+              placeholder="Ask Stockdox AI..."
               value={currentMessage}
               onChange={(e) => setCurrentMessage(e.target.value)}
               className="flex-grow bg-background focus:ring-primary/50"
