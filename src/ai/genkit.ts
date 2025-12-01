@@ -6,6 +6,6 @@ export const ai = genkit({
   plugins: [
     googleAI(),
   ],
-  // By removing the default model, we let Genkit pick a compatible one
-  // based on the flow's requirements or its own defaults.
+  // We explicitly set a stable default model to avoid "Not Found" errors.
+  model: 'gemini-pro',
 });
