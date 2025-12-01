@@ -61,7 +61,8 @@ const stockdoxChatFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      const { output } = await stockdoxChatPrompt(input);
+      const result = await stockdoxChatPrompt(input);
+      const output = result.output;
 
       // Defensive check: Ensure output and the reply property exist and are valid.
       if (output && typeof output.reply === 'string' && output.reply.trim() !== '') {
