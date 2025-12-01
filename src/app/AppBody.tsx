@@ -4,7 +4,6 @@
 import SiteHeader from '@/components/core/SiteHeader';
 import SiteFooter from '@/components/core/SiteFooter';
 import MobileBottomNav from '@/components/core/MobileBottomNav';
-import ChatbotLauncher from '@/components/chatbot/ChatbotLauncher';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from './loading';
 import AuthOverlay from '@/components/auth/AuthOverlay';
@@ -32,7 +31,6 @@ export default function AppBody({
       </main>
       <SiteFooter />
       <MobileBottomNav />
-      <ChatbotLauncher />
     </>
   );
 }
