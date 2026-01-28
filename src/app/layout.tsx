@@ -19,6 +19,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col bg-background text-foreground">
+        <div className="fixed inset-0 bg-white z-[9999] p-4">
+          <h1 className="text-black text-2xl font-mono">500 Internal Server Error</h1>
+        </div>
         <Providers>
           <AppBody>
             {children}
