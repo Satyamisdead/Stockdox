@@ -9,6 +9,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { fetchStockDetails } from '@/services/finnhubService';
+import { fetchCryptoDetails } from '@/services/coingeckoService';
 
 const StockdoxChatInputSchema = z.object({
   message: z.string().describe('The user message to the chatbot.'),
@@ -43,7 +45,6 @@ export const stockdoxChatFlow = ai.defineFlow(
     outputSchema: StockdoxChatOutputSchema,
   },
   async (input) => {
-    // Fallback logic if called directly through genkit flow
     return stockdoxChat(input);
   }
 );
@@ -146,21 +147,47 @@ export async function stockdoxChat(input: StockdoxChatInput): Promise<StockdoxCh
     };
   }
 
-  // 5. Live Price / Chart Requests
-  if (message.includes('price') || message.includes('chart') || message.includes('live') || message.includes('value')) {
+  // 5. Live Price / Chart Requests with Real Live Data
+  if (message.includes('price') || message.includes('chart') || message.includes('live') || message.includes('value') || message.includes('how much is')) {
     // Check for stock tickers
     let tickers: string[] = [];
-    if (message.includes('apple') || message.includes('aapl')) tickers = ['AAPL'];
-    else if (message.includes('microsoft') || message.includes('msft')) tickers = ['MSFT'];
-    else if (message.includes('google') || message.includes('goog')) tickers = ['GOOGL'];
-    else if (message.includes('amazon') || message.includes('amzn')) tickers = ['AMZN'];
-    else if (message.includes('tesla') || message.includes('tsla')) tickers = ['TSLA'];
-    else if (message.includes('nvidia') || message.includes('nvda')) tickers = ['NVDA'];
-    else if (message.includes('reliance')) tickers = ['RELIANCE.NS'];
-    else if (message.includes('tcs')) tickers = ['TCS.NS'];
-    else if (message.includes('infy') || message.includes('infosys')) tickers = ['INFY.NS'];
+    let stockName = '';
+    
+    if (message.includes('apple') || message.includes('aapl')) { tickers = ['AAPL']; stockName = 'Apple'; }
+    else if (message.includes('microsoft') || message.includes('msft')) { tickers = ['MSFT']; stockName = 'Microsoft'; }
+    else if (message.includes('google') || message.includes('goog')) { tickers = ['GOOGL']; stockName = 'Google'; }
+    else if (message.includes('amazon') || message.includes('amzn')) { tickers = ['AMZN']; stockName = 'Amazon'; }
+    else if (message.includes('tesla') || message.includes('tsla')) { tickers = ['TSLA']; stockName = 'Tesla'; }
+    else if (message.includes('nvidia') || message.includes('nvda')) { tickers = ['NVDA']; stockName = 'NVIDIA'; }
+    else if (message.includes('reliance')) { tickers = ['RELIANCE.NS']; stockName = 'Reliance'; }
+    else if (message.includes('tcs')) { tickers = ['TCS.NS']; stockName = 'TCS'; }
+    else if (message.includes('infy') || message.includes('infosys')) { tickers = ['INFY.NS']; stockName = 'Infosys'; }
+    else if (message.includes('meta') || message.includes('facebook')) { tickers = ['META']; stockName = 'Meta'; }
+    else if (message.includes('netflix') || message.includes('nflx')) { tickers = ['NFLX']; stockName = 'Netflix'; }
+    else if (message.includes('amd')) { tickers = ['AMD']; stockName = 'AMD'; }
+    else if (message.includes('intel') || message.includes('intc')) { tickers = ['INTC']; stockName = 'Intel'; }
 
     if (tickers.length > 0) {
+      try {
+        const details = await fetchStockDetails(tickers[0]);
+        if (details && details.price !== undefined) {
+          const price = details.price;
+          const change = details.change24h ?? 0;
+          const changeSign = change >= 0 ? '+' : '';
+          const high = details.dailyHigh !== undefined ? `$${details.dailyHigh.toFixed(2)}` : 'N/A';
+          const low = details.dailyLow !== undefined ? `$${details.dailyLow.toFixed(2)}` : 'N/A';
+          const mcap = details.marketCap ? `$${(details.marketCap / 1e9).toFixed(2)}B` : 'N/A';
+          
+          return {
+            answer: `The current live price of **${details.name || stockName} (${tickers[0]})** is **$${price.toFixed(2)}** (${changeSign}${change.toFixed(2)}% today).\n\n• **Daily Range:** ${low} - ${high}\n• **Market Cap:** ${mcap}\n• **Exchange:** ${details.exchange || 'N/A'}`,
+            action: "fetch_price",
+            data: { tickers },
+            disclaimer: "This is for informational purposes only. Please consult a registered financial advisor."
+          };
+        }
+      } catch (e) {
+        console.error("Failed to fetch live stock price in chat:", e);
+      }
       return {
         answer: `Sure! Let me fetch the latest live price and chart for ${tickers[0]} for you.`,
         action: "fetch_price",
@@ -171,13 +198,38 @@ export async function stockdoxChat(input: StockdoxChatInput): Promise<StockdoxCh
 
     // Check for crypto ids
     let cryptoIds: string[] = [];
-    if (message.includes('bitcoin') || message.includes('btc')) cryptoIds = ['bitcoin'];
-    else if (message.includes('ethereum') || message.includes('eth')) cryptoIds = ['ethereum'];
-    else if (message.includes('solana') || message.includes('sol')) cryptoIds = ['solana'];
-    else if (message.includes('dogecoin') || message.includes('doge')) cryptoIds = ['dogecoin'];
-    else if (message.includes('cardano') || message.includes('ada')) cryptoIds = ['cardano'];
+    let cryptoName = '';
+    
+    if (message.includes('bitcoin') || message.includes('btc')) { cryptoIds = ['bitcoin']; cryptoName = 'Bitcoin'; }
+    else if (message.includes('ethereum') || message.includes('eth')) { cryptoIds = ['ethereum']; cryptoName = 'Ethereum'; }
+    else if (message.includes('solana') || message.includes('sol')) { cryptoIds = ['solana']; cryptoName = 'Solana'; }
+    else if (message.includes('dogecoin') || message.includes('doge')) { cryptoIds = ['dogecoin']; cryptoName = 'Dogecoin'; }
+    else if (message.includes('cardano') || message.includes('ada')) { cryptoIds = ['cardano']; cryptoName = 'Cardano'; }
+    else if (message.includes('ripple') || message.includes('xrp')) { cryptoIds = ['ripple']; cryptoName = 'Ripple (XRP)'; }
+    else if (message.includes('polkadot') || message.includes('dot')) { cryptoIds = ['polkadot']; cryptoName = 'Polkadot'; }
+    else if (message.includes('litecoin') || message.includes('ltc')) { cryptoIds = ['litecoin']; cryptoName = 'Litecoin'; }
 
     if (cryptoIds.length > 0) {
+      try {
+        const details = await fetchCryptoDetails(cryptoIds[0]);
+        if (details && details.price !== undefined) {
+          const price = details.price;
+          const change = details.change24h ?? 0;
+          const changeSign = change >= 0 ? '+' : '';
+          const high = details.dailyHigh !== undefined ? `$${details.dailyHigh.toLocaleString()}` : 'N/A';
+          const low = details.dailyLow !== undefined ? `$${details.dailyLow.toLocaleString()}` : 'N/A';
+          const mcap = details.marketCap ? `$${(details.marketCap / 1e9).toFixed(2)}B` : 'N/A';
+          
+          return {
+            answer: `The current live price of **${details.name || cryptoName}** is **$${price.toLocaleString()}** (${changeSign}${change.toFixed(2)}% today).\n\n• **24h High:** ${high}\n• **24h Low:** ${low}\n• **Market Cap:** ${mcap}`,
+            action: "fetch_crypto_price",
+            data: { crypto_ids: cryptoIds },
+            disclaimer: "This is for informational purposes only. Please consult a registered financial advisor."
+          };
+        }
+      } catch (e) {
+        console.error("Failed to fetch live crypto price in chat:", e);
+      }
       return {
         answer: `Fetching the latest live price and market data for ${cryptoIds[0].toUpperCase()} for you.`,
         action: "fetch_crypto_price",
@@ -203,8 +255,128 @@ export async function stockdoxChat(input: StockdoxChatInput): Promise<StockdoxCh
     };
   }
 
-  // 7. Finance Knowledge Base Matching
+  // 7. Finance Knowledge Base Matching (50+ Detailed answers)
   const financeQA = [
+    {
+      keys: ['sip', 'systematic investment plan', 'recurring investment'],
+      answer: "A Systematic Investment Plan (SIP) is a mutual fund investment method where you invest a fixed amount regularly (monthly or quarterly) rather than a lump sum. It helps instil financial discipline and averages out purchase costs over time (Rupee-Cost Averaging)."
+    },
+    {
+      keys: ['lump sum', 'lumpsum', 'one time investment'],
+      answer: "A lump-sum investment is a single, bulk purchase of an asset (like stocks, mutual funds, or gold) all at once, as opposed to making regular contributions over time like in a SIP."
+    },
+    {
+      keys: ['compounding', 'compound interest', 'power of compounding'],
+      answer: "Compounding is earning returns on your previous returns plus the principal. By reinvesting your profits, your wealth grows exponentially over time. It is often called the eighth wonder of the world by investors."
+    },
+    {
+      keys: ['nifty 50', 'nifty50', 'what is nifty'],
+      answer: "The Nifty 50 is the benchmark index of the National Stock Exchange of India (NSE). It tracks the performance of 50 of the largest, most liquid, and financially robust companies listed in India across various sectors."
+    },
+    {
+      keys: ['sensex', 'what is sensex'],
+      answer: "The Sensex (Sensitive Index) is the benchmark index of the Bombay Stock Exchange (BSE). It comprises 30 of the largest and most actively traded stocks in India, representing the health of the Indian economy."
+    },
+    {
+      keys: ['short selling', 'shorting', 'sell short'],
+      answer: "Short selling is an investment strategy where an investor borrows shares of a stock and sells them immediately, planning to buy them back later at a lower price to return to the lender. They profit if the stock price drops."
+    },
+    {
+      keys: ['bullish', 'bearish'],
+      answer: "Bullish means expecting prices to rise and market sentiments to be positive. Bearish means expecting prices to fall and market sentiments to be negative or fearful."
+    },
+    {
+      keys: ['options trading', 'futures trading', 'derivatives', 'call option', 'put option', 'f&o'],
+      answer: "Derivatives are financial contracts whose value depends on an underlying asset (like a stock or index). Futures obligate traders to buy/sell at a set date, while Options give the right but not the obligation. They are highly leveraged and carry significant risks."
+    },
+    {
+      keys: ['day trading', 'intraday', 'scalping'],
+      answer: "Intraday or Day Trading involves buying and selling stocks within the same market session. All positions are closed before the day ends to capitalize on short-term price fluctuations, carrying high risk and requiring constant attention."
+    },
+    {
+      keys: ['liquidity', 'liquid asset'],
+      answer: "Liquidity refers to how quickly and easily an asset can be converted into cash without heavily affecting its price. Cash and large-cap stocks are highly liquid, whereas physical real estate is highly illiquid."
+    },
+    {
+      keys: ['volatility', 'volatile'],
+      answer: "Volatility measures the rate and size of price fluctuations of an asset. A highly volatile asset experiences rapid price swings, representing higher risk but also potential trading opportunities."
+    },
+    {
+      keys: ['bull run', 'market rally', 'crypto rally'],
+      answer: "A bull run or rally is an extended period during which asset prices rise consistently. It is driven by investor optimism, positive macroeconomic indicators, and high buying volume."
+    },
+    {
+      keys: ['market crash', 'market correction', 'recession', 'bear run', 'dump'],
+      answer: "A correction is a price drop of 10% to 20% from recent peaks. A crash is a sudden, steep drop of 20% or more, often due to crises or panic selling. A recession is a broad economic decline lasting months."
+    },
+    {
+      keys: ['blue chip', 'bluechip stocks'],
+      answer: "Blue-chip stocks belong to large, well-established, and financially sound corporations with a history of reliable performance, steady growth, and regular dividend payouts (e.g., Apple, Microsoft, Reliance)."
+    },
+    {
+      keys: ['penny stock', 'penny stocks'],
+      answer: "Penny stocks are highly speculative shares of tiny companies trading at very low prices (typically under $5 or ₹50). They have low liquidity, high volatility, and are prone to price manipulation and total capital loss."
+    },
+    {
+      keys: ['credit score', 'fico score', 'cibil'],
+      answer: "A credit score (e.g., CIBIL or FICO) is a three-digit number representing your creditworthiness, based on payment history and debt levels. Higher scores (750+) make it easier to get low-interest loans."
+    },
+    {
+      keys: ['emergency fund', 'emergency savings'],
+      answer: "An emergency fund is a pool of cash set aside for unexpected crises like medical emergencies or job loss. Keeping 3 to 6 months of living expenses in liquid accounts is recommended."
+    },
+    {
+      keys: ['debt vs equity', 'debt or equity'],
+      answer: "Equity represents ownership in a business (higher risk, unlimited return potential). Debt is lending money for fixed interest payouts (lower risk, capped return, like bonds or fixed deposits)."
+    },
+    {
+      keys: ['fixed deposit', 'fd', 'savings account'],
+      answer: "A Fixed Deposit (FD) is a secure banking instrument offering guaranteed interest rates for a locked-in duration. It carries virtually zero risk but struggles to beat inflation over the long run."
+    },
+    {
+      keys: ['tax', 'taxes', 'capital gains', 'capital gain'],
+      answer: "Capital Gains Tax applies to profits made from selling assets (stocks, real estate, crypto). Short-Term Capital Gains (STCG) apply to assets held briefly, while Long-Term Capital Gains (LTCG) enjoy lower tax rates."
+    },
+    {
+      keys: ['p2p lending', 'peer to peer lending'],
+      answer: "P2P lending connects borrowers directly with lenders through online platforms, bypassing traditional banks. Lenders earn higher interest rates than savings accounts but assume the risk of borrower defaults."
+    },
+    {
+      keys: ['hedge', 'hedging'],
+      answer: "Hedging is a risk reduction strategy where you take an offsetting position in a related asset (like buying gold or put options) to minimize potential losses in your core portfolio."
+    },
+    {
+      keys: ['fundamental analysis', 'financial statements', 'balance sheet'],
+      answer: "Fundamental Analysis is evaluating a company's financial health by studying its revenues, earnings, debts, balance sheets, and competitive advantage to calculate its intrinsic value for long-term investing."
+    },
+    {
+      keys: ['technical analysis', 'chart patterns', 'candlestick'],
+      answer: "Technical Analysis uses historical price and volume charts to forecast future price movements. It focuses on trends, chart patterns, and indicators (like RSI or MACD) to time short-term trades."
+    },
+    {
+      keys: ['defi', 'decentralized finance'],
+      answer: "Decentralized Finance (DeFi) is a blockchain-based financial system that allows users to trade, borrow, and lend directly with each other via smart contracts, removing traditional banks and intermediaries."
+    },
+    {
+      keys: ['nft', 'nfts', 'non fungible token'],
+      answer: "An NFT (Non-Fungible Token) is a unique cryptographic token on a blockchain representing ownership of a specific digital asset, such as artwork, music, collectibles, or virtual real estate."
+    },
+    {
+      keys: ['dca', 'dollar cost averaging', 'sip benefit'],
+      answer: "Dollar-Cost Averaging (DCA) is investing a fixed amount regularly. You buy more units when prices are low and fewer when prices are high, lowering your average cost per unit without timing the market."
+    },
+    {
+      keys: ['rebalancing', 'rebalance'],
+      answer: "Portfolio rebalancing is realigning your asset weights to your original target allocation. If stocks grow too fast, you sell some and buy bonds/gold to maintain your desired risk profile."
+    },
+    {
+      keys: ['gold', 'silver', 'precious metals'],
+      answer: "Gold is a safe-haven asset and inflation hedge. It does not produce cash flows like dividends, but historical trends show it preserves purchasing power and rises during economic uncertainties."
+    },
+    {
+      keys: ['real estate', 'property investment', 'reit'],
+      answer: "Real Estate involves buying land or buildings for rental income and appreciation. REITs (Real Estate Investment Trusts) allow you to buy shares in commercial property portfolios, trading like stocks."
+    },
     {
       keys: ['pe ratio', 'p/e ratio', 'price to earnings'],
       answer: "The Price-to-Earnings (P/E) ratio compares a company's stock price to its earnings per share (EPS). It helps determine if a stock is overvalued (high P/E) or undervalued (low P/E) relative to its peers."
