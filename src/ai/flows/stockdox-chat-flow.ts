@@ -189,7 +189,7 @@ export async function stockdoxChat(input: StockdoxChatInput): Promise<StockdoxCh
         console.error("Failed to fetch live stock price in chat:", e);
       }
       return {
-        answer: `I am currently unable to fetch the real-time price for **${stockName} (${tickers[0]})** due to a connection or API key issue. However, you can view its live price, interactive chart, and key metrics directly inside the **Stockdox app** on the main dashboard! As a Chatting AI assistant, I can explain ${stockName}'s business model, valuation ratios, or stock market concepts.`,
+        answer: `To view the real-time live price, interactive chart, and key metrics of **${stockName} (${tickers[0]})**, please check the **Stockdox main app dashboard**! We built the Stockdox app specifically to help you monitor and track live asset prices in real-time. As a Chatting AI, I can help explain ${stockName}'s business, financial ratios, or general stock market concepts.`,
         action: "fetch_price",
         data: { tickers },
         disclaimer: "This is for informational purposes only. Please consult a registered financial advisor."
@@ -231,7 +231,7 @@ export async function stockdoxChat(input: StockdoxChatInput): Promise<StockdoxCh
         console.error("Failed to fetch live crypto price in chat:", e);
       }
       return {
-        answer: `I am currently unable to fetch the real-time price for **${cryptoName}** due to a connection or API key issue. However, you can view its live price, 24-hour chart, and historical trends directly inside the **Stockdox app** on the main dashboard! As a Chatting AI assistant, I can explain ${cryptoName}'s tokenomics, blockchain architecture, or crypto market concepts.`,
+        answer: `To view the real-time live price, 24-hour chart, and historical trends of **${cryptoName}**, please check the **Stockdox main app dashboard**! We built the Stockdox app specifically to help you monitor and track live crypto assets in real-time. As a Chatting AI, I can help explain ${cryptoName}'s tokenomics, blockchain architecture, or general crypto market concepts.`,
         action: "fetch_crypto_price",
         data: { crypto_ids: cryptoIds },
         disclaimer: "This is for informational purposes only. Please consult a registered financial advisor."
@@ -406,7 +406,7 @@ export async function stockdoxChat(input: StockdoxChatInput): Promise<StockdoxCh
     },
     {
       keys: ['rebalancing', 'rebalance'],
-      answer: "Portfolio rebalancing is realigning your asset weights to your original target allocation. If stocks grow too fast, you sell some and buy bonds/gold to maintain your desired risk profile."
+      answer: "Portfolio rebalancing is the process of realigning your asset weights to your original target allocation. If stocks grow too fast, you sell some and buy bonds/gold to maintain your desired risk profile."
     },
     {
       keys: ['value investing'],
