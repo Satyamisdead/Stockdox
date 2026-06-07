@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 0 0% 0%; /* Black */
+    --foreground: 0 0% 82.7%; /* Light Grey (#D3D3D3) */
+
+    --card: 0 0% 5%; /* Very Dark Grey, slightly off-black */
+    --card-foreground: 0 0% 82.7%; /* Light Grey */
+
+    --popover: 0 0% 5%; /* Very Dark Grey */
+    --popover-foreground: 0 0% 82.7%; /* Light Grey */
+
+    --primary: 51 100% 50%; /* Bright Yellow (#FFD700) */
+    --primary-foreground: 0 0% 0%; /* Black (for text on yellow buttons) */
+
+    --secondary: 0 0% 10%; /* Dark Grey */
+    --secondary-foreground: 0 0% 82.7%; /* Light Grey */
+
+    --muted: 0 0% 15%; /* Slightly lighter Dark Grey for less important backgrounds */
+    --muted-foreground: 0 0% 60%; /* Medium Grey for supplementary text */
+
+    --accent: 0 0% 20%; /* Medium Dark Grey for hover states */
+    --accent-foreground: 0 0% 90%; /* Off-white/Very Light Grey for text on accent hover */
+    
+    --destructive: 0 72.2% 50.6%; /* Standard red */
+    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
+
+    --border: 0 0% 15%; /* Dark Grey for borders */
+    --input: 0 0% 10%; /* Dark Grey for input backgrounds */
+    --ring: 51 100% 50%; /* Bright Yellow for focus rings */
+    
+    --chart-1: 51 100% 60%; /* Lighter Yellow */
+    --chart-2: 210 100% 60%; /* Blue */
+    --chart-3: 150 100% 60%; /* Green */
+    --chart-4: 280 100% 70%; /* Purple */
+    --chart-5: 0 100% 70%; /* Reddish Orange */
+
+    /* Sidebar specific colors - align with the main theme */
+    --sidebar-background: 0 0% 3%; /* Slightly off-black */
+    --sidebar-foreground: 0 0% 82.7%; /* Light Grey */
+    --sidebar-primary: 51 100% 50%; /* Bright Yellow */
+    --sidebar-primary-foreground: 0 0% 0%; /* Black */
+    --sidebar-accent: 0 0% 10%; /* Dark Grey for sidebar hover */
+    --sidebar-accent-foreground: 0 0% 90%; /* Lighter grey for text on sidebar hover */
+    --sidebar-border: 0 0% 15%; /* Dark Grey */
+    --sidebar-ring: 51 100% 50%; /* Bright Yellow */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent; /* Disable tap highlight on mobile */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* IE10+/Edge */
+    user-select: none;         /* Standard */
+  }
+
+  /* Allow text selection on specific elements where it's useful */
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+    user-select: auto;
+  }
+}
+
+@layer utilities {
+  @keyframes fade-in-out {
+    0%, 100% { opacity: 0; transform: translateY(10px); }
+    10%, 90% { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in-out {
+    animation: fade-in-out 6s ease-in-out forwards;
+  }
+}
