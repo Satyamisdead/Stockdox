@@ -24,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import StockdoxLogo from "./StockdoxLogo";
 
 // Define form schemas using Zod
 const baseSchema = {
@@ -40,9 +41,10 @@ const signUpSchema = z.object({
 
 type AuthFormProps = {
   mode: "signin" | "signup";
+  onToggleMode: () => void;
 };
 
-export default function AuthForm({ mode }: AuthFormProps) {
+export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -82,7 +84,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
         await signInWithEmailAndPassword(auth, signInValues.email, signInValues.password);
         toast({ title: "Success", description: "Signed in successfully! Welcome back." });
       }
-      // The root layout's effect will handle showing the main app content.
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = authError.message || `Failed to ${mode}. Please try again.`;
@@ -103,26 +104,44 @@ export default function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold font-headline">{mode === "signin" ? "Welcome Back" : "Create an Account"}</h1>
-        <p className="text-muted-foreground">
+    <div className="flex flex-col flex-grow w-full max-w-sm mx-auto select-none">
+      {/* Top Large Logo */}
+      <div className="flex justify-center mb-6">
+        <StockdoxLogo variant="large" />
+      </div>
+
+      {/* Welcome Title */}
+      <div className="flex flex-col items-center space-y-2 text-center mb-8">
+        <div className="flex items-center justify-center gap-3">
+          <StockdoxLogo variant="icon" />
+          <h1 className="text-3xl font-extrabold tracking-tight text-white font-headline">
+            {mode === "signin" ? "Welcome Back" : "Create Account"}
+          </h1>
+          <StockdoxLogo variant="icon" />
+        </div>
+        <p className="text-sm font-medium text-neutral-500">
           {mode === "signin" ? "Sign in to access your Stockdox dashboard." : "Enter your details to create an account."}
         </p>
       </div>
+
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
            {mode === "signup" && (
             <FormField
-              control={form.control}
+              control={form.control as any}
               name="fullName"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm font-semibold text-neutral-300">Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} autoComplete="name" />
+                    <Input 
+                      placeholder="John Doe" 
+                      {...field} 
+                      autoComplete="name"
+                      className="bg-black border border-neutral-900 focus-visible:ring-1 focus-visible:ring-[#FFE600] focus-visible:ring-offset-0 focus-visible:border-[#FFE600] rounded-xl h-12 text-white placeholder-neutral-700 px-4"
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-red-500 text-xs" />
                 </FormItem>
               )}
             />
@@ -131,12 +150,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm font-semibold text-neutral-300">Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="you@example.com" {...field} type="email" autoComplete="email" />
+                  <Input 
+                    placeholder="you@example.com" 
+                    {...field} 
+                    type="email" 
+                    autoComplete="email" 
+                    className="bg-black border border-neutral-900 focus-visible:ring-1 focus-visible:ring-[#FFE600] focus-visible:ring-offset-0 focus-visible:border-[#FFE600] rounded-xl h-12 text-white placeholder-neutral-700 px-4"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-500 text-xs" />
               </FormItem>
             )}
           />
@@ -144,21 +169,57 @@ export default function AuthForm({ mode }: AuthFormProps) {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm font-semibold text-neutral-300">Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="••••••••" {...field} type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} />
+                  <Input 
+                    placeholder="••••••••" 
+                    {...field} 
+                    type="password" 
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} 
+                    className="bg-black border border-neutral-900 focus-visible:ring-1 focus-visible:ring-[#FFE600] focus-visible:ring-offset-0 focus-visible:border-[#FFE600] rounded-xl h-12 text-white placeholder-neutral-700 px-4"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-500 text-xs" />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {mode === "signin" ? "Sign In" : "Sign Up"}
-          </Button>
+          
+          {/* Yellow Submit Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex items-center justify-between w-full h-12 px-4 bg-[#FFE600] text-black font-extrabold rounded-xl hover:bg-[#FFE600]/95 active:scale-[0.99] transition-all disabled:opacity-50 select-none shadow-md mt-6"
+          >
+            <StockdoxLogo variant="monochrome" className="w-12 h-8" />
+            <span className="flex items-center gap-2 font-extrabold font-headline text-base tracking-wide">
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-black" />}
+              {mode === "signin" ? "Sign In" : "Sign Up"}
+            </span>
+            <StockdoxLogo variant="monochrome" className="w-12 h-8" />
+          </button>
         </form>
       </Form>
+
+      {/* Switch Mode Link */}
+      <p className="mt-6 text-center text-sm font-medium text-neutral-400">
+        {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
+        <button 
+          onClick={onToggleMode} 
+          type="button"
+          className="font-semibold text-[#FFE600] hover:underline focus:outline-none"
+        >
+          {mode === "signin" ? "Sign up" : "Sign in"}
+        </button>
+      </p>
+
+      {/* Bottom STOCKDOX Branding */}
+      <div className="mt-auto pt-16 pb-4 flex justify-center items-center">
+        <span className="text-white text-3xl font-black tracking-widest font-headline uppercase select-none">
+          STOCK<span className="text-[#00E676]">DOX</span>
+        </span>
+      </div>
     </div>
   );
 }
+
