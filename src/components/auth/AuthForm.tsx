@@ -108,7 +108,7 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
       {/* Top Animated SVG Logo */}
       <div className="flex justify-center mb-6">
         <img
-          src="/anilogo.svg"
+          src="/ani.gif"
           alt="Stockdox Animated Logo"
           className="w-64 h-36 object-contain"
         />
