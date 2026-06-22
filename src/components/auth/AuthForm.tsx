@@ -107,23 +107,21 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
     <div className="flex flex-col flex-grow w-full max-w-sm mx-auto select-none">
       {/* Top Looping Video Logo */}
       <div className="flex justify-center mb-6">
-        <div className="w-36 h-36 rounded-3xl overflow-hidden bg-black flex items-center justify-center">
-          <video
-            src="/logo_video.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <video
+          src="/logo_video.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-64 h-36 object-contain"
+        />
       </div>
 
       {/* Welcome Title */}
       <div className="flex flex-col items-center space-y-2 text-center mb-8">
         <div className="flex items-center justify-center gap-3">
           <StockdoxLogo variant="icon" />
-          <h1 className="text-4xl text-white font-bebas tracking-wide">
+          <h1 className="text-3xl font-extrabold tracking-tight text-white font-headline">
             {mode === "signin" ? "Welcome Back" : "Create Account"}
           </h1>
           <StockdoxLogo variant="icon" />
@@ -200,12 +198,12 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
             disabled={isSubmitting}
             className="flex items-center justify-between w-full h-12 px-4 bg-[#FFE600] text-black font-extrabold rounded-xl hover:bg-[#FFE600]/95 active:scale-[0.99] transition-all disabled:opacity-50 select-none shadow-md mt-6"
           >
-            <StockdoxLogo variant="monochrome" className="w-12 h-8" />
-            <span className="flex items-center gap-2 font-bebas text-2xl tracking-wide">
+            <StockdoxLogo variant="small-color" className="w-12 h-8" />
+            <span className="flex items-center gap-2 font-extrabold font-headline text-base tracking-wide">
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-black" />}
               {mode === "signin" ? "Sign In" : "Sign Up"}
             </span>
-            <StockdoxLogo variant="monochrome" className="w-12 h-8" />
+            <StockdoxLogo variant="small-color" className="w-12 h-8" />
           </button>
         </form>
       </Form>
