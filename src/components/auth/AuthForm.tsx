@@ -105,16 +105,12 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
 
   return (
     <div className="flex flex-col flex-grow w-full max-w-sm mx-auto select-none">
-      {/* Top Looping Video Logo */}
+      {/* Top Animated SVG Logo */}
       <div className="flex justify-center mb-6">
-        <video
-          src="/logo_video.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
+        <img
+          src="/anilogo.svg"
+          alt="Stockdox Animated Logo"
           className="w-64 h-36 object-contain"
-          style={{ mixBlendMode: "screen" }}
         />
       </div>
 
