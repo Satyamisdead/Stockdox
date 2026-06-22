@@ -12,8 +12,8 @@ export default function AuthOverlay() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-black text-white flex items-center justify-center p-6 py-12 select-none">
-      <div className="w-full max-w-sm flex flex-col justify-between min-h-[90vh]">
+    <div className="w-full min-h-screen bg-black text-white flex items-center justify-center p-6 py-12 select-none" style={{ backgroundColor: '#000000' }}>
+      <div className="w-full max-w-sm flex flex-col justify-between min-h-[90vh]" style={{ backgroundColor: '#000000' }}>
         <AuthForm mode={mode} onToggleMode={toggleMode} />
       </div>
     </div>

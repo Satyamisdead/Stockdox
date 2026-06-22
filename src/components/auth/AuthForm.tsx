@@ -104,13 +104,14 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
   }
 
   return (
-    <div className="flex flex-col flex-grow w-full max-w-sm mx-auto select-none">
-      {/* Top Animated SVG Logo */}
-      <div className="flex justify-center mb-6">
+    <div className="flex flex-col flex-grow w-full max-w-sm mx-auto select-none" style={{ backgroundColor: '#000000' }}>
+      {/* Top Animated Logo */}
+      <div className="flex justify-center mb-6" style={{ backgroundColor: '#000000' }}>
         <img
-          src="/ani.gif?v=2"
+          src="/ani_black.gif"
           alt="Stockdox Animated Logo"
           className="w-64 h-36 object-contain"
+          style={{ mixBlendMode: 'screen' }}
         />
       </div>
 
