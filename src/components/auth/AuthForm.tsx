@@ -114,6 +114,7 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
           muted
           playsInline
           className="w-64 h-36 object-contain"
+          style={{ mixBlendMode: "screen" }}
         />
       </div>
 
@@ -198,12 +199,12 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
             disabled={isSubmitting}
             className="flex items-center justify-between w-full h-12 px-4 bg-[#FFE600] text-black font-extrabold rounded-xl hover:bg-[#FFE600]/95 active:scale-[0.99] transition-all disabled:opacity-50 select-none shadow-md mt-6"
           >
-            <StockdoxLogo variant="small-color" className="w-12 h-8" />
+            <StockdoxLogo variant="button-logo" className="w-12 h-8" />
             <span className="flex items-center gap-2 font-extrabold font-headline text-base tracking-wide">
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-black" />}
               {mode === "signin" ? "Sign In" : "Sign Up"}
             </span>
-            <StockdoxLogo variant="small-color" className="w-12 h-8" />
+            <StockdoxLogo variant="button-logo" className="w-12 h-8" />
           </button>
         </form>
       </Form>
@@ -222,7 +223,7 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
 
       {/* Bottom STOCKDOX Branding */}
       <div className="mt-auto pt-16 pb-4 flex justify-center items-center">
-        <span className="text-white text-4xl tracking-widest font-bebas uppercase select-none">
+        <span className="text-white text-5xl tracking-widest font-bebas uppercase select-none">
           STOCK<span className="text-[#00D600]">DOX</span>
         </span>
       </div>
