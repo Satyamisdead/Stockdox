@@ -13,6 +13,7 @@ export default {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
+        bebas: ['"Bebas Neue"', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
