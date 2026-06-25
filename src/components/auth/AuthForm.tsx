@@ -199,12 +199,12 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
             disabled={isSubmitting}
             className="flex items-center justify-between w-full h-12 px-4 bg-[#FFE600] text-black font-extrabold rounded-xl hover:bg-[#FFE600]/95 active:scale-[0.99] transition-all disabled:opacity-50 select-none shadow-md mt-6"
           >
-            <StockdoxLogo variant="button-logo" className="w-12 h-8" />
+            <img src="/buttonlogo.png" alt="Button Logo" className="w-12 h-8 object-contain" />
             <span className="flex items-center gap-2 font-extrabold font-headline text-base tracking-wide">
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-black" />}
               {mode === "signin" ? "Sign In" : "Sign Up"}
             </span>
-            <StockdoxLogo variant="button-logo" className="w-12 h-8" />
+            <img src="/buttonlogo.png" alt="Button Logo" className="w-12 h-8 object-contain" />
           </button>
         </form>
       </Form>
