@@ -222,7 +222,7 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
       </p>
 
       {/* Bottom STOCKDOX Branding */}
-      <div className="mt-auto pt-16 pb-4 flex justify-center items-center text-center">
+      <div className="mt-8 pb-2 flex justify-center items-center text-center">
         <span className="text-white text-[64px] md:text-[72px] lg:text-[84px] font-normal tracking-[0.5px] leading-none font-bebas uppercase select-none text-center">
           STOCK<span className="text-[#00D600]">DOX</span>
         </span>
