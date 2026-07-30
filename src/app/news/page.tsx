@@ -9,19 +9,16 @@ import { ExternalLink, Newspaper, WifiOff, RefreshCw, Loader2 } from "lucide-rea
 import { formatDistanceToNow } from 'date-fns';
 import { fetchLatestNews } from "@/services/marketauxService";
 import { Skeleton } from "@/components/ui/skeleton";
-import Image from "next/image";
 
 function GlobalNewsItem({ article }: { article: NewsArticle }) {
   return (
     <Card className="flex flex-col h-full shadow-lg hover:shadow-primary/20 transition-shadow duration-300">
       <CardHeader>
         <div className="aspect-video relative mb-4">
-            <Image 
+            <img 
                 src={article.imageUrl || `https://placehold.co/600x400.png?text=${encodeURIComponent(article.source)}`}
                 alt={article.title}
-                layout="fill"
-                objectFit="cover"
-                className="rounded-t-lg border-b"
+                className="rounded-t-lg border-b absolute inset-0 w-full h-full object-cover"
                 data-ai-hint="news article"
             />
         </div>
