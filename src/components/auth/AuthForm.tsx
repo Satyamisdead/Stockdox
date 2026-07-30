@@ -113,8 +113,9 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
           loop
           muted
           playsInline
+          webkitPlaysInline={true}
           className="w-64 h-36 object-contain"
-          style={{ mixBlendMode: 'screen' }}
+          style={{ mixBlendMode: 'screen', pointerEvents: 'none' }}
         />
       </div>
 
