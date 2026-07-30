@@ -107,15 +107,11 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
     <div className="flex flex-col flex-grow w-full max-w-sm mx-auto select-none" style={{ backgroundColor: '#000000' }}>
       {/* Top Animated Logo */}
       <div className="flex justify-center mb-6" style={{ backgroundColor: '#000000' }}>
-        <video
-          src="/real.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          webkitPlaysInline={true}
-          className="w-64 h-36 object-contain"
-          style={{ mixBlendMode: 'screen', pointerEvents: 'none' }}
+        <img
+          src="/real.webp"
+          alt="Stockdox Logo"
+          className="w-64 h-36 object-contain pointer-events-none select-none"
+          style={{ mixBlendMode: 'screen' }}
         />
       </div>
 
