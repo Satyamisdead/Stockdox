@@ -216,7 +216,7 @@ export default function AuthForm({ mode, onToggleMode }: AuthFormProps) {
         <button 
           onClick={onToggleMode} 
           type="button"
-          className="font-semibold text-[#FFE600] hover:underline focus:outline-none"
+          className="font-semibold text-[#FFE600] hover:underline focus:outline-none hover:scale-[1.02] active:scale-[0.98] transition-transform inline-block"
         >
           {mode === "signin" ? "Sign up" : "Sign in"}
         </button>
