@@ -17,10 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function WatchlistPage() {
@@ -31,11 +29,9 @@ export default function WatchlistPage() {
   const [selectedAsset, setSelectedAsset] = useState<WatchlistAsset | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  // Alert settings form state
+  // Alert settings states
   const [alertOnPriceUp, setAlertOnPriceUp] = useState(true);
   const [alertOnPriceDown, setAlertOnPriceDown] = useState(true);
-  const [targetPriceUp, setTargetPriceUp] = useState("");
-  const [targetPriceDown, setTargetPriceDown] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -47,23 +43,23 @@ export default function WatchlistPage() {
     setSelectedAsset(asset);
     setAlertOnPriceUp(asset.alertSettings?.alertOnPriceUp ?? true);
     setAlertOnPriceDown(asset.alertSettings?.alertOnPriceDown ?? true);
-    setTargetPriceUp(asset.alertSettings?.targetPriceUp?.toString() || "");
-    setTargetPriceDown(asset.alertSettings?.targetPriceDown?.toString() || "");
     setIsDialogOpen(true);
   };
 
-  const handleSaveChanges = async () => {
+  const handleTogglePriceUp = async (checked: boolean) => {
     if (!selectedAsset) return;
-    
+    setAlertOnPriceUp(checked);
     await updateAlertSettings(selectedAsset.id, {
-      alertOnPriceUp,
-      alertOnPriceDown,
-      targetPriceUp: targetPriceUp ? parseFloat(targetPriceUp) : undefined,
-      targetPriceDown: targetPriceDown ? parseFloat(targetPriceDown) : undefined,
+      alertOnPriceUp: checked
     });
-    
-    setIsDialogOpen(false);
-    setSelectedAsset(null);
+  };
+
+  const handleTogglePriceDown = async (checked: boolean) => {
+    if (!selectedAsset) return;
+    setAlertOnPriceDown(checked);
+    await updateAlertSettings(selectedAsset.id, {
+      alertOnPriceDown: checked
+    });
   };
 
   if (authLoading) {
@@ -142,7 +138,7 @@ export default function WatchlistPage() {
               <Switch
                 id="price-up-alert"
                 checked={alertOnPriceUp}
-                onCheckedChange={setAlertOnPriceUp}
+                onCheckedChange={handleTogglePriceUp}
               />
             </div>
 
@@ -156,51 +152,10 @@ export default function WatchlistPage() {
               <Switch
                 id="price-down-alert"
                 checked={alertOnPriceDown}
-                onCheckedChange={setAlertOnPriceDown}
+                onCheckedChange={handleTogglePriceDown}
               />
             </div>
-
-            {/* Custom Limit inputs */}
-            <div className="space-y-3 pt-2 border-t border-border/40">
-              <Label className="text-xs font-bold text-primary tracking-wider uppercase">Custom Target Triggers</Label>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="target-up" className="text-xs">Rises Above ($)</Label>
-                  <Input
-                    id="target-up"
-                    type="number"
-                    step="any"
-                    placeholder="None"
-                    value={targetPriceUp}
-                    onChange={(e) => setTargetPriceUp(e.target.value)}
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="target-down" className="text-xs">Falls Below ($)</Label>
-                  <Input
-                    id="target-down"
-                    type="number"
-                    step="any"
-                    placeholder="None"
-                    value={targetPriceDown}
-                    onChange={(e) => setTargetPriceDown(e.target.value)}
-                    className="h-9"
-                  />
-                </div>
-              </div>
-            </div>
           </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveChanges} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Save Changes
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
