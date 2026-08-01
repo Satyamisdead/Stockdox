@@ -66,39 +66,14 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // 2. Play Synthesized iOS/iPhone Chime
+  // 2. Play Custom Alert Audio
   const playIphoneChime = () => {
     if (typeof window === 'undefined') return;
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-
-      const ctx = new AudioContextClass();
-      const playNode = (freq: number, startTime: number, duration: number) => {
-        const osc = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, startTime);
-
-        gainNode.gain.setValueAtTime(0, startTime);
-        gainNode.gain.linearRampToValueAtTime(0.25, startTime + 0.015);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-        osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
-
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-      };
-
-      const now = ctx.currentTime;
-      // Ascending tri-tone chime (resembles iOS default alert)
-      playNode(1046.50, now, 0.15);        // C6
-      playNode(1318.51, now + 0.08, 0.20); // E6
-      playNode(1567.98, now + 0.16, 0.30); // G6
+      const audio = new Audio('/alert.mp3');
+      audio.play().catch(e => console.error("Audio playback failed:", e));
     } catch (e) {
-      console.error('Audio synthesis failed:', e);
+      console.error('Audio playing failed:', e);
     }
   };
 
@@ -440,32 +415,18 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     let timerId: NodeJS.Timeout;
 
     const triggerRandomAlert = () => {
-      // Play a short version of the chime (D6 -> G6)
+      // Play a short version of the custom alert audio (pause it after 1.5 seconds)
       if (typeof window !== 'undefined') {
         try {
-          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-          if (AudioContextClass) {
-            const ctx = new AudioContextClass();
-            const playNode = (freq: number, startTime: number, duration: number) => {
-              const osc = ctx.createOscillator();
-              const gainNode = ctx.createGain();
-              osc.type = 'sine';
-              osc.frequency.setValueAtTime(freq, startTime);
-              gainNode.gain.setValueAtTime(0, startTime);
-              gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.015);
-              gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-              osc.connect(gainNode);
-              gainNode.connect(ctx.destination);
-              osc.start(startTime);
-              osc.stop(startTime + duration);
-            };
-            const now = ctx.currentTime;
-            // Short 2-note chime
-            playNode(1174.66, now, 0.12);        // D6
-            playNode(1567.98, now + 0.07, 0.18); // G6
-          }
+          const audio = new Audio('/alert.mp3');
+          audio.play().catch(e => console.error("Audio playback failed:", e));
+          setTimeout(() => {
+            try {
+              audio.pause();
+            } catch (e) {}
+          }, 1500);
         } catch (e) {
-          console.error('Audio synthesis failed:', e);
+          console.error('Audio playing failed:', e);
         }
       }
 
