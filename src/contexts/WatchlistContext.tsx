@@ -8,6 +8,7 @@ import type { Asset } from '@/types';
 import { fetchQuotesForMultipleStocks } from '@/services/finnhubService';
 import { fetchQuotesForMultipleCryptos } from '@/services/coingeckoService';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export interface WatchlistAsset extends Asset {
   alertSettings?: {
@@ -38,10 +39,34 @@ export const useWatchlist = () => {
 export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [watchlist, setWatchlist] = useState<WatchlistAsset[]>([]);
+  
+  // Load initial watchlist from localStorage cache for instant UI rendering
+  const [watchlist, setWatchlist] = useState<WatchlistAsset[]>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('stockdox_watchlist_cache');
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
+  
   const prevPricesRef = useRef<Record<string, number>>({});
 
-  // 1. Play Synthesized iOS/iPhone Chime
+  // 1. Register Service Worker on Mount for native iOS/Android PWA notification support
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => console.log('Service Worker registered:', reg.scope))
+        .catch((err) => console.error('Service Worker registration failed:', err));
+    }
+  }, []);
+
+  // 2. Play Synthesized iOS/iPhone Chime
   const playIphoneChime = () => {
     if (typeof window === 'undefined') return;
     try {
@@ -77,7 +102,7 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 2. Request Notification Permission
+  // 3. Request Notification Permission
   const requestNotificationPermission = () => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
@@ -86,17 +111,51 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 3. Show Desktop Notification
-  const triggerNotification = (title: string, body: string) => {
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+  // 4. Send Notification Directly to Phone's System Notification Tray
+  const triggerNotification = async (title: string, body: string) => {
+    if (typeof window === 'undefined') return;
+
+    // Check WebView wrapper native message handlers first (ReactNativeWebView or iOS message handler)
+    try {
+      if ((window as any).ReactNativeWebView) {
+        (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'notification', title, body }));
+        return;
+      } else if ((window as any).webkit?.messageHandlers?.notification) {
+        (window as any).webkit.messageHandlers.notification.postMessage({ title, body });
+        return;
+      }
+    } catch (e) {
+      console.warn("Native bridge notification trigger failed:", e);
+    }
+
+    // Try service worker registration showNotification (sends notification to native iOS/Android tray)
+    if ('serviceWorker' in navigator) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        if (reg && 'showNotification' in reg) {
+          reg.showNotification(title, {
+            body,
+            icon: '/logo.png',
+            badge: '/logo.png',
+            vibrate: [100, 50, 100],
+          } as any);
+          return;
+        }
+      } catch (e) {
+        console.warn("Service worker notification failed, falling back:", e);
+      }
+    }
+
+    // Standard fallback to browser Notification API
+    if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, {
         body,
-        icon: '/favicon.ico',
+        icon: '/logo.png',
       });
     }
   };
 
-  // 4. Sync Watchlist from Firestore in Real-Time
+  // 5. Sync Watchlist from Firestore in Real-Time
   useEffect(() => {
     if (!user || !db) {
       setWatchlist([]);
@@ -110,6 +169,8 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
         assetsList.push({ id: docSnap.id, ...docSnap.data() } as WatchlistAsset);
       });
       setWatchlist(assetsList);
+      // Keep local cache updated for immediate offline/page-load access
+      localStorage.setItem('stockdox_watchlist_cache', JSON.stringify(assetsList));
     }, (error) => {
       console.error('Firestore watchlist sync failed:', error);
     });
@@ -117,7 +178,7 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [user]);
 
-  // 5. Toggle Asset on Watchlist
+  // 6. Toggle Asset on Watchlist
   const toggleWatch = async (asset: Asset) => {
     if (!user) {
       toast({
@@ -171,7 +232,7 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 6. Update Custom Alert Conditions
+  // 7. Update Custom Alert Conditions
   const updateAlertSettings = async (assetId: string, settings: Partial<NonNullable<WatchlistAsset['alertSettings']>>) => {
     if (!user || !db) return;
     const docRef = doc(db, 'users', user.uid, 'watchlist', assetId);
@@ -206,12 +267,12 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 7. Check if Asset is Watched
+  // 8. Check if Asset is Watched
   const isAssetWatched = (assetId: string) => {
     return watchlist.some((w) => w.id === assetId);
   };
 
-  // 8. Background Price Checking Polling Loop
+  // 9. Background Price Checking Polling Loop
   useEffect(() => {
     if (!user || watchlist.length === 0) {
       return;
@@ -271,13 +332,32 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
               const message = `${asset.name} price moved from $${oldPrice.toLocaleString()} to $${newPrice.toLocaleString()} (${diffPercent > 0 ? '+' : ''}${diffPercent.toFixed(2)}%)`;
               
               triggerNotification(title, message);
+              
+              // Custom Alert Toast Notification Banner Matching theme
               toast({
                 title,
                 description: message,
-                duration: 5000,
+                duration: 6000,
+                className: cn(
+                  "border-l-4 text-white bg-gradient-to-r from-neutral-900 to-black border-r-0 border-y-0 shadow-2xl",
+                  direction === 'up' ? "border-l-[#00D600]" : "border-l-rose-500"
+                )
               });
 
-              // Optional: Sync back the newly fetched price to Firestore so watchlist is updated
+              // Save Alert Notification to Firestore
+              if (db) {
+                const notifRef = doc(collection(db, 'users', user.uid, 'notifications'));
+                setDoc(notifRef, {
+                  title,
+                  message,
+                  timestamp: new Date().toISOString(),
+                  type: direction === 'up' ? 'price_up' : 'price_down',
+                  assetId: asset.id,
+                  symbol: asset.symbol
+                }).catch((err) => console.error("Firestore notification save failed:", err));
+              }
+
+              // Sync back the newly fetched price to Firestore so watchlist is updated
               if (db) {
                 const docRef = doc(db, 'users', user.uid, 'watchlist', asset.id);
                 updateDoc(docRef, { price: newPrice }).catch(() => {});
@@ -301,7 +381,7 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(intervalId);
   }, [user, watchlist, toast]);
 
-  // 9. Random alert sound trigger mechanism for watchlisted items
+  // 10. Random alert sound trigger mechanism for watchlisted items
   useEffect(() => {
     if (!user || watchlist.length === 0) return;
 
@@ -341,11 +421,25 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
       const title = "Watchlist Update";
       const message = "Check the watchlist for recent asset price movements.";
       triggerNotification(title, message);
+      
+      // Custom Random Notification Toast Banner Matching theme
       toast({
         title,
         description: message,
-        duration: 4000,
+        duration: 5000,
+        className: "border-l-4 text-white bg-gradient-to-r from-neutral-900 to-black border-r-0 border-y-0 shadow-2xl border-l-[#FFE600]"
       });
+
+      // Save Random Notification to Firestore
+      if (db) {
+        const notifRef = doc(collection(db, 'users', user.uid, 'notifications'));
+        setDoc(notifRef, {
+          title,
+          message,
+          timestamp: new Date().toISOString(),
+          type: 'random'
+        }).catch((err) => console.error("Firestore random notification save failed:", err));
+      }
 
       // Schedule the next alert at a random interval
       scheduleNext();

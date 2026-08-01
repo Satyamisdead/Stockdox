@@ -4,14 +4,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { signOut, deleteUser, type AuthError } from "firebase/auth";
+import { collection, query, orderBy, limit, onSnapshot, deleteDoc, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import Loading from "@/app/loading";
-import { LogOut, User, Trash2, Loader2, ArrowLeft, History, TrendingUp, TrendingDown } from "lucide-react";
+import { LogOut, User, Trash2, Loader2, ArrowLeft, History, TrendingUp, TrendingDown, Bell, ArrowUp, ArrowDown } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getPredictionHistory, type PredictionRecord } from "@/services/predictionHistoryService";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,18 +36,68 @@ export default function ProfilePage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [predictionHistory, setPredictionHistory] = useState<PredictionRecord[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isLoadingNotifs, setIsLoadingNotifs] = useState(true);
+  const [isClearingNotifs, setIsClearingNotifs] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/signin?redirect=/profile");
-    } else if (user) {
-        setIsLoadingHistory(true);
-        getPredictionHistory(user.uid)
-            .then(setPredictionHistory)
-            .finally(() => setIsLoadingHistory(false));
+      return;
+    }
+
+    if (user) {
+      setIsLoadingHistory(true);
+      getPredictionHistory(user.uid)
+          .then(setPredictionHistory)
+          .finally(() => setIsLoadingHistory(false));
+
+      // Sync user notifications log in real-time
+      if (db) {
+        setIsLoadingNotifs(true);
+        const notifsRef = collection(db, 'users', user.uid, 'notifications');
+        const q = query(notifsRef, orderBy('timestamp', 'desc'), limit(50));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list: any[] = [];
+          snapshot.forEach(docSnap => {
+            list.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          setNotifications(list);
+          setIsLoadingNotifs(false);
+        }, (err) => {
+          console.error("Failed to sync notifications log:", err);
+          setIsLoadingNotifs(false);
+        });
+
+        return () => unsubscribe();
+      }
     }
   }, [user, authLoading, router]);
+
+  const handleClearNotifications = async () => {
+    if (!user || !db) return;
+    setIsClearingNotifs(true);
+    try {
+      const notifsRef = collection(db, 'users', user.uid, 'notifications');
+      const snapshot = await getDocs(notifsRef);
+      const batchPromises = snapshot.docs.map(docSnap => deleteDoc(docSnap.ref));
+      await Promise.all(batchPromises);
+      toast({
+        title: "History Cleared",
+        description: "Your notification logs have been successfully cleared."
+      });
+    } catch (err) {
+      console.error("Failed to clear notifications:", err);
+      toast({
+        title: "Error",
+        description: "Failed to clear notifications logs.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsClearingNotifs(false);
+    }
+  };
 
   const handleSignOut = async () => {
     if (auth) {
@@ -179,6 +230,75 @@ export default function ProfilePage() {
                          <div className="text-center py-10">
                             <p className="text-muted-foreground">No prediction history found.</p>
                             <p className="text-xs text-muted-foreground mt-1">View an asset to start generating predictions.</p>
+                        </div>
+                    )}
+                </ScrollArea>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                    <CardTitle className="flex items-center gap-2">
+                        <Bell className="h-5 w-5 text-primary" />
+                        Notification Log
+                    </CardTitle>
+                    <CardDescription>A real-time log of your price alerts and watchlist updates.</CardDescription>
+                </div>
+                {notifications.length > 0 && (
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        disabled={isClearingNotifs} 
+                        onClick={handleClearNotifications}
+                        className="text-muted-foreground hover:text-destructive h-8"
+                    >
+                        {isClearingNotifs ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+                        Clear Logs
+                    </Button>
+                )}
+            </CardHeader>
+            <CardContent>
+                <ScrollArea className="h-72 w-full pr-4">
+                    {isLoadingNotifs ? (
+                        <div className="space-y-3">
+                           {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                                    <div className="flex items-center gap-3">
+                                        <Skeleton className="h-8 w-8 rounded-full" />
+                                        <div className="space-y-1">
+                                             <Skeleton className="h-4 w-24" />
+                                             <Skeleton className="h-3 w-32" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : notifications.length > 0 ? (
+                        <ul className="space-y-3">
+                            {notifications.map((item, index) => (
+                                <li key={item.id || index} className="flex items-start justify-between text-sm p-2.5 rounded-md bg-card/40 border border-border/20 hover:bg-muted/30">
+                                    <div className="flex items-start gap-3">
+                                        <div className="mt-0.5 shrink-0">
+                                            {item.type === 'price_up' && <ArrowUp className="h-4 w-4 text-[#00D600]" />}
+                                            {item.type === 'price_down' && <ArrowDown className="h-4 w-4 text-rose-500" />}
+                                            {item.type === 'random' && <Bell className="h-4 w-4 text-[#FFE600]" />}
+                                        </div>
+                                        <div>
+                                             <p className="font-semibold text-primary">{item.title}</p>
+                                             <p className="text-xs text-muted-foreground mt-0.5">{item.message}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-4 shrink-0 font-medium">
+                                        {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                         <div className="text-center py-10">
+                            <p className="text-muted-foreground">No recent notifications.</p>
+                            <p className="text-xs text-muted-foreground mt-1">Notifications triggered by watched stocks will appear here.</p>
                         </div>
                     )}
                 </ScrollArea>
