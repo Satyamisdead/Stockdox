@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'NevisBold';
+  src: url('/fonts/NevisBold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+.font-nevis {
+  font-family: 'NevisBold', sans-serif;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

@@ -360,10 +360,10 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
               
               triggerNotification(title, message);
               
-              // Custom Alert Toast Notification Banner Matching theme (solid black, yellow title, white text)
+              // Custom Alert Toast Notification Banner Matching theme (solid black, yellow title, white text, NevisBold font)
               toast({
-                title: <span className="text-[#FFE600] font-bold text-sm font-headline tracking-wide">{title}</span>,
-                description: <span className="text-white text-xs font-normal">{message}</span>,
+                title: <span className="text-[#FFE600] font-bold text-sm font-headline tracking-wide font-nevis">{title}</span>,
+                description: <span className="text-white text-xs font-normal font-nevis">{message}</span>,
                 duration: 6000,
                 className: cn(
                   "bg-black border border-border/80 border-l-4 text-white opacity-100 shadow-2xl border-r-0 border-y-0",
@@ -435,10 +435,10 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
       const message = "Check the watchlist for recent asset price movements.";
       triggerNotification(title, message);
       
-      // Custom Random Notification Toast Banner Matching theme (solid black, yellow title, white text)
+      // Custom Random Notification Toast Banner Matching theme (solid black, yellow title, white text, NevisBold font)
       toast({
-        title: <span className="text-[#FFE600] font-bold text-sm font-headline tracking-wide">{title}</span>,
-        description: <span className="text-white text-xs font-normal">{message}</span>,
+        title: <span className="text-[#FFE600] font-bold text-sm font-headline tracking-wide font-nevis">{title}</span>,
+        description: <span className="text-white text-xs font-normal font-nevis">{message}</span>,
         duration: 5000,
         className: "bg-black border border-border/80 border-l-4 text-white opacity-100 shadow-2xl border-l-[#FFE600] border-r-0 border-y-0"
       } as any);
