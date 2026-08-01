@@ -103,6 +103,9 @@ export default function ProfilePage() {
     if (auth) {
       try {
         await signOut(auth);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('stockdox_watchlist_cache');
+        }
         toast({ title: "Signed Out", description: "You have been successfully signed out." });
         router.push('/');
         router.refresh();

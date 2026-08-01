@@ -37,7 +37,7 @@ export const useWatchlist = () => {
 };
 
 export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   
   // Load initial watchlist from localStorage cache for instant UI rendering
@@ -155,58 +155,101 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 5. Sync Watchlist from Firestore in Real-Time
+  // 5. Sync Watchlist from Firestore in Real-Time (with Local-First Cache Merge)
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
     if (!user || !db) {
-      setWatchlist([]);
+      // Do NOT clear local watchlist on guest loading (so it survives resets/offline)
       return;
     }
 
     const watchlistRef = collection(db, 'users', user.uid, 'watchlist');
-    const unsubscribe = onSnapshot(watchlistRef, (snapshot) => {
-      const assetsList: WatchlistAsset[] = [];
+    const unsubscribe = onSnapshot(watchlistRef, async (snapshot) => {
+      const firestoreAssets: WatchlistAsset[] = [];
       snapshot.forEach((docSnap) => {
-        assetsList.push({ id: docSnap.id, ...docSnap.data() } as WatchlistAsset);
+        firestoreAssets.push({ id: docSnap.id, ...docSnap.data() } as WatchlistAsset);
       });
-      setWatchlist(assetsList);
-      // Keep local cache updated for immediate offline/page-load access
-      localStorage.setItem('stockdox_watchlist_cache', JSON.stringify(assetsList));
+
+      // Synchronize / Upload local items to Firestore if they are missing
+      const localCached = localStorage.getItem('stockdox_watchlist_cache');
+      let localAssets: WatchlistAsset[] = [];
+      if (localCached) {
+        try {
+          localAssets = JSON.parse(localCached);
+        } catch (e) {}
+      }
+
+      // Find local assets not present in Firestore (e.g. added offline or under a reset anonymous account)
+      const missingInFirestore = localAssets.filter(
+        (localItem) => !firestoreAssets.some((fsItem) => fsItem.id === localItem.id)
+      );
+
+      // Auto-upload local cache items to Firestore (self-healing upload)
+      if (missingInFirestore.length > 0 && db && user) {
+        console.log(`[Watchlist] Syncing ${missingInFirestore.length} local items to Firestore...`);
+        for (const asset of missingInFirestore) {
+          const docRef = doc(db, 'users', user.uid, 'watchlist', asset.id);
+          await setDoc(docRef, {
+            id: asset.id,
+            name: asset.name,
+            symbol: asset.symbol,
+            type: asset.type,
+            logoUrl: asset.logoUrl || '',
+            price: asset.price || 0,
+            change24h: asset.change24h || 0,
+            alertSettings: asset.alertSettings || { alertOnPriceUp: true, alertOnPriceDown: true },
+          }).catch((err) => console.error("Sync to Firestore failed:", err));
+        }
+      }
+
+      // Combine Firestore data and local data
+      const combined = [...firestoreAssets];
+      missingInFirestore.forEach((item) => {
+        if (!combined.some((c) => c.id === item.id)) {
+          combined.push(item);
+        }
+      });
+
+      setWatchlist(combined);
+      localStorage.setItem('stockdox_watchlist_cache', JSON.stringify(combined));
     }, (error) => {
       console.error('Firestore watchlist sync failed:', error);
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, authLoading]);
 
-  // 6. Toggle Asset on Watchlist
+  // 6. Toggle Asset on Watchlist (Local-First Update)
   const toggleWatch = async (asset: Asset) => {
-    if (!user) {
-      toast({
-        title: 'Sign In Required',
-        description: 'Please log in to track stocks and receive alerts.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (!db) return;
-
     requestNotificationPermission();
-    const docRef = doc(db, 'users', user.uid, 'watchlist', asset.id);
+
     const alreadyWatched = watchlist.some((w) => w.id === asset.id);
+    let updatedWatchlist: WatchlistAsset[] = [];
 
     try {
       if (alreadyWatched) {
-        await deleteDoc(docRef);
+        updatedWatchlist = watchlist.filter((w) => w.id !== asset.id);
+        setWatchlist(updatedWatchlist);
+        localStorage.setItem('stockdox_watchlist_cache', JSON.stringify(updatedWatchlist));
+        
         toast({
           title: 'Alerts Removed',
           description: `Removed ${asset.name} (${asset.symbol.toUpperCase()}) from watchlist.`,
         });
+
+        if (user && db) {
+          const docRef = doc(db, 'users', user.uid, 'watchlist', asset.id);
+          await deleteDoc(docRef);
+        }
       } else {
         const initialSettings = {
           alertOnPriceUp: true,
           alertOnPriceDown: true,
         };
-        const dataToSave = {
+        const newAsset: WatchlistAsset = {
           id: asset.id,
           name: asset.name,
           symbol: asset.symbol,
@@ -216,11 +259,20 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
           change24h: asset.change24h || 0,
           alertSettings: initialSettings,
         };
-        await setDoc(docRef, dataToSave);
+
+        updatedWatchlist = [...watchlist, newAsset];
+        setWatchlist(updatedWatchlist);
+        localStorage.setItem('stockdox_watchlist_cache', JSON.stringify(updatedWatchlist));
+
         toast({
           title: 'Alerts Active',
           description: `Added ${asset.name} to watchlist. Audio alerts are active.`,
         });
+
+        if (user && db) {
+          const docRef = doc(db, 'users', user.uid, 'watchlist', asset.id);
+          await setDoc(docRef, newAsset);
+        }
       }
     } catch (error) {
       console.error('Error toggling watchlist document:', error);
