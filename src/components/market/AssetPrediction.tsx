@@ -74,12 +74,7 @@ export default function AssetPrediction({ asset }: AssetPredictionProps) {
             setLastUpdated(now);
             
             toast({
-                title: (
-                    <div className="flex items-center gap-2 font-bold">
-                        <PredictionIcon prediction={result.prediction} className="h-6 w-6"/>
-                        <span>AI Prediction for {asset.symbol.toUpperCase()}: {result.prediction}</span>
-                    </div>
-                ),
+                title: `AI Prediction: ${result.prediction} for ${asset.symbol.toUpperCase()}`,
                 description: `Analysis as of ${format(now, "h:mm:ss a")}. This is an AI-generated insight. Always do your own research.`,
                 duration: 6000,
                 variant: result.prediction === 'Sell' ? 'destructive' : 'default',

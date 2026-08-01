@@ -80,8 +80,8 @@ export interface Asset {
   relativeVolume?: number; 
 
   // Crypto specific (from CoinGecko)
-  circulatingSupply?: number;
-  allTimeHigh?: number;
+  circulatingSupply?: number | string;
+  allTimeHigh?: number | string;
 }
 
 

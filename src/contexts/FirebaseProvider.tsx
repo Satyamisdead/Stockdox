@@ -21,7 +21,8 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!firebaseAuthInstance) {
+    const currentAuth = firebaseAuthInstance;
+    if (!currentAuth) {
       console.warn("FirebaseProvider: Firebase Auth instance is not available.");
       setLoading(false);
       return;
@@ -30,7 +31,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     const processAuth = async () => {
         try {
             // First, process any redirect result that might be pending.
-            const result = await getRedirectResult(firebaseAuthInstance);
+            const result = await getRedirectResult(currentAuth);
             if (result) {
                 // This means a user just signed in via redirect.
                 // onAuthStateChanged will handle setting the user.
@@ -41,7 +42,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
             toast({ title: "Sign In Error", description: "Could not complete sign-in via redirect.", variant: "destructive" });
         } finally {
              // Now that any redirect is handled, set up the real-time auth state listener.
-            const unsubscribe = firebaseAuthInstance.onAuthStateChanged((currentUser) => {
+            const unsubscribe = currentAuth.onAuthStateChanged((currentUser) => {
                 setUser(currentUser);
                 setLoading(false); // Set loading to false only after the initial user state is determined.
             });

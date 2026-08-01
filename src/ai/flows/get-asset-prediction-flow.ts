@@ -75,7 +75,7 @@ const getAssetPredictionFlow = ai.defineFlow(
           assetName: input.assetName,
           assetSymbol: input.assetSymbol,
           assetType: input.assetType,
-          assetPrice: priceToolResult.price,
+          assetPrice: (priceToolResult as any).price,
       });
 
       if (result.output) {

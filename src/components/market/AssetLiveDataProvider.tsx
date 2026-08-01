@@ -8,9 +8,12 @@ import { fetchCryptoDetails } from "@/services/coingeckoService";
 import Image from "next/image";
 import PriceDisplay from "@/components/market/PriceDisplay";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, Info } from "lucide-react";
+import { RefreshCw, Info, BellRing } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useWatchlist } from "@/contexts/WatchlistContext";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface AssetLiveDataProviderProps {
   initialAsset: Asset;
@@ -19,6 +22,8 @@ interface AssetLiveDataProviderProps {
 export default function AssetLiveDataProvider({ initialAsset }: AssetLiveDataProviderProps) {
   const [liveAsset, setLiveAsset] = useState<Asset>(initialAsset);
   const [isFetching, setIsFetching] = useState(true);
+  const { isAssetWatched, toggleWatch } = useWatchlist();
+  const isWatched = isAssetWatched(initialAsset.id);
 
   useEffect(() => {
     const fetchLiveData = async () => {
@@ -98,8 +103,17 @@ export default function AssetLiveDataProvider({ initialAsset }: AssetLiveDataPro
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl md:text-4xl font-bold text-primary font-headline">{liveAsset.name}</h1>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                title="Toggle Watchlist Alerts" 
+                onClick={() => toggleWatch(liveAsset)}
+                className="h-10 w-10 shrink-0"
+              >
+                <BellRing className={cn("h-6 w-6 text-muted-foreground transition-all", isWatched && "text-primary fill-primary/20 scale-110")} />
+              </Button>
               {isFetching && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse mt-1">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse mt-1 shrink-0">
                   <RefreshCw size={16} className="animate-spin" />
                   <span>Syncing live data...</span>
                 </div>
