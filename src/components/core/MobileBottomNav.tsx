@@ -27,8 +27,11 @@ export default function MobileBottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border shadow-lg md:hidden z-50">
-      <div className="flex justify-around items-stretch h-full">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg md:hidden z-[9999] pb-[env(safe-area-inset-bottom)] h-[calc(4rem+env(safe-area-inset-bottom))]" 
+      style={{ transform: 'translate3d(0,0,0)', WebkitTransform: 'translate3d(0,0,0)' }}
+    >
+      <div className="flex justify-around items-center h-full">
         {navItems.map((item) => {
           const isActive = item.href ? (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) : false;
           const isHomeActive = item.href === "/" && pathname === "/";
