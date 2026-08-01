@@ -178,10 +178,17 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     const targetAsset = watchlist.find(w => w.id === assetId);
     if (!targetAsset) return;
 
-    const newSettings = {
+    const newSettings: any = {
       ...(targetAsset.alertSettings || { alertOnPriceUp: true, alertOnPriceDown: true }),
       ...settings
     };
+
+    // Strip out undefined values to prevent Firestore validation failures
+    Object.keys(newSettings).forEach((key) => {
+      if (newSettings[key] === undefined) {
+        delete newSettings[key];
+      }
+    });
 
     try {
       await updateDoc(docRef, { alertSettings: newSettings });
@@ -293,6 +300,74 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     const intervalId = setInterval(checkPrices, 30000); // Poll every 30 seconds
     return () => clearInterval(intervalId);
   }, [user, watchlist, toast]);
+
+  // 9. Random alert sound trigger mechanism for watchlisted items
+  useEffect(() => {
+    if (!user || watchlist.length === 0) return;
+
+    let timerId: NodeJS.Timeout;
+
+    const triggerRandomAlert = () => {
+      // Play a short version of the chime (D6 -> G6)
+      if (typeof window !== 'undefined') {
+        try {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          if (AudioContextClass) {
+            const ctx = new AudioContextClass();
+            const playNode = (freq: number, startTime: number, duration: number) => {
+              const osc = ctx.createOscillator();
+              const gainNode = ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, startTime);
+              gainNode.gain.setValueAtTime(0, startTime);
+              gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.015);
+              gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+              osc.connect(gainNode);
+              gainNode.connect(ctx.destination);
+              osc.start(startTime);
+              osc.stop(startTime + duration);
+            };
+            const now = ctx.currentTime;
+            // Short 2-note chime
+            playNode(1174.66, now, 0.12);        // D6
+            playNode(1567.98, now + 0.07, 0.18); // G6
+          }
+        } catch (e) {
+          console.error('Audio synthesis failed:', e);
+        }
+      }
+
+      // Trigger notification and toast
+      const title = "Watchlist Update";
+      const message = "Check the watchlist for recent asset price movements.";
+      triggerNotification(title, message);
+      toast({
+        title,
+        description: message,
+        duration: 4000,
+      });
+
+      // Schedule the next alert at a random interval
+      scheduleNext();
+    };
+
+    const scheduleNext = () => {
+      // Random interval between 2 minutes (120,000 ms) and 8 minutes (480,000 ms)
+      const minMs = 120000;
+      const maxMs = 480000;
+      const randomDelay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+      
+      console.log(`[Watchlist] Next random alert scheduled in ${(randomDelay / 1000 / 60).toFixed(2)} minutes.`);
+      timerId = setTimeout(triggerRandomAlert, randomDelay);
+    };
+
+    // Start the first schedule
+    scheduleNext();
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
+    };
+  }, [user, watchlist.length, toast]);
 
   return (
     <WatchlistContext.Provider value={{ watchlist, isAssetWatched, toggleWatch, updateAlertSettings }}>
