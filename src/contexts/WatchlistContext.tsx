@@ -385,16 +385,16 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
               
               triggerNotification(title, message);
               
-              // Custom Alert Toast Notification Banner Matching theme
+              // Custom Alert Toast Notification Banner Matching theme (solid black, yellow title, white text)
               toast({
-                title,
-                description: message,
+                title: <span className="text-[#FFE600] font-bold text-sm font-headline tracking-wide">{title}</span>,
+                description: <span className="text-white text-xs font-normal">{message}</span>,
                 duration: 6000,
                 className: cn(
-                  "border-l-4 text-white bg-gradient-to-r from-neutral-900 to-black border-r-0 border-y-0 shadow-2xl",
+                  "bg-black border border-border/80 border-l-4 text-white opacity-100 shadow-2xl border-r-0 border-y-0",
                   direction === 'up' ? "border-l-[#00D600]" : "border-l-rose-500"
                 )
-              });
+              } as any);
 
               // Save Alert Notification to Firestore
               if (db) {
@@ -474,13 +474,13 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
       const message = "Check the watchlist for recent asset price movements.";
       triggerNotification(title, message);
       
-      // Custom Random Notification Toast Banner Matching theme
+      // Custom Random Notification Toast Banner Matching theme (solid black, yellow title, white text)
       toast({
-        title,
-        description: message,
+        title: <span className="text-[#FFE600] font-bold text-sm font-headline tracking-wide">{title}</span>,
+        description: <span className="text-white text-xs font-normal">{message}</span>,
         duration: 5000,
-        className: "border-l-4 text-white bg-gradient-to-r from-neutral-900 to-black border-r-0 border-y-0 shadow-2xl border-l-[#FFE600]"
-      });
+        className: "bg-black border border-border/80 border-l-4 text-white opacity-100 shadow-2xl border-l-[#FFE600] border-r-0 border-y-0"
+      } as any);
 
       // Save Random Notification to Firestore
       if (db) {
